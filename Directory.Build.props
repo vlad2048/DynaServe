@@ -1,0 +1,22 @@
+<Project>
+
+	<PropertyGroup>
+		<LangVersion>preview</LangVersion>
+		<EnablePreviewFeatures>True</EnablePreviewFeatures>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<DebugType>embedded</DebugType>
+		<Version>0.0.1</Version>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Authors>vlad2048</Authors>
+		<Description>DynaServe</Description>
+		<PackageTags>DynaServe</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageProjectUrl>https://github.com/vlad2048/DynaServe</PackageProjectUrl>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="$(SolutionDir)\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+</Project>
