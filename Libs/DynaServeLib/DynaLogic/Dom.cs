@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
+using DynaServeLib.DynaLogic.DiffLogic;
 using DynaServeLib.DynaLogic.DomLogic;
 using DynaServeLib.DynaLogic.Events;
 using DynaServeLib.DynaLogic.Refreshers;
@@ -88,7 +89,7 @@ class Dom : IDisposable
 					var node = this.GetById(e.NodeId);
 					
 					// Unhook refreshers & Remove children
-					refreshTracker.RemoveChildrenRefreshers(node);
+					refreshTracker.RemoveChildrenRefreshers(node, false);
 					node.RemoveAllChildren();
 
 					// Create children and their refreshers
@@ -99,10 +100,44 @@ class Dom : IDisposable
 					refreshTracker.AddRefreshers(refreshersNext);
 
 					// Notify the frontend
-					SendServerMsg(ServerMsg.MkReplaceChildren(
-						childrenNext.Fmt(),
-						e.NodeId
-					));
+					SendServerMsg(ServerMsg.MkReplaceChildren(childrenNext.Fmt(), e.NodeId));
+					break;
+				}
+
+				case DiffChildrenDomEvt e:
+				{
+					var node = this.GetById(e.NodeId);
+					var childrenPrev = node.Children.ToArray();
+					var (childrenNext, refreshersNext) = Doc.CreateNodes(e.Children, domTweakers);
+					var diffs = DiffAlgo.ComputeDiffs(childrenPrev, childrenNext);
+					SendServerMsg(ServerMsg.MkDiffUpdate(diffs));
+					throw new NotImplementedException();
+				}
+
+				case AddBodyNode e:
+				{
+					var node = e.Node;
+
+					var (domNode, refreshers) = Doc.CreateNode(node, domTweakers);
+					var body = Doc.FindDescendant<IHtmlBodyElement>()!;
+
+					body.AppendChild(domNode);
+					refreshTracker.AddRefreshers(refreshers);
+
+					SendServerMsg(ServerMsg.MkAddChildToBody(domNode.Fmt()));
+					break;
+				}
+
+				case RemoveBodyNode e:
+				{
+					var nodeId = e.NodeId;
+
+					var domNode = this.GetById(nodeId);
+					refreshTracker.RemoveChildrenRefreshers(domNode, true);
+					domNode.Remove();
+
+					SendServerMsg(ServerMsg.MkRemoveChildFromBody(nodeId));
+
 					break;
 				}
 			}
@@ -113,11 +148,12 @@ class Dom : IDisposable
 	{
 		sendServerMsg = refreshCtx.SendServerMsg;
 		refreshTracker.Start(refreshCtx);
-		initRootNodes.ForEach(AddNodeToBody);
+		initRootNodes.ForEach(AddNodeToBodyOnStart);
 	}
 
 
-	private void AddNodeToBody(HtmlNode htmlNode)
+
+	private void AddNodeToBodyOnStart(HtmlNode htmlNode)
 	{
 		var body = Doc.FindDescendant<IHtmlBodyElement>()!;
 		var (node, refreshers) = Doc.CreateNode(htmlNode, domTweakers);
@@ -138,9 +174,18 @@ class Dom : IDisposable
 		node.Href = link;
 		head.AppendNodes(node);
 		resourceHolder.AddContent(link, Reply.MkTxt(ReplyType.ScriptCss, script));
+	}
 
-		// TODO remove ServerMsg.MkAddScriptCss
-		//SendServerMsg(ServerMsg.MkAddScriptCss(link));
+	public void AddScriptManifest(string manifestFile)
+	{
+		var name = Path.GetFileName(manifestFile);
+		var link = name;
+		var head = Doc.FindDescendant<IHtmlHeadElement>()!;
+		var node = Doc.CreateElement<IHtmlLinkElement>();
+		node.Relation = "manifest";
+		node.Href = link;
+		head.AppendNodes(node);
+		resourceHolder.AddContent(link, Reply.MkTxt(ReplyType.Json, File.ReadAllText(manifestFile)));
 	}
 
 	public void AddScriptJS(string name, string script)
@@ -151,12 +196,7 @@ class Dom : IDisposable
 		node.Source = link;
 		head.AppendNodes(node);
 		resourceHolder.AddContent(link, Reply.MkTxt(ReplyType.ScriptJs, script));
-
-		// TODO remove ServerMsg.MkAddScriptJs
-		//SendServerMsg(ServerMsg.MkAddScriptJs(link));
 	}
-
-
 
 	public void AddOrRefreshCss(string name, string script)
 	{
@@ -194,6 +234,7 @@ class Dom : IDisposable
 		<!DOCTYPE html>
 		<html>
 			<head>
+				<link rel="icon" type="image/png" href="image/creepy-icon.png" />
 				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 				<title>DynaServe</title>
 				<link href='http://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900italic,900' rel='stylesheet' type='text/css'>

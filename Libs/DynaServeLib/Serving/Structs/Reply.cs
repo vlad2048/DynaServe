@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Reactive.Subjects;
 using System.Text;
 using DynaServeLib.Utils.Exts;
 
@@ -9,11 +10,13 @@ enum ReplyType
 	Html,
 	ScriptJs,
 	ScriptCss,
+	Json,
 	ImageSvg,
 	ImagePng,
 	ImageJpg,
 	ImageIco,
 	Video,
+	FontWoff2,
 }
 
 class Reply
@@ -28,8 +31,9 @@ class Reply
 	}
 
 	public static Reply MkBin(ReplyType type, byte[] data) => new(type, data);
-
 	public static Reply MkTxt(ReplyType type, string data) => new(type, data.ToBytes());
+
+	public static Reply Mk(ReplyType type, byte[] data) => new(type, data);
 }
 
 
@@ -62,11 +66,13 @@ static class ReplyExt
 		ReplyType.Html => false,
 		ReplyType.ScriptJs => false,
 		ReplyType.ScriptCss => false,
+		ReplyType.Json => false,
 		ReplyType.ImageSvg => false,
 		ReplyType.ImagePng => true,
 		ReplyType.ImageJpg => true,
 		ReplyType.ImageIco => true,
 		ReplyType.Video => true,
+		ReplyType.FontWoff2 => true,
 		_ => throw new ArgumentException()
 	};
 
@@ -75,11 +81,13 @@ static class ReplyExt
 		ReplyType.Html => "text/html",
 		ReplyType.ScriptJs => "text/javascript",
 		ReplyType.ScriptCss => "text/css",
+		ReplyType.Json => "application/json",
 		ReplyType.ImageSvg => "image/svg+xml",
 		ReplyType.ImagePng => "image/png",
 		ReplyType.ImageJpg => "image/jpeg",
 		ReplyType.ImageIco => "image/x-icon",
 		ReplyType.Video => "video/mp4",
+		ReplyType.FontWoff2 => "font/woff2",
 		_ => throw new ArgumentException()
 	};
 }

@@ -11,26 +11,43 @@ using DynaServeLib.Serving;
 using DynaServeLib.Serving.Repliers;
 using DynaServeLib.Serving.Repliers.DynaServe;
 using DynaServeLib.Serving.Repliers.DynaServe.Holders;
+using DynaServeLib.Serving.Structs;
 using DynaServeLib.Serving.Syncing;
 using DynaServeLib.Serving.Syncing.Structs;
 using DynaServeLib.Utils;
+using PowMaybe;
 using PowRxVar;
 
 namespace DynaServeLib;
 
+public record ClientUserMsg(string Type, string Arg);
+
 public class ServOpt
 {
+	internal record ScriptJs(string Name, string Script);
+	internal record ScriptCss(string Name, string Script);
+
 	public int Port { get; set; } = 7000;
 	public ILogr Logr { get; set; } = new ConsoleLogr();
+	public bool PlaceWebSocketsHtmlManually { get; set; }
+	public Action<ClientUserMsg> OnClientUserMsg { get; set; } = _ => { };
 	internal List<IReplier> Repliers { get; set; } = new();
 	internal List<string> CssFolders { get; } = new();
 	internal List<string> ImgFolders { get; } = new();
+	internal List<string> FontFolders { get; } = new();
+	internal List<ScriptJs> JsScripts { get; } = new();
+	internal List<ScriptCss> CssScripts { get; } = new();
+	internal Maybe<string> ManifestFile { get; private set; } = May.None<string>();
 
 	private ServOpt() {}
 
 	public void AddRepliers(params IReplier[] repliers) => Repliers.AddRange(repliers);
 	public void AddCss(params string[] cssFolders) => CssFolders.AddRange(cssFolders);
 	public void AddImg(params string[] imgFolders) => ImgFolders.AddRange(imgFolders);
+	public void AddFonts(params string[] fontFolders) => FontFolders.AddRange(fontFolders);
+	public void SetManifest(string manifestFile) => ManifestFile = May.Some(manifestFile);
+	public void AddScriptJs(string name, string script) => JsScripts.Add(new ScriptJs(name, script));
+	public void AddScriptCss(string name, string script) => CssScripts.Add(new ScriptCss(name, script));
 
 	internal static ServOpt Build(Action<ServOpt>? optFun)
 	{
@@ -43,24 +60,29 @@ public class ServOpt
 class ServInst : IDisposable
 {
 	internal const string StatusEltId = "syncserv-status";
+	internal const string StatusEltClsAuto = "syncserv-status-auto";
+	internal const string StatusEltClsManual = "syncserv-status-manual";
 
 	private readonly Disp d = new();
 	public void Dispose() => d.Dispose();
 
 	private readonly Server server;
+	private readonly ISubject<IDomEvt> whenDomEvt;
 	private readonly ISubject<LogEvt> whenLogEvt;
 
 	public Syncer Syncer { get; }
 	public Dom Dom { get; }
 	public IObservable<LogEvt> WhenLogEvt => whenLogEvt.AsObservable();
+	public void SignalDomEvt(IDomEvt evt) => whenDomEvt.OnNext(evt);
 
 	public ServInst(Action<ServOpt>? optFun, HtmlNode[] rootNodes)
 	{
 		var opt = ServOpt.Build(optFun);
-		var whenDomEvt = new Subject<IDomEvt>().D(d);
+		whenDomEvt = new Subject<IDomEvt>().D(d);
 		whenLogEvt = new ReplaySubject<LogEvt>().D(d);
 
 		var resourceHolder = new ResourceHolder();
+		resourceHolder.AddFolders(opt.FontFolders, "*.woff2", "fonts", ReplyType.FontWoff2);
 		var domTweakers = new IDomTweaker[]
 		{
 			new ImgDomTweaker(opt.ImgFolders, resourceHolder, opt.Logr)
@@ -69,14 +91,26 @@ class ServInst : IDisposable
 
 		Dom.AddScriptJS("css-links", Embedded.Read("css-links.js", ("{{HttpLink}}", UrlUtils.GetLocalLink(opt.Port))));
 		Dom.AddScriptJS("websockets", Embedded.Read("websockets.js", ("{{WSLink}}", UrlUtils.GetWSLink(opt.Port)), ("{{StatusEltId}}", StatusEltId)));
-		Dom.AddScriptCss("websockets", Embedded.Read("websockets.css", ("StatusEltId", StatusEltId)));
-		Dom.AddHtml(Embedded.Read("websockets.html", ("{{StatusEltId}}", StatusEltId)));
+		Dom.AddScriptCss("websockets", Embedded.Read("websockets.css", ("StatusEltClsAuto", StatusEltClsAuto), ("StatusEltClsManual", StatusEltClsManual)));
+		if (!opt.PlaceWebSocketsHtmlManually)
+			Dom.AddHtml(Embedded.Read("websockets.html", ("{{StatusEltId}}", StatusEltId), ("{{StatusEltClsAuto}}", StatusEltClsAuto)));
+		if (opt.ManifestFile.IsSome(out var manifestFile))
+		{
+			Dom.AddScriptManifest(manifestFile);
+		}
+		foreach (var jsScript in opt.JsScripts)
+			Dom.AddScriptJS(jsScript.Name, jsScript.Script);
+		foreach (var cssScript in opt.CssScripts)
+			Dom.AddOrRefreshCss(cssScript.Name, cssScript.Script);
 
 		var repliers = opt.Repliers
 			.Append(new DynaServeReplier(resourceHolder, Dom))
 			.ToArray();
 		server = new Server(opt.Port, repliers).D(d);
 		Syncer = new Syncer(server, Dom).D(d);
+		Syncer.WhenClientMsg
+			.Where(msg => msg.Type == ClientMsgType.User)
+			.Subscribe(msg => opt.OnClientUserMsg(new ClientUserMsg(msg.UserType!, msg.UserArg!))).D(d);
 		Dom.LogEvt("initial");
 		Dom.Start(new RefreshCtx(
 			whenDomEvt.OnNext,
@@ -120,7 +154,20 @@ public static class Serv
 		return d;
 	}
 
+	public static HtmlNode StatusEltManual => new HtmlNode("div").Id(ServInst.StatusEltId).Cls(ServInst.StatusEltClsManual);
+
 	public static void Css(string name, string css) => St.I.Dom.AddScriptCss(name, css);
+
+	public static IDisposable AddNodeToBody(HtmlNode node)
+	{
+		var addD = new Disp();
+		ServInst!.SignalDomEvt(new AddBodyNode(node));
+		Disposable.Create(() =>
+		{
+			ServInst.SignalDomEvt(new RemoveBodyNode(node.Id));
+		}).D(addD);
+		return addD;
+	}
 }
 
 

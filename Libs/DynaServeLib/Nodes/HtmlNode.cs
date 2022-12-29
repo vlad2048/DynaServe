@@ -12,57 +12,51 @@ namespace DynaServeLib.Nodes;
 
 public class HtmlNode : IRoDispBase
 {
-	internal Disp D { get; } = new();
+	public Disp D { get; } = new();
 	public bool IsDisposed { get; private set; }
-	public void Dispose() { if (IsDisposed) return; IsDisposed = true; D.Dispose(); }
+
+	public void Dispose()
+	{
+		if (IsDisposed) return;
+		IsDisposed = true;
+		whenDisposed.OnNext(Unit.Default);
+		whenDisposed.OnCompleted();
+		D.Dispose();
+	}
+
 	private readonly ISubject<Unit> whenDisposed = new AsyncSubject<Unit>();
 	public IObservable<Unit> WhenDisposed => whenDisposed.AsObservable();
 
 	private static int idCnt;
 
 	internal readonly List<IRefresher> refreshers = new();
+	internal IReadOnlyList<IRefresher> Refreshers => refreshers.AsReadOnly();
+	internal void AddRefresher(IRefresher refresher) => refreshers.Add(refresher);
 
+	public bool IsTxt { get; }
 	public string TagName { get; }
 	public string Id { get; set; } = $"id-{idCnt++}";
 	public string? Cls { get; set; }
 	public string? Txt { get; set; }
 	public Dictionary<string, string> Attrs { get; } = new();
-	public HtmlNode[] Children { get; private set; } = Array.Empty<HtmlNode>();
-	internal IReadOnlyList<IRefresher> Refreshers => refreshers.AsReadOnly();
+	public HtmlNode[] Children { get; internal set; } = Array.Empty<HtmlNode>();
 
-	public HtmlNode(string tagName)
+	public static implicit operator HtmlNode[](HtmlNode n) => new[] { n };
+
+	public HtmlNode(string tagName) : this(false, null)
 	{
 		TagName = tagName;
 		refreshers.Add(new NodeRefresher(Id, D));
 	}
 
-	internal void SetChildren(HtmlNode[] children)
+	public static HtmlNode MkTxt(string txt) => new(true, txt);
+
+	private HtmlNode(bool isTxt, string? txt)
 	{
-		if (Children.Any()) throw new ArgumentException();
-		Children = children;
+		IsTxt = isTxt;
+		Txt = txt;
+		TagName = "dummy";
 	}
-
-	internal void SetChildrenUpdater(IObservable<Unit> when, Func<IEnumerable<HtmlNode>> fun)
-	{
-		if (Children.Any()) throw new ArgumentException();
-		refreshers.Add(new ChildRefresher(Id, when, () => fun().ToArray()));
-	}
-
-	internal void AddEvtHook(string evtName, Action action)
-	{
-		Attrs[$"on{evtName}"] = $"sockEvt('{Id}', '{evtName}')";
-		refreshers.Add(new EvtRefresher(Id, evtName, action));
-	}
-
-	internal void AddEvtHookArg(string evtName, Action<string> action, string argExpr)
-	{
-		Attrs[$"on{evtName}"] = $"sockEvtArg('{Id}', '{evtName}', {argExpr})";
-		refreshers.Add(new EvtArgRefresher(Id, evtName, action, argExpr));
-	}
-
-	internal void UpdateAttrWhen(string attrName, IObservable<string?> valObs) =>
-		refreshers.Add(new AttrRefresher(Id, attrName, valObs));
-
 
 	internal IElement MakeElt(IHtmlDocument doc, IDomTweaker[] domTweakers)
 	{

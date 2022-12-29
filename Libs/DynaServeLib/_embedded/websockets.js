@@ -44,12 +44,13 @@ function init() {
 				cssLinkRefresh: '',
 				attrKey: '',
 				attrVal: '',
+				cls: '',
 				methodName: ''
 			}
 // ReSharper restore AssignedValueIsNeverUsed
 			data = JSON.parse(e.data);
 
-			console.log(`RECEIVED: ${data.type}`);
+			//console.log(`RECEIVED: ${data.type}`);
 
 
 			// ****************************
@@ -72,6 +73,12 @@ function init() {
 					break;
 				}
 
+				case 'DiffUpdate':
+				{
+
+					break;
+				}
+
 				case 'CssSync':
 				{
 					cssNormalizeAllWebLinks();
@@ -89,31 +96,20 @@ function init() {
 					break;
 				}
 
+				case 'RemoveChildFromBody':
+				{
+					var nodeId = data.nodeId;
+					var node = document.getElementById(nodeId);
+					if (!!node)
+						node.remove();
+					break;
+				}
+
 				case 'ReplaceChildren':
 				{
 					const elt = document.getElementById(data.nodeId);
 					if (!!elt)
 						elt.innerHTML = data.html;
-					break;
-				}
-
-				case 'AddScriptCss':
-				{
-					const head = document.getElementsByTagName('head')[0];
-					const lnk = document.createElement('link');
-					lnk.rel = 'stylesheet';
-					lnk.type = 'text/css';
-					lnk.href = data.scriptLink;
-					head.appendChild(lnk);
-					break;
-				}
-
-				case 'AddScriptJs':
-				{
-					const head = document.getElementsByTagName('head')[0];
-					const lnk = document.createElement('script');
-					lnk.source = data.scriptLink;
-					head.appendChild(lnk);
 					break;
 				}
 
@@ -141,12 +137,20 @@ function init() {
 					break;
 				}
 
+				case 'SetCls':
+				{
+					const elt = document.getElementById(data.nodeId);
+					if (!!elt)
+						elt.className = data.cls;
+					break;
+				}
+
 				case 'ReqCallMethodOnNode':
 				{
 					const elt = document.getElementById(data.nodeId);
-					console.log(`calling ${data.methodName} on ${data.nodeId}`);
+					//console.log(`calling ${data.methodName} on ${data.nodeId}`);
 					elt[data.methodName]();
-					console.log('after calling');
+					//console.log('after calling');
 					break;
 				}
 			}

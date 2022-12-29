@@ -1,11 +1,14 @@
-﻿namespace DynaServeLib.Serving.Syncing.Structs;
+﻿using DynaServeLib.DynaLogic.DiffLogic.Structs;
+
+namespace DynaServeLib.Serving.Syncing.Structs;
 
 enum ClientMsgType
 {
 	ReqCssSync,
 	HookCalled,
 	HookArgCalled,
-	ReqFullLog
+	ReqFullLog,
+	User
 }
 
 class ClientMsg
@@ -16,18 +19,21 @@ class ClientMsg
 	public string? EvtArg { get; init; }
 	public string? Html { get; init; }
 	public string[]? CssLinks { get; init; }
+	public string? UserType { get; init; }
+	public string? UserArg { get; init; }
 }
 
 public enum ServerMsgType
 {
 	FullUpdate,
+	DiffUpdate,
 	CssSync,
 	AddChildToBody,
+	RemoveChildFromBody,
 	ReplaceChildren,
-	AddScriptCss,
-	AddScriptJs,
 	RefreshCss,
 	SetAttr,
+	SetCls,
 	ReqCallMethodOnNode
 }
 
@@ -35,19 +41,26 @@ public class ServerMsg
 {
 	public ServerMsgType Type { get; private init; }
 	public string? Html { get; private init; }
+	public Diff[]? Diffs { get; private init; }
 	public string[]? CssSyncRemove { get; private init; }
 	public string[]? CssSyncAdd { get; private init; }
 	public string? NodeId { get; private init; }
-	public string? ScriptLink { get; private init; }
 	public string? CssLinkRefresh { get; private init; }
 	public string? AttrKey { get; private init; }
 	public string? AttrVal { get; private init; }
+	public string? Cls { get; private init; }
 	public string? MethodName { get; private init; }
 
 	public static ServerMsg MkFullUpdate(string html) => new()
 	{
 		Type = ServerMsgType.FullUpdate,
 		Html = html
+	};
+
+	public static ServerMsg MkDiffUpdate(Diff[] diffs) => new()
+	{
+		Type = ServerMsgType.DiffUpdate,
+		Diffs = diffs
 	};
 
 	public static ServerMsg MkCssSync(string[] remove, string[] add) => new()
@@ -63,23 +76,17 @@ public class ServerMsg
 		Html = html
 	};
 
+	public static ServerMsg MkRemoveChildFromBody(string nodeId) => new()
+	{
+		Type = ServerMsgType.RemoveChildFromBody,
+		NodeId = nodeId
+	};
+
 	public static ServerMsg MkReplaceChildren(string html, string nodeId) => new()
 	{
 		Type = ServerMsgType.ReplaceChildren,
 		Html = html,
 		NodeId = nodeId
-	};
-
-	public static ServerMsg MkAddScriptCss(string link) => new()
-	{
-		Type = ServerMsgType.AddScriptCss,
-		ScriptLink = link
-	};
-
-	public static ServerMsg MkAddScriptJs(string link) => new()
-	{
-		Type = ServerMsgType.AddScriptJs,
-		ScriptLink = link
 	};
 
 	public static ServerMsg MkRefreshCss(string cssLinkRefresh) => new()
@@ -94,6 +101,13 @@ public class ServerMsg
 		NodeId = nodeId,
 		AttrKey = attrKey,
 		AttrVal = attrVal
+	};
+
+	public static ServerMsg MkSetCls(string nodeId, string? cls) => new()
+	{
+		Type = ServerMsgType.SetCls,
+		NodeId = nodeId,
+		Cls = cls
 	};
 
 	public static ServerMsg MkReqCallMethodOnNode(string nodeId, string methodName) => new()

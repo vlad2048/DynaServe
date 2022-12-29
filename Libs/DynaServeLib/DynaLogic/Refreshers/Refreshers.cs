@@ -31,11 +31,27 @@ record ChildRefresher(string NodeId, IObservable<Unit> When, Func<HtmlNode[]> Fu
 	});
 }
 
+record DiffRefresher(string NodeId, IObservable<Unit> When, Func<HtmlNode[]> Fun) : IRefresher
+{
+	public IDisposable Activate(RefreshCtx ctx) => When.Subscribe(_ =>
+	{
+		ctx.SignalDomEvt(new DiffChildrenDomEvt(NodeId, Fun()));
+	});
+}
+
 record AttrRefresher(string NodeId, string AttrName, IObservable<string?> ValObs) : IRefresher
 {
 	public IDisposable Activate(RefreshCtx ctx) => ValObs.Subscribe(val =>
 	{
 		ctx.SendServerMsg(ServerMsg.MkSetAttr(NodeId, AttrName, val));
+	});
+}
+
+record ClsRefresher(string NodeId, IObservable<string?> ValObs) : IRefresher
+{
+	public IDisposable Activate(RefreshCtx ctx) => ValObs.Subscribe(val =>
+	{
+		ctx.SendServerMsg(ServerMsg.MkSetCls(NodeId, val));
 	});
 }
 
@@ -45,7 +61,19 @@ record EvtRefresher(string NodeId, string EvtName, Action Action) : IRefresher
 		.Where(e => e.Type == ClientMsgType.HookCalled && e.Id == NodeId && e.EvtName == EvtName)
 		.Subscribe(_ =>
 		{
-			Action();
+			try
+			{
+				Action();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("Exception in EvtRefresher");
+				Console.WriteLine($"  NodeId : {NodeId}");
+				Console.WriteLine($"  EvtName: {EvtName}");
+				Console.WriteLine($"  Ex.Msg : {ex.Message}");
+				Console.WriteLine("  Ex:");
+				Console.WriteLine($"{ex}");
+			}
 		});
 }
 

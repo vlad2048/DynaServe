@@ -43,9 +43,9 @@ class RefreshTracker : IDisposable
 		}
 	}
 
-	public void RemoveChildrenRefreshers(IElement node)
+	public void RemoveChildrenRefreshers(IElement node, bool includeRoot)
 	{
-		var ids = node.GetAllChildrenIds();
+		var ids = node.GetAllChildrenIds(includeRoot);
 		ids.ForEach(RemoveRefresher);
 	}
 
@@ -53,20 +53,27 @@ class RefreshTracker : IDisposable
 	{
 		if (ctx == null) throw new ArgumentException();
 
+		//L($"RemoveRefresher({id}) inMap:{refresherMap.ContainsKey(id)}");
+
 		if (refresherMap.TryGetValue(id, out var rd))
 		{
 			rd.Dispose();
 			refresherMap.Remove(id);
 		}
 	}
+
+	private static void L(string s) => Console.WriteLine(s);
 }
 
 
 file static class RefreshTrackerExt
 {
-	public static string[] GetAllChildrenIds(this IElement elt)
+	public static string[] GetAllChildrenIds(this IElement elt, bool includeRoot)
 	{
 		var list = new List<string>();
+
+		if (includeRoot)
+			list.Add(elt.Id);
 
 		void Recurse(IElement e)
 		{

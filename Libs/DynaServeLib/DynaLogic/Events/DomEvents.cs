@@ -1,13 +1,12 @@
-﻿using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using DynaServeLib.Nodes;
-using PowRxVar;
+﻿using DynaServeLib.Nodes;
 
 namespace DynaServeLib.DynaLogic.Events;
 
 interface IDomEvt {}
 record ReplaceChildrenDomEvt(string NodeId, HtmlNode[] Children) : IDomEvt;
-record SetAttrDomEvt(string NodeId, string AttrName, string? AttrVal) : IDomEvt;
+record DiffChildrenDomEvt(string NodeId, HtmlNode[] Children) : IDomEvt;
+record AddBodyNode(HtmlNode Node) : IDomEvt;
+record RemoveBodyNode(string NodeId) : IDomEvt;
 
 
 /*interface ITreeEvtObs

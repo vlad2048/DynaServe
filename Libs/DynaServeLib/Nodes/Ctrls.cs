@@ -1,5 +1,4 @@
-﻿using System.Reactive;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using DynaServeLib.Serving.Syncing.Structs;
 using PowRxVar;
 
@@ -10,13 +9,21 @@ public static class Ctrls
 	public static HtmlNode Div(string? cls = null) => new HtmlNode("div").Cls(cls);
 	public static HtmlNode Img(string src) => new HtmlNode("img").Attr("src", src);
 
-	public static HtmlNode Btn(string txt, Action action) => new HtmlNode("button").Txt(txt).Hook("click", action);
+	public static HtmlNode Btn(string txt, Action? action = null) => action switch
+	{
+		not null => new HtmlNode("button").Txt(txt).Hook("click", action),
+		null => new HtmlNode("button").Txt(txt)
+	};
+		
+		
 
 	public static HtmlNode TextBox(IRwVar<string> rxVar)
 	{
 		var isUiUpdate = false;
 
-		var node = new HtmlNode("input").Attr("type", "text")
+		var node = new HtmlNode("input")
+			.Attr("type", "text")
+			.Attr("value", rxVar.V)
 			.HookArg("input", v =>
 			{
 				isUiUpdate = true;
@@ -38,7 +45,9 @@ public static class Ctrls
 	{
 		var isUiUpdate = false;
 
-		var node = new HtmlNode("input").Attr("type", "checkbox")
+		var node = new HtmlNode("input")
+			.Attr("type", "checkbox")
+			.Attr("checked", rxVar.V ? "" : null)
 			.HookArg("change", valStr =>
 			{
 				var val = bool.Parse(valStr);
@@ -51,7 +60,7 @@ public static class Ctrls
 			.Where(_ => !isUiUpdate)
 			.Subscribe(val =>
 			{
-				var valStr = val ? "true" : null;
+				var valStr = val ? "" : null;
 				St.SendToClientHack(ServerMsg.MkSetAttr(node.Id, "checked", valStr));
 			}).D(node.D);
 
@@ -62,7 +71,11 @@ public static class Ctrls
 	{
 		var isUiUpdate = false;
 
-		var node = new HtmlNode("input").Attr("type", "range").Attr("min", $"{min}").Attr("max", $"{max}")
+		var node = new HtmlNode("input")
+			.Attr("type", "range")
+			.Attr("min", $"{min}")
+			.Attr("max", $"{max}")
+			.Attr("value", $"{rxVar.V}")
 			.HookArg("change", valStr =>
 			{
 				var val = int.Parse(valStr);

@@ -49,6 +49,7 @@ public class VideoForwarderReplier : IReplier, IDisposable
 	public string RegisterVid(string link, Headers? headers) => Name2Link(linkMapper.RegisterVid(new VidLinkFw(link, headers)));
 	public string RegisterFile(string file) => Name2Link(linkMapper.RegisterFile(file));
 	public IObservable<IVidFwEvt> WhenEvt => whenEvt.AsObservable();
+	public IObservable<string> WhenEvtMsg => WhenEvt.Select(e => $"{e}");
 
 
 	public VideoForwarderReplier(int port, Action<VideoForwarderOpt>? optFun = null)

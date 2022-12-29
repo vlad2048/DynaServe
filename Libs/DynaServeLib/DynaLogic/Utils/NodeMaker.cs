@@ -25,8 +25,10 @@ static class NodeMaker
 	{
 		var refreshers = new List<IRefresher>();
 
-		IElement Recurse(HtmlNode n)
+		INode Recurse(HtmlNode n)
 		{
+			if (n.IsTxt)
+				return doc.CreateTextNode(n.Txt!);
 			var elt = n.MakeElt(doc, domTweakers);
 			refreshers.AddRange(n.Refreshers);
 			foreach (var child in n.Children)
@@ -40,6 +42,6 @@ static class NodeMaker
 
 		var nodeElt = Recurse(node);
 
-		return (nodeElt, refreshers.ToArray());
+		return ((IElement)nodeElt, refreshers.ToArray());
 	}
 }

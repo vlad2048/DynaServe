@@ -22,6 +22,7 @@ class Syncer : IDisposable
 	public IObservable<ServerMsg> WhenServerMsg => whenServerMsg.AsObservable();
 
 	public void SendToClient(ServerMsg msg) => whenServerMsg.OnNext(msg);
+	private static void L(string s) => Console.WriteLine(s);
 
 	public Syncer(Server server, Dom dom)
 	{

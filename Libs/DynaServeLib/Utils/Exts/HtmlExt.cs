@@ -5,7 +5,7 @@ using AngleSharp.Html.Parser;
 
 namespace DynaServeLib.Utils.Exts;
 
-static class HtmlExt
+public static class HtmlExt
 {
 	public static IHtmlDocument Parse(this string html) => new HtmlParser().ParseDocument(html);
 
