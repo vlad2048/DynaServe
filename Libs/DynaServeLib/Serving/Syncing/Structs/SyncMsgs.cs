@@ -25,7 +25,7 @@ public enum ServerMsgType
 {
 	FullUpdate,
 
-	AttrChangesDomUpdate,
+	PropChangesDomUpdate,
 	ReplaceChildrenDomUpdate,
 
 	CssSync,
@@ -37,13 +37,7 @@ public enum ServerMsgType
 	ReqCallMethodOnNode
 }
 
-public record AttrChange(
-	string NodeId,
-	string Name,
-	string? Val
-);
-
-/*public enum PropChangeType
+public enum PropChangeType
 {
 	Attr,
 	Text
@@ -52,15 +46,37 @@ public record AttrChange(
 public class PropChange
 {
 	public PropChangeType Type { get; }
-	public string
-}*/
+	public string NodeId { get; }
+	public string? AttrName { get; private init; }
+	public string? AttrVal { get; private init; }
+	public string? TextVal { get; private init; }
+
+	private PropChange(PropChangeType type, string nodeId)
+	{
+		Type = type;
+		NodeId = nodeId;
+	}
+
+	public static PropChange MkAttrChange(string nodeId, string attrName, string? attrVal) =>
+		new(PropChangeType.Attr, nodeId)
+		{
+			AttrName = attrName,
+			AttrVal = attrVal,
+		};
+
+	public static PropChange MkTextChange(string nodeId, string? textVal) =>
+		new(PropChangeType.Text, nodeId)
+		{
+			TextVal = textVal,
+		};
+}
 
 
 public class ServerMsg
 {
 	public ServerMsgType Type { get; private init; }
 	public string? Html { get; private init; }
-	public AttrChange[]? AttrChanges { get; private init; }
+	public PropChange[]? PropChanges { get; private init; }
 	public string[]? CssSyncRemove { get; private init; }
 	public string[]? CssSyncAdd { get; private init; }
 	public string? NodeId { get; private init; }
@@ -76,10 +92,10 @@ public class ServerMsg
 		Html = html,
 	};
 
-	public static ServerMsg MkAttrChangesDomUpdate(AttrChange[] attrChanges) => new()
+	public static ServerMsg MkPropChangesDomUpdate(PropChange[] propChanges) => new()
 	{
-		Type = ServerMsgType.AttrChangesDomUpdate,
-		AttrChanges = attrChanges,
+		Type = ServerMsgType.PropChangesDomUpdate,
+		PropChanges = propChanges,
 	};
 
 	public static ServerMsg MkReplaceChildrenDomUpdate(string html, string nodeId) => new()

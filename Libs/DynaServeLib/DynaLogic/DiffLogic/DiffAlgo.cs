@@ -41,9 +41,9 @@ static class DiffAlgo
 
 
 
-	public static AttrChange[] ComputeAttrChanges_In_StructurallyIdentical_DomNodesTree(IElement[] rootsPrev, IElement[] rootsNext)
+	public static PropChange[] ComputePropChanges_In_StructurallyIdentical_DomNodesTree(IElement[] rootsPrev, IElement[] rootsNext)
 	{
-		var list = new List<AttrChange>();
+		var list = new List<PropChange>();
 
 		void Recurse(IElement nodePrev, IElement nodeNext)
 		{
@@ -51,6 +51,9 @@ static class DiffAlgo
 			var nodeId = nodeNext.Id!;
 
 
+			// ********
+			// * Attr *
+			// ********
 			var attrsPrev = nodePrev.Attributes.SelectToArray(e => e.Name);
 			var attrsNext = nodeNext.Attributes.SelectToArray(e => e.Name);
 
@@ -58,9 +61,16 @@ static class DiffAlgo
 			var attrsRemoved = attrsPrev.WhereNotToArray(attrsNext.Contains);
 			var attrsChanged = attrsNext.Where(attrsPrev.Contains).WhereToArray(e => nodeNext.GetAttribute(e) != nodePrev.GetAttribute(e));
 
-			list.AddRange(attrsAdded.Select(e => new AttrChange(nodeId, e, nodeNext.GetAttribute(e))));
-			list.AddRange(attrsRemoved.Select(e => new AttrChange(nodeId, e, null)));
-			list.AddRange(attrsChanged.Select(e => new AttrChange(nodeId, e, nodeNext.GetAttribute(e))));
+			list.AddRange(attrsAdded.Select(e => PropChange.MkAttrChange(nodeId, e, nodeNext.GetAttribute(e))));
+			list.AddRange(attrsRemoved.Select(e => PropChange.MkAttrChange(nodeId, e, null)));
+			list.AddRange(attrsChanged.Select(e => PropChange.MkAttrChange(nodeId, e, nodeNext.GetAttribute(e))));
+
+
+			// ********
+			// * Text *
+			// ********
+			if (nodeNext.TextContent != nodePrev.TextContent)
+				list.Add(PropChange.MkTextChange(nodeId, nodeNext.TextContent));
 
 
 			//if (nodeNext.ClassName != nodePrev.ClassName)
@@ -78,16 +88,26 @@ static class DiffAlgo
 		return list.ToArray();
 	}
 
-	public static void ApplyAttrChanges_In_DomNodeTrees(IElement[] rootsNext, AttrChange[] attrChanges)
+	public static void ApplyPropChanges_In_DomNodeTrees(IElement[] rootsNext, PropChange[] propChanges)
 	{
 		var nodeMap = rootsNext.GetNodeMap();
-		foreach (var chg in attrChanges)
+		foreach (var chg in propChanges)
 		{
 			var node = nodeMap[chg.NodeId];
-			if (chg.Val != null)
-				node.SetAttribute(chg.Name, chg.Val);
-			else
-				node.RemoveAttribute(chg.Name);
+			switch (chg.Type)
+			{
+				case PropChangeType.Attr:
+					if (chg.AttrVal != null)
+						node.SetAttribute(chg.AttrName!, chg.AttrVal);
+					else
+						node.RemoveAttribute(chg.AttrName!);
+					break;
+				case PropChangeType.Text:
+					node.TextContent = chg.TextVal ?? "";
+					break;
+				default:
+					throw new ArgumentException();
+			}
 		}
 	}
 }

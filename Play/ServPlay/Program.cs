@@ -43,13 +43,13 @@ static class Program
 
 		if (identical)
 		{
-			var chgs = DiffAlgo.ComputeAttrChanges_In_StructurallyIdentical_DomNodesTree(childrenPrev, childrenNext);
+			var chgs = DiffAlgo.ComputePropChanges_In_StructurallyIdentical_DomNodesTree(childrenPrev, childrenNext);
 			L($"{chgs.Length} changes:");
 			foreach (var chg in chgs)
 				L($"  {chg}");
 			L("");
 
-			DiffAlgo.ApplyAttrChanges_In_DomNodeTrees(childrenPrev, chgs);
+			DiffAlgo.ApplyPropChanges_In_DomNodeTrees(childrenPrev, chgs);
 			L(childrenPrev.Fmt());
 		}
 	}

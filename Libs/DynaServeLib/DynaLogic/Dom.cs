@@ -1,6 +1,4 @@
-﻿using System.Reactive;
-using System.Reactive.Linq;
-using AngleSharp.Dom;
+﻿using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using DynaServeLib.DynaLogic.DiffLogic;
@@ -16,7 +14,6 @@ using DynaServeLib.Serving.Syncing.Structs;
 using DynaServeLib.Utils.Exts;
 using PowBasics.CollectionsExt;
 using PowRxVar;
-using PowTrees.Algorithms;
 
 namespace DynaServeLib.DynaLogic;
 
@@ -94,18 +91,18 @@ class Dom : IDisposable
 					{
 						// (optimization: keep the same NodeIds as before to avoid sending updates for those)
 						refreshersNext = DiffAlgo.KeepPrevIds_In_StructurallyIdentical_DomNodesTree_And_GetUpdatedRefreshers(childrenPrev, childrenNext, refreshersNext);
-						var refreshersNextInitialAttrChanges = refreshersNext.SelectMany(f => f.GetInitialAttrChanges()).ToArray();
-						var propChanges = DiffAlgo.ComputeAttrChanges_In_StructurallyIdentical_DomNodesTree(childrenPrev, childrenNext);
-						propChanges = propChanges.Concat(refreshersNextInitialAttrChanges).ToArray();
+						var refreshersNextInitialPropChanges = refreshersNext.SelectMany(f => f.GetInitialPropChanges()).ToArray();
+						var propChanges = DiffAlgo.ComputePropChanges_In_StructurallyIdentical_DomNodesTree(childrenPrev, childrenNext);
+						propChanges = propChanges.Concat(refreshersNextInitialPropChanges).ToArray();
 
 						// Dom
-						DiffAlgo.ApplyAttrChanges_In_DomNodeTrees(childrenPrev, propChanges);
+						DiffAlgo.ApplyPropChanges_In_DomNodeTrees(childrenPrev, propChanges);
 
 						// Refreshers
 						refreshTracker.ReplaceRefreshers(refreshersPrevKeys, refreshersNext);
 
 						// Client
-						if (propChanges.Any()) SendServerMsg(ServerMsg.MkAttrChangesDomUpdate(propChanges));
+						if (propChanges.Any()) SendServerMsg(ServerMsg.MkPropChangesDomUpdate(propChanges));
 					}
 					else
 					{
@@ -115,8 +112,8 @@ class Dom : IDisposable
 
 						// Refreshers
 						refreshTracker.ReplaceRefreshers(refreshersPrevKeys, refreshersNext);
-						var refreshersNextInitialAttrChanges = refreshersNext.SelectMany(f => f.GetInitialAttrChanges()).ToArray();
-						DiffAlgo.ApplyAttrChanges_In_DomNodeTrees(childrenNext, refreshersNextInitialAttrChanges);
+						var refreshersNextInitialPropChanges = refreshersNext.SelectMany(f => f.GetInitialPropChanges()).ToArray();
+						DiffAlgo.ApplyPropChanges_In_DomNodeTrees(childrenNext, refreshersNextInitialPropChanges);
 
 						// Client
 						SendServerMsg(ServerMsg.MkReplaceChildrenDomUpdate(childrenNext.Fmt(), e.NodeId));
@@ -150,8 +147,8 @@ class Dom : IDisposable
 					var node = e.Node;
 
 					var (domNode, refreshers) = Doc.CreateNode(node, domTweakers);
-					var refreshersInitialAttrChanges = refreshers.SelectMany(f => f.GetInitialAttrChanges()).ToArray();
-					DiffAlgo.ApplyAttrChanges_In_DomNodeTrees(new [] { domNode }, refreshersInitialAttrChanges);
+					var refreshersInitialPropChanges = refreshers.SelectMany(f => f.GetInitialPropChanges()).ToArray();
+					DiffAlgo.ApplyPropChanges_In_DomNodeTrees(new [] { domNode }, refreshersInitialPropChanges);
 					var body = Doc.FindDescendant<IHtmlBodyElement>()!;
 
 					body.AppendChild(domNode);
@@ -190,8 +187,8 @@ class Dom : IDisposable
 	{
 		var body = Doc.FindDescendant<IHtmlBodyElement>()!;
 		var (node, refreshers) = Doc.CreateNode(htmlNode, domTweakers);
-		var refreshersInitialAttrChanges = refreshers.SelectMany(f => f.GetInitialAttrChanges()).ToArray();
-		DiffAlgo.ApplyAttrChanges_In_DomNodeTrees(new [] { node }, refreshersInitialAttrChanges);
+		var refreshersInitialPropChanges = refreshers.SelectMany(f => f.GetInitialPropChanges()).ToArray();
+		DiffAlgo.ApplyPropChanges_In_DomNodeTrees(new [] { node }, refreshersInitialPropChanges);
 		body.AppendChild(node);
 		refreshTracker.AddRefreshers(refreshers);
 	}

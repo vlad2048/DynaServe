@@ -37,7 +37,7 @@ function init() {
 			let data = {
 				type: '',
 				html: '',
-				attrChanges: [],
+				propChanges: [],
 				cssSyncRemove: [],
 				cssSyncAdd: [],
 				nodeId: '',
@@ -76,17 +76,26 @@ function init() {
 
 
 
-				case 'AttrChangesDomUpdate':
+				case 'PropChangesDomUpdate':
 				{
-					for (let chg of data.attrChanges) {
+					for (let chg of data.propChanges) {
 						const node = document.getElementById(chg.nodeId);
-						if (chg.name === 'class') {
-							node.className = chg.val;
-						} else {
-							if (chg.val === undefined || chg.val === null)
-								node.removeAttribute(chg.name);
-							else
-								node.setAttribute(chg.name, chg.val);
+						switch (chg.type) {
+							case 'Attr':
+								if (chg.attrName === 'class') {
+									node.className = chg.attrVal;
+								} else {
+									if (chg.attrVal === undefined || chg.attrVal === null)
+										node.removeAttribute(chg.attrName);
+									else
+										node.setAttribute(chg.attrName, chg.attrVal);
+								}
+								break;
+							case 'Text':
+								node.innerText = chg.textVal;
+								break;
+							default:
+								throw new Error(`Invalid PropChangeType: ${chg.type}`)
 						}
 					}
 					break;
