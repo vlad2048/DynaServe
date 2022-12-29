@@ -1,6 +1,4 @@
-﻿using DynaServeLib.DynaLogic.DiffLogic.Structs;
-
-namespace DynaServeLib.Serving.Syncing.Structs;
+﻿namespace DynaServeLib.Serving.Syncing.Structs;
 
 enum ClientMsgType
 {
@@ -26,22 +24,43 @@ class ClientMsg
 public enum ServerMsgType
 {
 	FullUpdate,
-	DiffUpdate,
+
+	AttrChangesDomUpdate,
+	ReplaceChildrenDomUpdate,
+
 	CssSync,
 	AddChildToBody,
 	RemoveChildFromBody,
-	ReplaceChildren,
 	RefreshCss,
 	SetAttr,
 	SetCls,
 	ReqCallMethodOnNode
 }
 
+public record AttrChange(
+	string NodeId,
+	string Name,
+	string? Val
+);
+
+/*public enum PropChangeType
+{
+	Attr,
+	Text
+}
+
+public class PropChange
+{
+	public PropChangeType Type { get; }
+	public string
+}*/
+
+
 public class ServerMsg
 {
 	public ServerMsgType Type { get; private init; }
 	public string? Html { get; private init; }
-	public Diff[]? Diffs { get; private init; }
+	public AttrChange[]? AttrChanges { get; private init; }
 	public string[]? CssSyncRemove { get; private init; }
 	public string[]? CssSyncAdd { get; private init; }
 	public string? NodeId { get; private init; }
@@ -54,39 +73,40 @@ public class ServerMsg
 	public static ServerMsg MkFullUpdate(string html) => new()
 	{
 		Type = ServerMsgType.FullUpdate,
-		Html = html
+		Html = html,
 	};
 
-	public static ServerMsg MkDiffUpdate(Diff[] diffs) => new()
+	public static ServerMsg MkAttrChangesDomUpdate(AttrChange[] attrChanges) => new()
 	{
-		Type = ServerMsgType.DiffUpdate,
-		Diffs = diffs
+		Type = ServerMsgType.AttrChangesDomUpdate,
+		AttrChanges = attrChanges,
 	};
+
+	public static ServerMsg MkReplaceChildrenDomUpdate(string html, string nodeId) => new()
+	{
+		Type = ServerMsgType.ReplaceChildrenDomUpdate,
+		Html = html,
+		NodeId = nodeId,
+	};
+
 
 	public static ServerMsg MkCssSync(string[] remove, string[] add) => new()
 	{
 		Type = ServerMsgType.CssSync,
 		CssSyncRemove = remove,
-		CssSyncAdd = add
+		CssSyncAdd = add,
 	};
 
 	public static ServerMsg MkAddChildToBody(string html) => new()
 	{
 		Type = ServerMsgType.AddChildToBody,
-		Html = html
+		Html = html,
 	};
 
 	public static ServerMsg MkRemoveChildFromBody(string nodeId) => new()
 	{
 		Type = ServerMsgType.RemoveChildFromBody,
-		NodeId = nodeId
-	};
-
-	public static ServerMsg MkReplaceChildren(string html, string nodeId) => new()
-	{
-		Type = ServerMsgType.ReplaceChildren,
-		Html = html,
-		NodeId = nodeId
+		NodeId = nodeId,
 	};
 
 	public static ServerMsg MkRefreshCss(string cssLinkRefresh) => new()
@@ -100,20 +120,20 @@ public class ServerMsg
 		Type = ServerMsgType.SetAttr,
 		NodeId = nodeId,
 		AttrKey = attrKey,
-		AttrVal = attrVal
+		AttrVal = attrVal,
 	};
 
 	public static ServerMsg MkSetCls(string nodeId, string? cls) => new()
 	{
 		Type = ServerMsgType.SetCls,
 		NodeId = nodeId,
-		Cls = cls
+		Cls = cls,
 	};
 
 	public static ServerMsg MkReqCallMethodOnNode(string nodeId, string methodName) => new()
 	{
 		Type = ServerMsgType.ReqCallMethodOnNode,
 		NodeId = nodeId,
-		MethodName = methodName
+		MethodName = methodName,
 	};
 }

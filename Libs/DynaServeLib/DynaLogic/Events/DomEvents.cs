@@ -3,8 +3,7 @@
 namespace DynaServeLib.DynaLogic.Events;
 
 interface IDomEvt {}
-record ReplaceChildrenDomEvt(string NodeId, HtmlNode[] Children) : IDomEvt;
-record DiffChildrenDomEvt(string NodeId, HtmlNode[] Children) : IDomEvt;
+record UpdateChildrenDomEvt(string NodeId, HtmlNode[] Children) : IDomEvt;
 record AddBodyNode(HtmlNode Node) : IDomEvt;
 record RemoveBodyNode(string NodeId) : IDomEvt;
 

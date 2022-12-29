@@ -84,7 +84,48 @@ class Dom : IDisposable
 		{
 			switch (evt)
 			{
-				case ReplaceChildrenDomEvt e:
+				case UpdateChildrenDomEvt e:
+				{
+					var node = this.GetById(e.NodeId);
+					var (childrenPrev, refreshersPrevKeys) = node.GetChildrenAndTheirRefresherKeys();
+					var (childrenNext, refreshersNext) = Doc.CreateNodes(e.Children, domTweakers);
+
+					if (DiffAlgo.Are_DomNodeTrees_StructurallyIdentical(childrenPrev, childrenNext))
+					{
+						// (optimization: keep the same NodeIds as before to avoid sending updates for those)
+						refreshersNext = DiffAlgo.KeepPrevIds_In_StructurallyIdentical_DomNodesTree_And_GetUpdatedRefreshers(childrenPrev, childrenNext, refreshersNext);
+						var refreshersNextInitialAttrChanges = refreshersNext.SelectMany(f => f.GetInitialAttrChanges()).ToArray();
+						var propChanges = DiffAlgo.ComputeAttrChanges_In_StructurallyIdentical_DomNodesTree(childrenPrev, childrenNext);
+						propChanges = propChanges.Concat(refreshersNextInitialAttrChanges).ToArray();
+
+						// Dom
+						DiffAlgo.ApplyAttrChanges_In_DomNodeTrees(childrenPrev, propChanges);
+
+						// Refreshers
+						refreshTracker.ReplaceRefreshers(refreshersPrevKeys, refreshersNext);
+
+						// Client
+						if (propChanges.Any()) SendServerMsg(ServerMsg.MkAttrChangesDomUpdate(propChanges));
+					}
+					else
+					{
+						// Dom
+						node.RemoveAllChildren();
+						node.AppendChildren(childrenNext);
+
+						// Refreshers
+						refreshTracker.ReplaceRefreshers(refreshersPrevKeys, refreshersNext);
+						var refreshersNextInitialAttrChanges = refreshersNext.SelectMany(f => f.GetInitialAttrChanges()).ToArray();
+						DiffAlgo.ApplyAttrChanges_In_DomNodeTrees(childrenNext, refreshersNextInitialAttrChanges);
+
+						// Client
+						SendServerMsg(ServerMsg.MkReplaceChildrenDomUpdate(childrenNext.Fmt(), e.NodeId));
+					}
+
+					break;
+				}
+
+				/*case ReplaceChildrenDomEvt e:
 				{
 					var node = this.GetById(e.NodeId);
 					
@@ -102,25 +143,15 @@ class Dom : IDisposable
 					// Notify the frontend
 					SendServerMsg(ServerMsg.MkReplaceChildren(childrenNext.Fmt(), e.NodeId));
 					break;
-				}
-
-				case DiffChildrenDomEvt e:
-				{
-					var node = this.GetById(e.NodeId);
-					var childrenPrev = node.Children.ToArray();
-					var (childrenNext, refreshersNext) = Doc.CreateNodes(e.Children, domTweakers);
-
-					var diffs = DiffAlgo.ComputeDiffs(childrenPrev, childrenNext);
-
-					SendServerMsg(ServerMsg.MkDiffUpdate(diffs));
-					throw new NotImplementedException();
-				}
+				}*/
 
 				case AddBodyNode e:
 				{
 					var node = e.Node;
 
 					var (domNode, refreshers) = Doc.CreateNode(node, domTweakers);
+					var refreshersInitialAttrChanges = refreshers.SelectMany(f => f.GetInitialAttrChanges()).ToArray();
+					DiffAlgo.ApplyAttrChanges_In_DomNodeTrees(new [] { domNode }, refreshersInitialAttrChanges);
 					var body = Doc.FindDescendant<IHtmlBodyElement>()!;
 
 					body.AppendChild(domNode);
@@ -159,6 +190,8 @@ class Dom : IDisposable
 	{
 		var body = Doc.FindDescendant<IHtmlBodyElement>()!;
 		var (node, refreshers) = Doc.CreateNode(htmlNode, domTweakers);
+		var refreshersInitialAttrChanges = refreshers.SelectMany(f => f.GetInitialAttrChanges()).ToArray();
+		DiffAlgo.ApplyAttrChanges_In_DomNodeTrees(new [] { node }, refreshersInitialAttrChanges);
 		body.AppendChild(node);
 		refreshTracker.AddRefreshers(refreshers);
 	}

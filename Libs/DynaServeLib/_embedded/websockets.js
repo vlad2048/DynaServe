@@ -37,10 +37,10 @@ function init() {
 			let data = {
 				type: '',
 				html: '',
+				attrChanges: [],
 				cssSyncRemove: [],
 				cssSyncAdd: [],
 				nodeId: '',
-				scriptLink: '',
 				cssLinkRefresh: '',
 				attrKey: '',
 				attrVal: '',
@@ -73,11 +73,35 @@ function init() {
 					break;
 				}
 
-				case 'DiffUpdate':
-				{
 
+
+
+				case 'AttrChangesDomUpdate':
+				{
+					for (let chg of data.attrChanges) {
+						const node = document.getElementById(chg.nodeId);
+						if (chg.name === 'class') {
+							node.className = chg.val;
+						} else {
+							if (chg.val === undefined || chg.val === null)
+								node.removeAttribute(chg.name);
+							else
+								node.setAttribute(chg.name, chg.val);
+						}
+					}
 					break;
 				}
+
+				
+				case 'ReplaceChildrenDomUpdate':
+				{
+					const elt = document.getElementById(data.nodeId);
+					if (!!elt)
+						elt.innerHTML = data.html;
+					break;
+				}
+
+
 
 				case 'CssSync':
 				{
@@ -105,27 +129,12 @@ function init() {
 					break;
 				}
 
-				case 'ReplaceChildren':
-				{
-					const elt = document.getElementById(data.nodeId);
-					if (!!elt)
-						elt.innerHTML = data.html;
-					break;
-				}
-
 				case 'RefreshCss':
 				{
 					const cssLinkRefresh = data.cssLinkRefresh;
 					cssGetWebLinkNodes()
 						.filter(e => cssCleanLink(e.href) === cssCleanLink(cssLinkRefresh))
-						.forEach(e => {
-							/*console.log(' ');
-							console.log('Refresh');
-							console.log(`  '${e.href}'`);
-							console.log('with');
-							console.log(`  '${cssLinkRefresh}'`);*/
-							e.href = cssLinkRefresh;
-						});
+						.forEach(e => e.href = cssLinkRefresh);
 					break;
 				}
 
@@ -153,6 +162,9 @@ function init() {
 					//console.log('after calling');
 					break;
 				}
+
+				default:
+					throw new Error(`Invalid ServerMsgType: ${data.type}`);
 			}
 		}
 	}

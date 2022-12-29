@@ -1,6 +1,4 @@
-﻿using AngleSharp.Dom;
-using AngleSharp.Html.Dom;
-using DynaServeLib;
+﻿using DynaServeLib;
 using DynaServeLib.DynaLogic.DiffLogic;
 using DynaServeLib.Nodes;
 using DynaServeLib.Utils.Exts;
@@ -15,19 +13,20 @@ static class Program
 	{
 		var htmlPrev = """
 			<body id="root">
-				<span class="id_0"></span>
-				<span class="id_2"></span>
-				<span class="id_3">
-					<div></div>
+				<span id="sp0" class="id_0"></span>
+				<section id="sec0" class="id_2"></section>
+				<span id="sp1" class="id_3">
+					<div id="div0" class="id_30"></div>
 				</span>
 			</body>
 			""";
+
 		var htmlNext = """
 			<body id="root">
-				<span class="id_0"></span>
-				<section class="id_2"></section>
-				<span class="id_3">
-					<div id="ffk"></div>
+				<span id="sp0" class="id_0"></span>
+				<section id="sec0" class="id_2"></section>
+				<span id="sp1" class="id_3">
+					<div id="div0" class="id_37"></div>
 				</span>
 			</body>
 			""";
@@ -38,17 +37,21 @@ static class Program
 		var childrenPrev = domPrev.Body!.Children.ToArray();
 		var childrenNext = domNext.Body!.Children.ToArray();
 
-		var diffs = DiffAlgo.ComputeDiffs(childrenPrev, childrenNext);
-		foreach (var diff in diffs)
-			Console.WriteLine($"{diff}");
+		var identical = DiffAlgo.Are_DomNodeTrees_StructurallyIdentical(childrenPrev, childrenNext);
+		L($"Identical: {identical}");
+		L("");
 
-		Console.WriteLine();
+		if (identical)
+		{
+			var chgs = DiffAlgo.ComputeAttrChanges_In_StructurallyIdentical_DomNodesTree(childrenPrev, childrenNext);
+			L($"{chgs.Length} changes:");
+			foreach (var chg in chgs)
+				L($"  {chg}");
+			L("");
 
-		var domCheck = htmlPrev.Parse();
-		DiffAlgo.ApplyDiffsToDom(diffs, "root", domCheck);
-		var htmlCheck = domCheck.Body!.Fmt();
-
-		Console.WriteLine(htmlCheck);
+			DiffAlgo.ApplyAttrChanges_In_DomNodeTrees(childrenPrev, chgs);
+			L(childrenPrev.Fmt());
+		}
 	}
 
 
