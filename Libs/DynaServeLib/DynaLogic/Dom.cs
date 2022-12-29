@@ -109,7 +109,9 @@ class Dom : IDisposable
 					var node = this.GetById(e.NodeId);
 					var childrenPrev = node.Children.ToArray();
 					var (childrenNext, refreshersNext) = Doc.CreateNodes(e.Children, domTweakers);
+
 					var diffs = DiffAlgo.ComputeDiffs(childrenPrev, childrenNext);
+
 					SendServerMsg(ServerMsg.MkDiffUpdate(diffs));
 					throw new NotImplementedException();
 				}
