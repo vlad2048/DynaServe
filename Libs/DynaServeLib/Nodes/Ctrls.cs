@@ -9,12 +9,14 @@ public static class Ctrls
 	public static HtmlNode Div(string? cls = null) => new HtmlNode("div").Cls(cls);
 	public static HtmlNode Img(string src) => new HtmlNode("img").Attr("src", src);
 
-	public static HtmlNode Btn(string txt, Action? action = null) => action switch
-	{
-		not null => new HtmlNode("button").Txt(txt).Hook("click", action),
-		null => new HtmlNode("button").Txt(txt)
-	};
-		
+	public static HtmlNode Btn(string txt, Action action) =>
+		Btn(txt, async () => action());
+
+	public static HtmlNode Btn(string txt, Func<Task> action) =>
+		new HtmlNode("button").Txt(txt).Hook("click", action);
+
+	public static HtmlNode Btn(string txt) => new HtmlNode("button").Txt(txt);
+
 		
 
 	public static HtmlNode TextBox(IRwVar<string> rxVar)

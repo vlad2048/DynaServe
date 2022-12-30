@@ -57,7 +57,7 @@ record ClsRefresher(string NodeId, IObservable<string?> ValObs) : IRefresher
 	public IRefresher CloneWithId(string nodeId) => this with { NodeId = nodeId };
 }
 
-record EvtRefresher(string NodeId, string EvtName, Action Action, bool StopPropagation) : IRefresher
+record EvtRefresher(string NodeId, string EvtName, Func<Task> Action, bool StopPropagation) : IRefresher
 {
 	public PropChange[] GetInitialPropChanges()
 	{
@@ -74,11 +74,11 @@ record EvtRefresher(string NodeId, string EvtName, Action Action, bool StopPropa
 
 	public IDisposable Activate(RefreshCtx ctx) => ctx.WhenClientMsg
 		.Where(e => e.Type == ClientMsgType.HookCalled && e.Id == NodeId && e.EvtName == EvtName)
-		.Subscribe(_ =>
+		.Subscribe(async _ =>
 		{
 			try
 			{
-				Action();
+				await Action();
 			}
 			catch (Exception ex)
 			{
@@ -94,7 +94,7 @@ record EvtRefresher(string NodeId, string EvtName, Action Action, bool StopPropa
 	public IRefresher CloneWithId(string nodeId) => this with { NodeId = nodeId };
 }
 
-record EvtArgRefresher(string NodeId, string EvtName, Action<string> Action, string ArgExpr, bool StopPropagation) : IRefresher
+record EvtArgRefresher(string NodeId, string EvtName, Func<string, Task> Action, string ArgExpr, bool StopPropagation) : IRefresher
 {
 	public PropChange[] GetInitialPropChanges()
 	{
@@ -111,9 +111,9 @@ record EvtArgRefresher(string NodeId, string EvtName, Action<string> Action, str
 
 	public IDisposable Activate(RefreshCtx ctx) => ctx.WhenClientMsg
 		.Where(e => e.Type == ClientMsgType.HookArgCalled && e.Id == NodeId && e.EvtName == EvtName)
-		.Subscribe(e =>
+		.Subscribe(async e =>
 		{
-			Action(e.EvtArg!);
+			await Action(e.EvtArg!);
 		});
 	public IRefresher CloneWithId(string nodeId) => this with { NodeId = nodeId };
 }

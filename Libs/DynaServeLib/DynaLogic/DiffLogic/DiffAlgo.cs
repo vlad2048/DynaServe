@@ -69,8 +69,8 @@ static class DiffAlgo
 			// ********
 			// * Text *
 			// ********
-			if (nodeNext.TextContent != nodePrev.TextContent)
-				list.Add(PropChange.MkTextChange(nodeId, nodeNext.TextContent));
+			if (nodeNext.GetOnlyThisNodeText() != nodePrev.GetOnlyThisNodeText())
+				list.Add(PropChange.MkTextChange(nodeId, nodeNext.GetOnlyThisNodeText()));
 
 
 			//if (nodeNext.ClassName != nodePrev.ClassName)
@@ -110,4 +110,11 @@ static class DiffAlgo
 			}
 		}
 	}
+
+
+	private static string? GetOnlyThisNodeText(this IElement node) => node.HasTextNodes() switch
+	{
+		false => null,
+		true => node.Text(),
+	};
 }

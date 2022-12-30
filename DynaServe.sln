@@ -5,11 +5,15 @@ VisualStudioVersion = 17.4.33122.133
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libs", "Libs", "{7A56073A-4556-4F83-A269-FE388EB1CB0D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynaServeLib", "Libs\DynaServeLib\DynaServeLib.csproj", "{032E27FF-CA54-4283-B7E9-EA132D9961B6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynaServeLib", "Libs\DynaServeLib\DynaServeLib.csproj", "{032E27FF-CA54-4283-B7E9-EA132D9961B6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Play", "Play", "{B6A7EFCB-8198-4F23-8473-EF3D32191F19}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServPlay", "Play\ServPlay\ServPlay.csproj", "{6462DC91-41C7-4B0B-AA4E-A2DC7E423841}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServPlay", "Play\ServPlay\ServPlay.csproj", "{6462DC91-41C7-4B0B-AA4E-A2DC7E423841}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynaServeExtrasLib", "Libs\DynaServeExtrasLib\DynaServeExtrasLib.csproj", "{2F5C4146-4A97-483A-BDA9-22ADD3A79EB0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtrasPlay", "Play\ExtrasPlay\ExtrasPlay.csproj", "{7A9DF5AF-FBD1-4C47-9F65-7170535D4080}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,6 +29,14 @@ Global
 		{6462DC91-41C7-4B0B-AA4E-A2DC7E423841}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6462DC91-41C7-4B0B-AA4E-A2DC7E423841}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6462DC91-41C7-4B0B-AA4E-A2DC7E423841}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F5C4146-4A97-483A-BDA9-22ADD3A79EB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F5C4146-4A97-483A-BDA9-22ADD3A79EB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F5C4146-4A97-483A-BDA9-22ADD3A79EB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F5C4146-4A97-483A-BDA9-22ADD3A79EB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A9DF5AF-FBD1-4C47-9F65-7170535D4080}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A9DF5AF-FBD1-4C47-9F65-7170535D4080}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A9DF5AF-FBD1-4C47-9F65-7170535D4080}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A9DF5AF-FBD1-4C47-9F65-7170535D4080}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -32,6 +44,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{032E27FF-CA54-4283-B7E9-EA132D9961B6} = {7A56073A-4556-4F83-A269-FE388EB1CB0D}
 		{6462DC91-41C7-4B0B-AA4E-A2DC7E423841} = {B6A7EFCB-8198-4F23-8473-EF3D32191F19}
+		{2F5C4146-4A97-483A-BDA9-22ADD3A79EB0} = {7A56073A-4556-4F83-A269-FE388EB1CB0D}
+		{7A9DF5AF-FBD1-4C47-9F65-7170535D4080} = {B6A7EFCB-8198-4F23-8473-EF3D32191F19}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3AFD62B2-CD79-4B64-92E1-0E5C97159014}

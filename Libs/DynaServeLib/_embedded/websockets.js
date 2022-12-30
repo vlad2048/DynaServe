@@ -84,6 +84,11 @@ function init() {
 							case 'Attr':
 								if (chg.attrName === 'class') {
 									node.className = chg.attrVal;
+								/*} else if (chg.attrName === 'autofocus') {
+									setTimeout(() => {
+										console.log(`focus on ${node.id}`);
+										node.focus();
+									}, 10);*/
 								} else {
 									if (chg.attrVal === undefined || chg.attrVal === null)
 										node.removeAttribute(chg.attrName);
@@ -126,6 +131,10 @@ function init() {
 				{
 					const body = document.getElementsByTagName('body')[0];
 					body.innerHTML += data.html;
+					const autofocusElt = document.querySelector('[autofocus]');
+					if (!!autofocusElt) {
+						autofocusElt.focus();
+					}
 					break;
 				}
 

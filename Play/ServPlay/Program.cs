@@ -1,5 +1,6 @@
 ﻿using DynaServeLib;
 using DynaServeLib.DynaLogic.DiffLogic;
+using DynaServeLib.Gizmos;
 using DynaServeLib.Nodes;
 using DynaServeLib.Utils.Exts;
 using PowRxVar;
@@ -58,7 +59,8 @@ static class Program
 
 	public static void Main()
 	{
-		Test();
+
+		//Console.WriteLine($"{DynaServVerDisplayer.GetVer()}");
 		return;
 
 		var isOn = Var.Make(true);

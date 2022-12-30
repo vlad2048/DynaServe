@@ -122,26 +122,6 @@ class Dom : IDisposable
 					break;
 				}
 
-				/*case ReplaceChildrenDomEvt e:
-				{
-					var node = this.GetById(e.NodeId);
-					
-					// Unhook refreshers & Remove children
-					refreshTracker.RemoveChildrenRefreshers(node, false);
-					node.RemoveAllChildren();
-
-					// Create children and their refreshers
-					var (childrenNext, refreshersNext) = Doc.CreateNodes(e.Children, domTweakers);
-
-					// Add children & Hook their refreshers
-					node.AppendChildren(childrenNext);
-					refreshTracker.AddRefreshers(refreshersNext);
-
-					// Notify the frontend
-					SendServerMsg(ServerMsg.MkReplaceChildren(childrenNext.Fmt(), e.NodeId));
-					break;
-				}*/
-
 				case AddBodyNode e:
 				{
 					var node = e.Node;

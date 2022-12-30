@@ -1,0 +1,52 @@
+﻿// *******************
+// * base-icontoggle *
+// *******************
+.base-icontoggle {
+    font-size: var(--fnt-size-5);
+    padding: 5px;
+    cursor: pointer;
+    background-color: #555;
+    border: 3px solid #444;
+    border-radius: 5px;
+    text-align: center;
+
+    &:hover {
+        background-color: #666;
+    }
+}
+
+.base-icontoggle-on {
+    color: #fff;
+}
+
+.base-icontoggle-off {
+    color: #888;
+}
+
+// ****************
+// * base-iconbtn *
+// ****************
+:root {
+    --base-iconbtn-color: #fff;
+    --base-iconbtn-color-disabled: #888;
+}
+
+.base-iconbtn {
+    cursor: pointer;
+    background-color: #444;
+    border-radius: 0;
+    border: 0px solid black;
+    padding: 0px 3px;
+    border-radius: 10px;
+    font-weight: normal;
+    font-size: 36px;
+    color: var(--base-iconbtn-color);
+
+    &:hover:not(:disabled) {
+        opacity: 0.6;
+    }
+
+    &:disabled {
+        color: var(--base-iconbtn-color-disabled);
+    }
+}

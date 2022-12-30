@@ -6,6 +6,8 @@
 
 	<ItemGroup>
 		<None Remove="_embedded\css-links.js" />
+		<None Remove="_embedded\dynaservver.css" />
+		<None Remove="_embedded\dynaservver.html" />
 		<None Remove="_embedded\websockets.css" />
 		<None Remove="_embedded\websockets.html" />
 		<None Remove="_embedded\websockets.js" />
@@ -13,6 +15,8 @@
 
 	<ItemGroup>
 		<EmbeddedResource Include="_embedded\css-links.js" />
+		<EmbeddedResource Include="_embedded\dynaservver.css" />
+		<EmbeddedResource Include="_embedded\dynaservver.html" />
 		<EmbeddedResource Include="_embedded\websockets.css" />
 		<EmbeddedResource Include="_embedded\websockets.html" />
 		<EmbeddedResource Include="_embedded\websockets.js" />
@@ -24,6 +28,10 @@
 		<PackageReference Include="PowBasics" Version="0.0.6" />
 		<PackageReference Include="PowRxVar.Maybe" Version="0.0.11" />
 		<PackageReference Include="PowTrees" Version="0.0.8" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Gizmos\" />
 	</ItemGroup>
 
 </Project>

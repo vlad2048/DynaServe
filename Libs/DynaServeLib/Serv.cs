@@ -5,8 +5,10 @@ using DynaServeLib.DynaLogic;
 using DynaServeLib.DynaLogic.DomLogic;
 using DynaServeLib.DynaLogic.Events;
 using DynaServeLib.DynaLogic.Refreshers;
+using DynaServeLib.Gizmos;
 using DynaServeLib.Logging;
 using DynaServeLib.Nodes;
+using DynaServeLib.Security;
 using DynaServeLib.Serving;
 using DynaServeLib.Serving.Repliers;
 using DynaServeLib.Serving.Repliers.DynaServe;
@@ -26,10 +28,18 @@ public class ServOpt
 {
 	internal record ScriptJs(string Name, string Script);
 	internal record ScriptCss(string Name, string Script);
+	internal record ServResource(string Link, Reply Resource);
+	
+	//public ILogr Logr { get; set; } = new ConsoleLogr();
+	//public bool PlaceWebSocketsHtmlManually { get; set; }
+	//public bool ShowDynaServLibVersion { get; set; }
 
+	public bool CheckSecurity { get; set; } = true;
 	public int Port { get; set; } = 7000;
-	public ILogr Logr { get; set; } = new ConsoleLogr();
-	public bool PlaceWebSocketsHtmlManually { get; set; }
+	//public bool CheckSecurity { get; set; };
+	public ILogr Logr { get; set; } = new NullLogr();
+	public bool PlaceWebSocketsHtmlManually { get; set; } = true;
+	public bool ShowDynaServLibVersion { get; set; } = true;
 	public Action<ClientUserMsg> OnClientUserMsg { get; set; } = _ => { };
 	internal List<IReplier> Repliers { get; set; } = new();
 	internal List<string> CssFolders { get; } = new();
@@ -37,7 +47,23 @@ public class ServOpt
 	internal List<string> FontFolders { get; } = new();
 	internal List<ScriptJs> JsScripts { get; } = new();
 	internal List<ScriptCss> CssScripts { get; } = new();
+	internal List<ServResource> ServResources { get; } = new();
 	internal Maybe<string> ManifestFile { get; private set; } = May.None<string>();
+
+	internal void KeepUniqueOnly()
+	{
+		static void Do<T>(List<T> list)
+		{
+			var listNext = list.Distinct().ToList();
+			list.Clear();
+			list.AddRange(listNext);
+		}
+
+		Do(CssFolders);
+		Do(ImgFolders);
+		Do(FontFolders);
+		Do(ServResources);
+	}
 
 	private ServOpt() {}
 
@@ -49,10 +75,16 @@ public class ServOpt
 	public void AddScriptJs(string name, string script) => JsScripts.Add(new ScriptJs(name, script));
 	public void AddScriptCss(string name, string script) => CssScripts.Add(new ScriptCss(name, script));
 
+	public void ServEmbeddedFontResources(EmbeddedFile[] files) => ServResources.AddRange(files.Select(file => new ServResource(
+		$"fonts/{file.Name}",
+		Reply.Mk(ReplyType.FontWoff2, file.Content)
+	)));
+
 	internal static ServOpt Build(Action<ServOpt>? optFun)
 	{
 		var opt = new ServOpt();
 		optFun?.Invoke(opt);
+		opt.KeepUniqueOnly();
 		return opt;
 	}
 }
@@ -81,6 +113,9 @@ class ServInst : IDisposable
 		whenDomEvt = new Subject<IDomEvt>().D(d);
 		whenLogEvt = new ReplaySubject<LogEvt>().D(d);
 
+		if (opt.CheckSecurity)
+			SecurityChecker.CheckPort(opt.Port);
+
 		var resourceHolder = new ResourceHolder();
 		resourceHolder.AddFolders(opt.FontFolders, "*.woff2", "fonts", ReplyType.FontWoff2);
 		var domTweakers = new IDomTweaker[]
@@ -102,6 +137,9 @@ class ServInst : IDisposable
 			Dom.AddScriptJS(jsScript.Name, jsScript.Script);
 		foreach (var cssScript in opt.CssScripts)
 			Dom.AddOrRefreshCss(cssScript.Name, cssScript.Script);
+		foreach (var servResource in opt.ServResources)
+			resourceHolder.AddContent(servResource.Link, servResource.Resource);
+		DynaServVerDisplayer.Show(opt.ShowDynaServLibVersion, Dom);
 
 		var repliers = opt.Repliers
 			.Append(new DynaServeReplier(resourceHolder, Dom))
