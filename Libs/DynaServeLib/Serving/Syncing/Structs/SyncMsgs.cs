@@ -5,9 +5,14 @@ enum ClientMsgType
 	ReqCssSync,
 	HookCalled,
 	HookArgCalled,
-	ReqFullLog,
+	AnswerDomSnapshot,
 	User
 }
+
+record ClientDomSnapshot(
+	string Head,
+	string Body
+);
 
 class ClientMsg
 {
@@ -17,6 +22,7 @@ class ClientMsg
 	public string? EvtArg { get; init; }
 	public string? Html { get; init; }
 	public string[]? CssLinks { get; init; }
+	public ClientDomSnapshot? ClientDomSnapshot { get; init; }
 	public string? UserType { get; init; }
 	public string? UserArg { get; init; }
 }
@@ -28,12 +34,12 @@ public enum ServerMsgType
 	PropChangesDomUpdate,
 	ReplaceChildrenDomUpdate,
 
+	ReqDomSnapshot,
+
 	CssSync,
 	AddChildToBody,
 	RemoveChildFromBody,
 	RefreshCss,
-	SetAttr,
-	SetCls,
 	ReqCallMethodOnNode
 }
 
@@ -74,81 +80,60 @@ public class PropChange
 
 public class ServerMsg
 {
-	public ServerMsgType Type { get; private init; }
+	public ServerMsgType Type { get; }
 	public string? Html { get; private init; }
 	public PropChange[]? PropChanges { get; private init; }
 	public string[]? CssSyncRemove { get; private init; }
 	public string[]? CssSyncAdd { get; private init; }
 	public string? NodeId { get; private init; }
 	public string? CssLinkRefresh { get; private init; }
-	public string? AttrKey { get; private init; }
+	public string? AttrName { get; private init; }
 	public string? AttrVal { get; private init; }
-	public string? Cls { get; private init; }
 	public string? MethodName { get; private init; }
 
-	public static ServerMsg MkFullUpdate(string html) => new()
+	private ServerMsg(ServerMsgType type) => Type = type;
+
+	public static ServerMsg MkFullUpdate(string html) => new(ServerMsgType.FullUpdate)
 	{
-		Type = ServerMsgType.FullUpdate,
 		Html = html,
 	};
 
-	public static ServerMsg MkPropChangesDomUpdate(PropChange[] propChanges) => new()
+	public static ServerMsg MkPropChangesDomUpdate(PropChange[] propChanges) => new(ServerMsgType.PropChangesDomUpdate)
 	{
-		Type = ServerMsgType.PropChangesDomUpdate,
 		PropChanges = propChanges,
 	};
 
-	public static ServerMsg MkReplaceChildrenDomUpdate(string html, string nodeId) => new()
+	public static ServerMsg MkReplaceChildrenDomUpdate(string html, string nodeId) => new(ServerMsgType.ReplaceChildrenDomUpdate)
 	{
-		Type = ServerMsgType.ReplaceChildrenDomUpdate,
 		Html = html,
 		NodeId = nodeId,
 	};
 
+	public static ServerMsg MkReqDomSnapshot() => new(ServerMsgType.ReqDomSnapshot);
 
-	public static ServerMsg MkCssSync(string[] remove, string[] add) => new()
+	public static ServerMsg MkCssSync(string[] remove, string[] add) => new(ServerMsgType.CssSync)
 	{
-		Type = ServerMsgType.CssSync,
 		CssSyncRemove = remove,
 		CssSyncAdd = add,
 	};
 
-	public static ServerMsg MkAddChildToBody(string html) => new()
+	public static ServerMsg MkAddChildToBody(string html) => new(ServerMsgType.AddChildToBody)
 	{
-		Type = ServerMsgType.AddChildToBody,
 		Html = html,
 	};
 
-	public static ServerMsg MkRemoveChildFromBody(string nodeId) => new()
+	public static ServerMsg MkRemoveChildFromBody(string nodeId) => new(ServerMsgType.RemoveChildFromBody)
 	{
-		Type = ServerMsgType.RemoveChildFromBody,
 		NodeId = nodeId,
 	};
 
-	public static ServerMsg MkRefreshCss(string cssLinkRefresh) => new()
+	public static ServerMsg MkRefreshCss(string cssLinkRefresh) => new(ServerMsgType.RefreshCss)
 	{
-		Type = ServerMsgType.RefreshCss,
 		CssLinkRefresh = cssLinkRefresh,
 	};
 
-	public static ServerMsg MkSetAttr(string nodeId, string attrKey, string? attrVal) => new()
+	public static ServerMsg MkReqCallMethodOnNode(string nodeId, string methodName) => new(ServerMsgType.ReqCallMethodOnNode)
 	{
-		Type = ServerMsgType.SetAttr,
-		NodeId = nodeId,
-		AttrKey = attrKey,
-		AttrVal = attrVal,
-	};
-
-	public static ServerMsg MkSetCls(string nodeId, string? cls) => new()
-	{
-		Type = ServerMsgType.SetCls,
-		NodeId = nodeId,
-		Cls = cls,
-	};
-
-	public static ServerMsg MkReqCallMethodOnNode(string nodeId, string methodName) => new()
-	{
-		Type = ServerMsgType.ReqCallMethodOnNode,
 		NodeId = nodeId,
 		MethodName = methodName,
 	};

@@ -5,17 +5,26 @@ using PowRxVar;
 
 namespace DynaServeLib.DynaLogic.Refreshers;
 
+record RefreshTrackerDbgNfo(
+	Dictionary<string, string[]> Map
+);
+
 class RefreshTracker : IDisposable
 {
 	private readonly Disp d = new();
 	public void Dispose() => d.Dispose();
 
 	private readonly Dictionary<string, Disp> refresherMap;
+	private readonly Dictionary<string, IRefresher[]> dbgMap = new();
 	private RefreshCtx? ctx;
 	private RefreshCtx Ctx => ctx ?? throw new ArgumentException("Start not called");
 
 	public string DbgGetRefresherIds() => refresherMap.Keys.JoinText(", ");
 
+	public RefreshTrackerDbgNfo GetDbgNfo() => new(dbgMap.ToDictionary(
+		t => t.Key,
+		t => t.Value.SelectToArray(e => e.GetType().Name)
+	));
 
 	public RefreshTracker()
 	{
@@ -40,17 +49,33 @@ class RefreshTracker : IDisposable
 	
 	public void AddRefreshers(IEnumerable<IRefresher> refreshers)
 	{
-		if (ctx == null) throw new ArgumentException();
+		if (ctx == null) throw new ArgumentException("ctx == null");
 
 		var grps = refreshers.GroupBy(e => e.NodeId);
 		foreach (var grp in grps)
 		{
 			if (refresherMap.ContainsKey(grp.Key))
-				throw new ArgumentException();
+				throw new ArgumentException("refresherMap.ContainsKey(grp.Key)");
 			var rd = new Disp();
 			foreach (var refresher in grp)
 				refresher.Activate(Ctx).D(rd);
-			refresherMap[grp.Key] = rd;
+
+			try
+			{
+				dbgMap[grp.Key] = grp.ToArray();
+			}
+			catch (Exception ex)
+			{
+				throw new ArgumentException("dbgMap[grp.Key] = grp.ToArray()", ex);
+			}
+			try
+			{
+				refresherMap[grp.Key] = rd;
+			}
+			catch (Exception ex)
+			{
+				throw new ArgumentException("refresherMap[grp.Key] = rd;", ex);
+			}
 		}
 	}
 
@@ -72,6 +97,7 @@ class RefreshTracker : IDisposable
 		{
 			rd.Dispose();
 			refresherMap.Remove(id);
+			dbgMap.Remove(id);
 		}
 	}
 

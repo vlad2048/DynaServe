@@ -1,0 +1,18 @@
+.btnrow {
+  display: flex;
+  gap: 20px;
+}
+
+
+
+
+
+button {
+  cursor: pointer;
+  background-color: #999;
+  border-radius: 7px;
+  border: 1px solid black;
+  padding: 0px 15px;
+  font-weight: bold;
+  font-size: 36px;
+}

@@ -37,7 +37,11 @@ public static class Ctrls
 			.Where(_ => !isUiUpdate)
 			.Subscribe(val =>
 			{
-				St.SendToClientHack(ServerMsg.MkSetAttr(node.Id, "value", val));
+				//St.SendToClientHack(ServerMsg.MkSetAttr(node.Id, "value", val));
+				St.SendToClientHack(ServerMsg.MkPropChangesDomUpdate(new []
+				{
+					PropChange.MkAttrChange(node.Id, "value", val),
+				}));
 			}).D(node.D);
 
 		return node;
@@ -63,7 +67,11 @@ public static class Ctrls
 			.Subscribe(val =>
 			{
 				var valStr = val ? "" : null;
-				St.SendToClientHack(ServerMsg.MkSetAttr(node.Id, "checked", valStr));
+				//St.SendToClientHack(ServerMsg.MkSetAttr(node.Id, "checked", valStr));
+				St.SendToClientHack(ServerMsg.MkPropChangesDomUpdate(new []
+				{
+					PropChange.MkAttrChange(node.Id, "checked", valStr),
+				}));
 			}).D(node.D);
 
 		return node;
@@ -91,7 +99,11 @@ public static class Ctrls
 			.Subscribe(val =>
 			{
 				var valStr = $"{val}";
-				St.SendToClientHack(ServerMsg.MkSetAttr(node.Id, "value", valStr));
+				//St.SendToClientHack(ServerMsg.MkSetAttr(node.Id, "value", valStr));
+				St.SendToClientHack(ServerMsg.MkPropChangesDomUpdate(new []
+				{
+					PropChange.MkAttrChange(node.Id, "value", valStr),
+				}));
 			}).D(node.D);
 
 		return node;

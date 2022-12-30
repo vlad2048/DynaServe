@@ -28,7 +28,7 @@ static class Demo_EditList
 			}
 		).D(d);
 
-		var slavesLinkNfo = EditListConstraintMaker.OwnsMultiple_And_EditTheSlavesOfTheSelectedMaster(
+		var slavesLinkNfo = EditListConstraintMaker.OwnsMultiple(
 			listMaster,
 			master => master.Slaves,
 			(master, slaves) => master with { Slaves = slaves }

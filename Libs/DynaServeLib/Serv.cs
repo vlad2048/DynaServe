@@ -10,6 +10,7 @@ using DynaServeLib.Logging;
 using DynaServeLib.Nodes;
 using DynaServeLib.Security;
 using DynaServeLib.Serving;
+using DynaServeLib.Serving.Debugging;
 using DynaServeLib.Serving.Repliers;
 using DynaServeLib.Serving.Repliers.DynaServe;
 using DynaServeLib.Serving.Repliers.DynaServe.Holders;
@@ -104,6 +105,7 @@ class ServInst : IDisposable
 
 	public Syncer Syncer { get; }
 	public Dom Dom { get; }
+	public ServDbg ServDbg { get; }
 	public IObservable<LogEvt> WhenLogEvt => whenLogEvt.AsObservable();
 	public void SignalDomEvt(IDomEvt evt) => whenDomEvt.OnNext(evt);
 
@@ -158,13 +160,15 @@ class ServInst : IDisposable
 		Dom.LogEvt("after start");
 		ServCssWatcher.Setup(opt.CssFolders, Dom, opt.Logr).D(d);
 
+		ServDbg = new ServDbg(Dom, Syncer).D(d);
+
 		opt.Logr.OnSimpleMsg($"Listening on: {UrlUtils.GetLocalLink(opt.Port)}");
 	}
 
 	public void Start()
 	{
 		server.Start();
-		//Dom.Start();
+		Dom.StartFinal();
 	}
 }
 
@@ -192,6 +196,8 @@ public static class Serv
 		return d;
 	}
 
+	public static ServDbg Dbg => St.I.ServDbg;
+
 	public static HtmlNode StatusEltManual => new HtmlNode("div").Id(ServInst.StatusEltId).Cls(ServInst.StatusEltClsManual);
 
 	public static void Css(string name, string css) => St.I.Dom.AddScriptCss(name, css);
@@ -199,10 +205,10 @@ public static class Serv
 	public static IDisposable AddNodeToBody(HtmlNode node)
 	{
 		var addD = new Disp();
-		ServInst!.SignalDomEvt(new AddBodyNode(node));
+		ServInst!.SignalDomEvt(new AddBodyNodeDomEvt(node));
 		Disposable.Create(() =>
 		{
-			ServInst.SignalDomEvt(new RemoveBodyNode(node.Id));
+			ServInst.SignalDomEvt(new RemoveBodyNodeDomEvt(node.Id));
 		}).D(addD);
 		return addD;
 	}

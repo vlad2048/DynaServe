@@ -1,11 +1,14 @@
 ﻿using DynaServeLib.Nodes;
+using DynaServeLib.Serving.Syncing.Structs;
 
 namespace DynaServeLib.DynaLogic.Events;
 
 interface IDomEvt {}
 record UpdateChildrenDomEvt(string NodeId, HtmlNode[] Children) : IDomEvt;
-record AddBodyNode(HtmlNode Node) : IDomEvt;
-record RemoveBodyNode(string NodeId) : IDomEvt;
+record AddBodyNodeDomEvt(HtmlNode Node) : IDomEvt;
+record RemoveBodyNodeDomEvt(string NodeId) : IDomEvt;
+//record ChangeAttrDomEvt(string NodeId, string AttrName, string? AttrVal) : IDomEvt;
+record PropChangeDomEvt(PropChange Chg) : IDomEvt;
 
 
 /*interface ITreeEvtObs

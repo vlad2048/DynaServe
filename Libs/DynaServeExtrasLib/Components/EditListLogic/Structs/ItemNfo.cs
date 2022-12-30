@@ -2,4 +2,8 @@
 
 namespace DynaServeExtrasLib.Components.EditListLogic.Structs;
 
-public record ItemNfo<T>(T Item, ItemSelStatus SelStatus);
+public record ItemNfo<T>(
+	T Item,
+	ItemSelStatus SelStatus,
+	Action<T> Mutate
+);

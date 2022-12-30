@@ -32,6 +32,7 @@
 
 	<ItemGroup>
 	  <Folder Include="Gizmos\" />
+	  <Folder Include="Serving\Debugging\Structs\" />
 	</ItemGroup>
 
 </Project>

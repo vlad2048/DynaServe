@@ -1,13 +1,20 @@
-﻿using PowMaybe;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using DynaServeLib.DynaLogic.Refreshers;
-using PowRxVar;
+using DynaServeLib.Utils.Exts;
+using System.Runtime.CompilerServices;
 
 namespace DynaServeLib.Nodes;
 
 public static class HtmlNodeAttrStyleExt
 {
-	public static HtmlNode Attr(this HtmlNode node, string attrName, string? attrVal)
+	// **********
+	// * Static *
+	// **********
+	public static HtmlNode Attr(
+		this HtmlNode node,
+		string attrName,
+		string? attrVal
+	)
 	{
 		if (attrVal == null)
 			node.Attrs.Remove(attrName);
@@ -16,46 +23,59 @@ public static class HtmlNodeAttrStyleExt
 		return node;
 	}
 
-
-	public static HtmlNode Attr(this HtmlNode node, string attrName, IRoVar<string?> valVar)
+	
+	// ***********
+	// * Dynamic *
+	// ***********
+	public static HtmlNode Attr(
+		this HtmlNode node,
+		string attrName,
+		IObservable<string?> valObs,
+		[CallerArgumentExpression(nameof(valObs))] string? valObsName = null
+	)
 	{
-		node.AddRefresher(new AttrRefresher(node.Id, attrName, valVar));
-		node.Attr(attrName, valVar.V);
+		//node.AddRefresher(new AttrRefresher(node.Id, attrName, valObs.ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
+		node.AddRefresher(PropChangeRefresher.MkAttr(node.Id, attrName, valObs.ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
 		return node;
 	}
 
 
-	public static HtmlNode Attr(this HtmlNode node, string attrName, IObservable<string?> valObs)
+	// ****************
+	// * Sugar (base) *
+	// ****************
+	public static HtmlNode AttrSetWhenNot(
+		this HtmlNode node,
+		string attrName,
+		string attrVal,
+		IObservable<bool> whenCondition,
+		[CallerArgumentExpression(nameof(whenCondition))] string? whenConditionName = null
+	)
 	{
-		node.AddRefresher(new AttrRefresher(node.Id, attrName, valObs));
-		SetInitVal(v => node.Attr(attrName, v), valObs);
-		return node;
+		var attrValObs = whenCondition
+			.ThrowIf_Observable_IsNot_Derived_From_RxVar(whenConditionName)
+			.Select(condition => condition switch
+			{
+				true => null,
+				false => attrVal
+			});
+		return node.Attr(attrName, attrValObs, whenConditionName);
 	}
 
-	public static HtmlNode AttrSetWhenNot(this HtmlNode node, string attrName, string attrVal, IObservable<bool> whenCondition)
-	{
-		var updateObs = whenCondition.Select(condition => condition switch
-		{
-			true => null,
-			false => attrVal
-		});
-		node.AddRefresher(new AttrRefresher(node.Id, attrName, updateObs));
-		SetInitVal(v => node.Attr(attrName, v), updateObs);
-		return node;
-	}
 
-	public static HtmlNode VisibleWhen(this HtmlNode node, IObservable<bool> whenVisible) =>
-		node.AttrSetWhenNot("style", "display: none", whenVisible);
+	// *********
+	// * Sugar *
+	// *********
+	public static HtmlNode VisibleWhen(
+		this HtmlNode node,
+		IObservable<bool> whenVisible,
+		[CallerArgumentExpression(nameof(whenVisible))] string? whenVisibleName = null
+	) =>
+		node.AttrSetWhenNot("style", "display: none", whenVisible, whenVisibleName);
 
-	public static HtmlNode EnableWhen(this HtmlNode node, IObservable<bool> whenEnabled) =>
-		node.AttrSetWhenNot("disabled", "true", whenEnabled);
-
-
-	private static void SetInitVal<T>(Action<T> setFun, IObservable<T> obs)
-	{
-		var initVal = May.None<T>();
-		using var _ = obs.Take(1).Subscribe(v => initVal = May.Some(v));
-		if (initVal.IsSome(out var init))
-			setFun(init);
-	}
+	public static HtmlNode EnableWhen(
+		this HtmlNode node,
+		IObservable<bool> whenEnabled,
+		[CallerArgumentExpression(nameof(whenEnabled))] string? whenEnabledName = null
+	) =>
+		node.AttrSetWhenNot("disabled", "", whenEnabled, whenEnabledName);
 }

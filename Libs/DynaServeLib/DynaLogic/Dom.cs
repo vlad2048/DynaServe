@@ -1,4 +1,5 @@
-﻿using AngleSharp.Dom;
+﻿using System.Reactive.Linq;
+using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using DynaServeLib.DynaLogic.DiffLogic;
@@ -17,6 +18,10 @@ using PowRxVar;
 
 namespace DynaServeLib.DynaLogic;
 
+record DomDbgNfo(
+	IHtmlDocument ServerDom,
+	RefreshTrackerDbgNfo RefreshTrackerDbgNfo
+);
 
 class Dom : IDisposable
 {
@@ -32,6 +37,8 @@ class Dom : IDisposable
 	private Action<ServerMsg> SendServerMsg => sendServerMsg ?? throw new ArgumentException("Start not called");
 
 	public IHtmlDocument Doc { get; }
+
+	public DomDbgNfo GetDbgNfo() => new(Doc, refreshTracker.GetDbgNfo());
 
 	public void LogFull(string clientHtml) => DomLogUtils.LogFull(clientHtml, Doc, refreshTracker.DbgGetRefresherIds(), logr);
 
@@ -77,81 +84,92 @@ class Dom : IDisposable
 		refreshTracker = new RefreshTracker().D(d);
 		Doc = new HtmlParser().ParseDocument(InitialHtml).D(d);
 
-		whenDomEvt.Subscribe(evt =>
-		{
-			switch (evt)
+		whenDomEvt
+			.Synchronize()
+			.Subscribe(evt =>
 			{
-				case UpdateChildrenDomEvt e:
+				switch (evt)
 				{
-					var node = this.GetById(e.NodeId);
-					var (childrenPrev, refreshersPrevKeys) = node.GetChildrenAndTheirRefresherKeys();
-					var (childrenNext, refreshersNext) = Doc.CreateNodes(e.Children, domTweakers);
-
-					if (DiffAlgo.Are_DomNodeTrees_StructurallyIdentical(childrenPrev, childrenNext))
+					case UpdateChildrenDomEvt e:
 					{
-						// (optimization: keep the same NodeIds as before to avoid sending updates for those)
-						refreshersNext = DiffAlgo.KeepPrevIds_In_StructurallyIdentical_DomNodesTree_And_GetUpdatedRefreshers(childrenPrev, childrenNext, refreshersNext);
-						var refreshersNextInitialPropChanges = refreshersNext.SelectMany(f => f.GetInitialPropChanges()).ToArray();
-						var propChanges = DiffAlgo.ComputePropChanges_In_StructurallyIdentical_DomNodesTree(childrenPrev, childrenNext);
-						propChanges = propChanges.Concat(refreshersNextInitialPropChanges).ToArray();
+						var node = this.GetById(e.NodeId);
+						var (childrenPrev, refreshersPrevKeys) = node.GetChildrenAndTheirRefresherKeys();
+						var (childrenNext, refreshersNext) = Doc.CreateNodes(e.Children, domTweakers);
 
-						// Dom
-						DiffAlgo.ApplyPropChanges_In_DomNodeTrees(childrenPrev, propChanges);
+						if (DiffAlgo.Are_DomNodeTrees_StructurallyIdentical(childrenPrev, childrenNext))
+						{
+							// (optimization: keep the same NodeIds as before to avoid sending updates for those)
+							refreshersNext = DiffAlgo.KeepPrevIds_In_StructurallyIdentical_DomNodesTree_And_GetUpdatedRefreshers(childrenPrev, childrenNext, refreshersNext);
+							var refreshersNextInitialPropChanges = refreshersNext.SelectMany(f => f.GetInitialPropChanges()).ToArray();
+							var propChanges = DiffAlgo.ComputePropChanges_In_StructurallyIdentical_DomNodesTree(childrenPrev, childrenNext);
+							propChanges = propChanges.Concat(refreshersNextInitialPropChanges).ToArray();
 
-						// Refreshers
-						refreshTracker.ReplaceRefreshers(refreshersPrevKeys, refreshersNext);
+							// Dom
+							DiffAlgo.ApplyPropChanges_In_DomNodeTrees(childrenPrev, propChanges);
 
-						// Client
-						if (propChanges.Any()) SendServerMsg(ServerMsg.MkPropChangesDomUpdate(propChanges));
+							// Refreshers
+							refreshTracker.ReplaceRefreshers(refreshersPrevKeys, refreshersNext);
+
+							// Client
+							if (propChanges.Any()) SendServerMsg(ServerMsg.MkPropChangesDomUpdate(propChanges));
+						}
+						else
+						{
+							// Dom
+							node.RemoveAllChildren();
+							node.AppendChildren(childrenNext);
+
+							// Refreshers
+							refreshTracker.ReplaceRefreshers(refreshersPrevKeys, refreshersNext);
+							var refreshersNextInitialPropChanges = refreshersNext.SelectMany(f => f.GetInitialPropChanges()).ToArray();
+							DiffAlgo.ApplyPropChanges_In_DomNodeTrees(childrenNext, refreshersNextInitialPropChanges);
+
+							// Client
+							SendServerMsg(ServerMsg.MkReplaceChildrenDomUpdate(childrenNext.Fmt(), e.NodeId));
+						}
+
+						break;
 					}
-					else
+
+					case PropChangeDomEvt e:
 					{
-						// Dom
-						node.RemoveAllChildren();
-						node.AppendChildren(childrenNext);
-
-						// Refreshers
-						refreshTracker.ReplaceRefreshers(refreshersPrevKeys, refreshersNext);
-						var refreshersNextInitialPropChanges = refreshersNext.SelectMany(f => f.GetInitialPropChanges()).ToArray();
-						DiffAlgo.ApplyPropChanges_In_DomNodeTrees(childrenNext, refreshersNextInitialPropChanges);
-
-						// Client
-						SendServerMsg(ServerMsg.MkReplaceChildrenDomUpdate(childrenNext.Fmt(), e.NodeId));
+						var node = this.GetById(e.Chg.NodeId);
+						var propChanges = new[] { e.Chg };
+						DiffAlgo.ApplyPropChanges_In_DomNodeTrees(new [] { node }, propChanges);
+						SendServerMsg(ServerMsg.MkPropChangesDomUpdate(propChanges));
+						break;
 					}
 
-					break;
+					case AddBodyNodeDomEvt e:
+					{
+						var node = e.Node;
+
+						var (domNode, refreshers) = Doc.CreateNode(node, domTweakers);
+						var refreshersInitialPropChanges = refreshers.SelectMany(f => f.GetInitialPropChanges()).ToArray();
+						DiffAlgo.ApplyPropChanges_In_DomNodeTrees(new [] { domNode }, refreshersInitialPropChanges);
+						var body = Doc.FindDescendant<IHtmlBodyElement>()!;
+
+						body.AppendChild(domNode);
+						refreshTracker.AddRefreshers(refreshers);
+
+						SendServerMsg(ServerMsg.MkAddChildToBody(domNode.Fmt()));
+						break;
+					}
+
+					case RemoveBodyNodeDomEvt e:
+					{
+						var nodeId = e.NodeId;
+
+						var domNode = this.GetById(nodeId);
+						refreshTracker.RemoveChildrenRefreshers(domNode, true);
+						domNode.Remove();
+
+						SendServerMsg(ServerMsg.MkRemoveChildFromBody(nodeId));
+
+						break;
+					}
 				}
-
-				case AddBodyNode e:
-				{
-					var node = e.Node;
-
-					var (domNode, refreshers) = Doc.CreateNode(node, domTweakers);
-					var refreshersInitialPropChanges = refreshers.SelectMany(f => f.GetInitialPropChanges()).ToArray();
-					DiffAlgo.ApplyPropChanges_In_DomNodeTrees(new [] { domNode }, refreshersInitialPropChanges);
-					var body = Doc.FindDescendant<IHtmlBodyElement>()!;
-
-					body.AppendChild(domNode);
-					refreshTracker.AddRefreshers(refreshers);
-
-					SendServerMsg(ServerMsg.MkAddChildToBody(domNode.Fmt()));
-					break;
-				}
-
-				case RemoveBodyNode e:
-				{
-					var nodeId = e.NodeId;
-
-					var domNode = this.GetById(nodeId);
-					refreshTracker.RemoveChildrenRefreshers(domNode, true);
-					domNode.Remove();
-
-					SendServerMsg(ServerMsg.MkRemoveChildFromBody(nodeId));
-
-					break;
-				}
-			}
-		}).D(d);
+			}).D(d);
 	}
 
 	public void Start(RefreshCtx refreshCtx)
@@ -159,6 +177,21 @@ class Dom : IDisposable
 		sendServerMsg = refreshCtx.SendServerMsg;
 		refreshTracker.Start(refreshCtx);
 		initRootNodes.ForEach(AddNodeToBodyOnStart);
+	}
+
+	public void StartFinal()
+	{
+		/*initRootNodes.ForEach(node =>
+		{
+			St.I.SignalDomEvt(new AddBodyNodeDomEvt(node));
+			//Serv.AddNodeToBody(node).D(d);
+		});*/
+
+		/*Observable.Timer(TimeSpan.FromMilliseconds(100)).Subscribe(_ =>
+		{
+			//initRootNodes.ForEach(AddNodeToBodyOnStart);
+			initRootNodes.ForEach(node => Serv.AddNodeToBody(node).D(d));
+		});*/
 	}
 
 

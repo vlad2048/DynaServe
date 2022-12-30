@@ -67,12 +67,6 @@ class Syncer : IDisposable
 						break;
 					}
 
-					case ClientMsgType.ReqFullLog:
-					{
-						dom.LogFull(msg.Html!);
-						break;
-					}
-
 					default:
 					{
 						whenClientMsg.OnNext(msg);

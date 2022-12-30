@@ -13,6 +13,8 @@ namespace DynaServeExtrasLib.Components.EditListLogic;
 
 public class EditList<T> : IDisposable
 {
+	private static readonly TimeSpan DebounceTime = TimeSpan.FromMilliseconds(50);
+
     private readonly Disp d = new();
     public void Dispose() => d.Dispose();
 
@@ -21,25 +23,20 @@ public class EditList<T> : IDisposable
 
     private readonly IRwVar<T[]> list;
     private readonly EditListOpt<T> opt;
-    private readonly IRwVar<Maybe<T>> selItem;
     private readonly IRwVar<T[]> selItems;
     private IRoVar<int> SelItemIndex { get; }
 
     public HtmlNode UI { get; }
-    public IRoVar<Maybe<T>> SelItem => selItem.ToReadOnly();
+    public IRoVar<T[]> List => list.ToReadOnly();
+    public IRwVar<Maybe<T>> SelItem { get; }
     public IRoVar<T[]> SelItems => selItems.ToReadOnly();
     public IObservable<Unit> WhenChanged => Observable.Merge(
         list.ToUnit(),
         SelItem.ToUnit(),
         SelItems.ToUnit(),
         opt.ItemDispWhenChange ?? Observable.Never<Unit>()
-    ).Throttle(TimeSpan.Zero).Prepend(Unit.Default);
+    ).Throttle(DebounceTime).Prepend(Unit.Default);
 
-    /*private static void L(string s)
-    {
-	    if (typeof(T).Name != "RecSlave") return;
-	    Console.WriteLine($"[{Thread.CurrentThread.ManagedThreadId} - {Thread.CurrentThread.Name}] {s}");
-    }*/
 
     public EditList(
         IRwVar<T[]> list,
@@ -51,22 +48,27 @@ public class EditList<T> : IDisposable
         this.list = list;
         opt = EditListOpt<T>.Build(optFun);
         var itemDispFun = opt.ItemDispFun ?? defaultItemDispFun;
-        selItem = Var.Make(May.None<T>()).D(d);
-        selItems = Var.Make(Array.Empty<T>()).D(d);
+        SelItem = Var.Make(opt.InitSelItem).D(d);
+        selItems = Var.Make(opt.InitSelItem.Select(e => new[] {e}).FailWith(Array.Empty<T>())).D(d);
         // TODO: not sure why this line fails !
         //SelItemIndex = Var.Expr(() => ComputeSelItemIndex(SelItem.V));
-        SelItemIndex = Var.Expr(() => ComputeSelItemIndex(selItem.V), list.ToUnit());
+        SelItemIndex = Var.Expr(() => ComputeSelItemIndex(SelItem.V), list.ToUnit());
 
         Constraint_MakeSelNone_When_RemovedFromArr().D(d);
-
-        //list.Where(e => e.Length == 0).Subscribe(_ => L("List <- []")).D(d);
 
         UI =
             Div("editlist").SetWidthOpt(opt.Width).Wrap(
 
                 Div("editlist-titlelist").OnClick(OnNoItemClicked).Wrap(
 
-                    TH3().Txt(title),
+					Div("editlist-title").Wrap(
+						TH3().Txt(title),
+						IconBtn("fa-solid fa-plus", async () =>
+						{
+							if ((await createFun(May.None<T>())).IsNone(out var item)) return;
+							AddItem(item);
+						}).EnableWhen(opt.WhenCanAdd)
+                    ),
 
                     Div("editlist-list").Wrap(
                         WhenChanged,
@@ -74,10 +76,12 @@ public class EditList<T> : IDisposable
                             .Select(ComputeItemDispNfo)
                             .Select(nfo =>
                                 itemDispFun(nfo)
-                                    .OnClick(() =>
+                                    /*.OnClick(() =>
                                     {
                                         OnItemClicked(nfo.Item);
-                                    }, true)
+                                    }, true)*/
+                                    .Hook("mousedown", () => OnItemClicked(nfo.Item), true)
+                                    .OnClick(() => {}, true)
                             )
                     )
                 ),
@@ -101,12 +105,6 @@ public class EditList<T> : IDisposable
                             ReplaceSelItem(item);
                         }).EnableWhen(SelItem.Select(e => e.IsSome())),
 
-                        IconBtn("fa-solid fa-plus", async () =>
-                        {
-                            if ((await createFun(May.None<T>())).IsNone(out var item)) return;
-                            AddItem(item);
-                        }).EnableWhen(opt.WhenCanAdd),
-
                         IconBtn("fa-solid fa-trash", () =>
                         {
                             DelSelItem();
@@ -120,7 +118,10 @@ public class EditList<T> : IDisposable
 			.Subscribe(arr =>
 			{
 				if (SelItem.V.IsSomeAndVerifies(e => !arr.Contains(e)))
-					selItem.V = May.None<T>();
+				{
+					SelItem.V = May.None<T>();
+				}
+
 				if (SelItems.V.Any(e => !arr.Contains(e)))
 					selItems.V = selItems.V.WhereToArray(arr.Contains);
 			});
@@ -132,7 +133,7 @@ public class EditList<T> : IDisposable
 
     private void OnNoItemClicked()
     {
-        selItem.V = May.None<T>();
+	    SelItem.V = May.None<T>();
         selItems.V = Array.Empty<T>();
     }
 
@@ -141,19 +142,19 @@ public class EditList<T> : IDisposable
         switch (opt.SelectMode)
         {
             case EditListSelectMode.Single:
-                selItem.V = May.Some(item);
+	            SelItem.V = May.Some(item);
                 selItems.V = new[] { item };
                 break;
             case EditListSelectMode.Multiple:
                 var isMultiSel = selItems.V.Contains(item);
                 if (isMultiSel)
                 {
-                    selItem.V = May.None<T>();
+	                SelItem.V = May.None<T>();
                     selItems.V = selItems.V.ArrDel(item);
                 }
                 else
                 {
-                    selItem.V = May.Some(item);
+	                SelItem.V = May.Some(item);
                     selItems.V = selItems.V.ArrAdd(item);
                 }
                 break;
@@ -195,15 +196,32 @@ public class EditList<T> : IDisposable
     {
         var itemPrev = SelItem.V.Ensure();
 		// TODO: updating the list BEFORE the selItem&selItems breaks master/slave linking (slaveList.SelItem becomes None for no reason when moving a Slave up). Not sure why. But it works like this
-        selItem.V = May.Some(itemNext);
+		SelItem.V = May.Some(itemNext);
         selItems.V = new[] { itemNext };
         list.V = list.V.ArrRepl(itemPrev, itemNext);
+    }
+
+    internal void ReplaceItem(T itemPrev, T itemNext)
+    {
+	    if (SelItem.V.IsSomeAndEqualTo(itemPrev))
+	    {
+			ReplaceSelItem(itemNext);
+			return;
+	    }
+	    if (SelItems.V.Contains(itemPrev))
+	    {
+		    var selItemsNext = SelItems.V.ToList();
+		    selItemsNext.Remove(itemPrev);
+		    selItemsNext.Add(itemNext);
+		    selItems.V = selItemsNext.ToArray();
+		    list.V = list.V.ArrRepl(itemPrev, itemNext);
+	    }
     }
 
     private void AddItem(T item)
     {
         list.V = list.V.ArrAdd(item);
-        selItem.V = May.Some(item);
+        SelItem.V = May.Some(item);
         selItems.V = new[] { item };
     }
 
@@ -211,7 +229,7 @@ public class EditList<T> : IDisposable
     {
         var item = SelItem.V.Ensure();
         list.V = list.V.ArrDel(item);
-        selItem.V = May.None<T>();
+        SelItem.V = May.None<T>();
         var isMultiSel = selItems.V.Contains(item);
         if (isMultiSel)
             selItems.V = selItems.V.ArrDel(item);
@@ -234,6 +252,21 @@ public class EditList<T> : IDisposable
                 true => ItemSelStatus.SelLast,
             }
         };
-        return new ItemNfo<T>(item, selStatus);
+        return new ItemNfo<T>(
+	        item,
+	        selStatus,
+			itemNext =>
+			{
+				if (SelItem.V.IsNone(out var selItemVal) || !selItemVal.Equals(item))
+				{
+					L("IT SHOULD BE SELITEM");
+					throw new ArgumentException();
+				}
+
+				//list.V = list.V.ArrRepl(item, itemNext);
+				ReplaceSelItem(itemNext);
+			});
     }
+
+    private static void L(string s) => Console.WriteLine(s);
 }

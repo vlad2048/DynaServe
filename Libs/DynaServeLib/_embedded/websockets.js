@@ -42,9 +42,6 @@ function init() {
 				cssSyncAdd: [],
 				nodeId: '',
 				cssLinkRefresh: '',
-				attrKey: '',
-				attrVal: '',
-				cls: '',
 				methodName: ''
 			}
 // ReSharper restore AssignedValueIsNeverUsed
@@ -117,6 +114,20 @@ function init() {
 
 
 
+				case 'ReqDomSnapshot':
+				{
+					sockSend({
+						type: 'AnswerDomSnapshot',
+						clientDomSnapshot: {
+							head: document.head.outerHTML,
+							body: document.body.outerHTML,
+						}
+					});
+					break;
+				}
+
+
+
 				case 'CssSync':
 				{
 					cssNormalizeAllWebLinks();
@@ -153,22 +164,6 @@ function init() {
 					cssGetWebLinkNodes()
 						.filter(e => cssCleanLink(e.href) === cssCleanLink(cssLinkRefresh))
 						.forEach(e => e.href = cssLinkRefresh);
-					break;
-				}
-
-				case 'SetAttr':
-				{
-					const elt = document.getElementById(data.nodeId);
-					if (!!elt)
-						elt[data.attrKey] = data.attrVal;
-					break;
-				}
-
-				case 'SetCls':
-				{
-					const elt = document.getElementById(data.nodeId);
-					if (!!elt)
-						elt.className = data.cls;
 					break;
 				}
 
