@@ -135,26 +135,4 @@ class FileServer : IDisposable
 		let finalFile = file.TransposeFileToCompiledFolderIFN(scssOutputFolder)
 		select new ServLinkFile(finalFile, fold.FCat)
 	).ToArray();
-
-
-	/*private void LogRegs()
-	{
-		static void L(string s) => Console.WriteLine(s);
-
-		foreach (var (link, reg) in regMap)
-		{
-			var sb = new StringBuilder($"'{link}'".PadRight(60));
-			switch (reg)
-			{
-				case FileReg e:
-					//sb.Append($"exists:{File.Exists(e.Filename)}  ({e.Filename})");
-					sb.Append($"name:{e.Name}  type:{e.Name.ToType()}  mime:{e.Name.ToType().ToMime()}");
-					break;
-				case DirectReg e:
-					//sb.Append($"name:'{e.Name}'");
-					break;
-			}
-			L(sb.ToString());
-		}
-	}*/
 }

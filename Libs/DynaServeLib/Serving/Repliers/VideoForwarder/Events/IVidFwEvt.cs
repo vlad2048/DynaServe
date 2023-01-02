@@ -9,14 +9,6 @@ public interface IVidFwEvt
 	int ReqId { get; }
 }
 
-/*public record MsgVidFwEvt(
-	int ReqId,
-	string Msg
-) : IVidFwEvt
-{
-	public override string ToString() => $"[{ReqId}] '{Msg}'";
-}*/
-
 public record StartVidFwEvt(
 	int ReqId,
 	string Name,
@@ -37,15 +29,6 @@ public record HeadersVidFwEvt(
 	public override string ToString() => $"[{ReqId}] Headers  rng:{RngRes}  lng:{Length.FmtSize()} time:{(int)Time.TotalMilliseconds}ms";
 }
 
-/*public record ChunkVidFwEvt(
-	int ReqId,
-	long Length,
-	TimeSpan Time
-) : IVidFwEvt
-{
-	public override string ToString() => $"[{ReqId}] Chunk lng:{Length.FmtSize()} time:{(int)Time.TotalMilliseconds}ms";
-}*/
-
 public record ErrHeadersVidFwEvt(int ReqId, HttpStatusCode StatusCode) : IVidFwEvt
 {
 	public override string ToString() => $"[{ReqId}] ERR Headers {StatusCode}";
@@ -60,11 +43,6 @@ public record ErrClientClosedConnection(int ReqId) : IVidFwEvt
 {
 	public override string ToString() => $"[{ReqId}] ERR ClientClosedConnection";
 }
-
-/*public record ErrNetworkUnavailableVidFwEvt(int ReqId) : IVidFwEvt
-{
-	public override string ToString() => $"[{ReqId}] ERR NetworkUnavailable";
-}*/
 
 public record ErrUnexpectedException(int ReqId, Exception Ex) : IVidFwEvt
 {

@@ -1,6 +1,4 @@
-﻿using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using AngleSharp.Html.Dom;
+﻿using AngleSharp.Html.Dom;
 using DynaServeLib.DynaLogic.DiffLogic;
 using DynaServeLib.DynaLogic.Events;
 using DynaServeLib.DynaLogic.Refreshers;
@@ -8,11 +6,10 @@ using DynaServeLib.Nodes;
 using DynaServeLib.Serving;
 using DynaServeLib.Serving.Syncing.Structs;
 using AngleSharp.Dom;
-using DynaServeLib.DynaLogic.Utils;
-using DynaServeLib.Serving.FileServing.StructsEnum;
+using DynaServeLib.DynaLogic.DomUtils;
 using DynaServeLib.Utils.Exts;
 using PowBasics.CollectionsExt;
-using PowRxVar;
+using DynaServeLib.DynaLogic.DomLogic;
 
 namespace DynaServeLib.DynaLogic;
 
@@ -146,21 +143,15 @@ class DomOps
 	// image/img.png
 	public void BumpImageUrl(string imgUrl)
 	{
-		// "about:///images/img.png"
 		var nodes = Dom
-			.GetRecursively<IHtmlImageElement>()
-			.WhereToArray(e => DomUtils.IsImgSrcMatchingLink(e, imgUrl));
-
+			.GetAllImgNodes()
+			.WhereToArray(e => e.Id != null && e.Source.GetRelevantLinkEnsure().IsSameAsWithoutQueryParams(imgUrl));
 		foreach (var node in nodes)
-		{
-			if (node.Id == null)
-				continue;
-			var linkPrev = node.Source.RemoveImgSrcPrefix();
-			var linkNext = linkPrev.CssInc();
-			node.Source = linkNext;
-			var propChange = PropChange.MkAttrChange(node.Id, "src", linkNext);
-			SignalDomEvt(new PropChangeDomEvt(propChange));
-		}
+			SignalDomEvt(new PropChangeDomEvt(PropChange.MkAttrChange(
+				node.Id!,
+				"src",
+				node.Source.GetRelevantLinkEnsure().BumpQueryParamCounter()
+			)));
 	}
 
 

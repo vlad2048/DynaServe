@@ -11,13 +11,6 @@ public static class HtmlNodeHookExt
 
 	public static HtmlNode Hook(this HtmlNode node, string evtName, Func<Task> action, bool stopPropagation = false)
 	{
-		/*var stopStr = stopPropagation switch
-		{
-			true => "event.stopPropagation();",
-			false => null
-		};
-
-		node.Attrs[$"on{evtName}"] = $"{stopStr}sockEvt('{node.Id}', '{evtName}')";*/
 		node.AddRefresher(new EvtRefresher(node.Id, evtName, action, stopPropagation));
 		return node;
 	}

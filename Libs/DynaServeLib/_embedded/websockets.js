@@ -92,11 +92,6 @@ function init() {
 							case 'Attr':
 								if (chg.attrName === 'class') {
 									node.className = chg.attrVal;
-								/*} else if (chg.attrName === 'autofocus') {
-									setTimeout(() => {
-										console.log(`focus on ${node.id}`);
-										node.focus();
-									}, 10);*/
 								} else {
 									if (chg.attrVal === undefined || chg.attrVal === null)
 										node.removeAttribute(chg.attrName);

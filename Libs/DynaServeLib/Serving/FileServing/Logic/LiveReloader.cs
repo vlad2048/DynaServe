@@ -2,6 +2,7 @@
 using DynaServeLib.DynaLogic;
 using DynaServeLib.Serving.FileServing.Structs;
 using DynaServeLib.Serving.FileServing.StructsEnum;
+using DynaServeLib.Serving.Syncing.Structs;
 using DynaServeLib.Utils;
 using PowBasics.CollectionsExt;
 using PowRxVar;
@@ -37,20 +38,20 @@ static class LiveReloader
 
 				var cat = reg.Filename.ToCat();
 				var link = reg.Filename.ToLink();
-				//Console.WriteLine($"Invalidated -> '{reg.Filename}'  Cat:{cat}  NeedsLinking:{cat.NeedsLinking()}");
 
-				if (cat.NeedsLinking())
+				switch (cat)
 				{
-					LinkCreator.BumpLink(domOps, link);
-				}
-				else
-				{
-					switch (cat)
-					{
-						case FCat.Image:
-							domOps.BumpImageUrl(link);
-							break;
-					}
+					case FCat.Css:
+						domOps.SendToClient(ServerMsg.MkScriptRefresh(ScriptType.Css, link));
+						break;
+
+					case FCat.Js:
+						domOps.SendToClient(ServerMsg.MkScriptRefresh(ScriptType.Js, link));
+						break;
+
+					case FCat.Image:
+						domOps.BumpImageUrl(link);
+						break;
 				}
 			}).D(d);
 

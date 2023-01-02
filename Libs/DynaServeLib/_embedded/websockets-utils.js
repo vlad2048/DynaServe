@@ -194,12 +194,3 @@ function handleScriptRefresh(msg) {
       throw new Error(`Invalid ScriptType: ${msg.type}`);
   }
 }
-
-/*(function check() {
-  const node = getJsScripts().filter(e => e.src.includes('code.js'))[0];
-  node.remove();
-  setTimeout(() => {
-    mkJsScript('js/code.js?c=23');
-  }, 2000);
-})()
-*/

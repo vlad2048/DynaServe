@@ -15,12 +15,14 @@ interface IRefresher
 	IDisposable Activate(DomOps domOps);
 }
 
+
 record NodeRefresher(string NodeId, IDisposable NodeD) : IRefresher
 {
 	public IRefresher CloneWithId(string nodeId) => this with { NodeId = nodeId };
 	public PropChange[] GetInitialPropChanges() => Array.Empty<PropChange>();
 	public IDisposable Activate(DomOps domOps) => NodeD;
 }
+
 
 record ChildrenRefresher(string NodeId, IObservable<Unit> When, Func<HtmlNode[]> Fun) : IRefresher
 {
@@ -31,6 +33,7 @@ record ChildrenRefresher(string NodeId, IObservable<Unit> When, Func<HtmlNode[]>
 			domOps.UpdateNodeChildren(NodeId, Fun())
 		);
 }
+
 
 record PropChangeRefresher(string NodeId, PropChangeType Type, string? AttrName, IObservable<string?> ValObs) : IRefresher
 {
@@ -51,36 +54,6 @@ record PropChangeRefresher(string NodeId, PropChangeType Type, string? AttrName,
 	public static PropChangeRefresher MkAttr(string nodeId, string? attrName, IObservable<string?> valObs) => new(nodeId, PropChangeType.Attr, attrName, valObs);
 	public static PropChangeRefresher MkText(string nodeId, IObservable<string?> valObs) => new(nodeId, PropChangeType.Text, null, valObs);
 }
-
-
-/*record AttrRefresher(string NodeId, string AttrName, IObservable<string?> ValObs) : IRefresher
-{
-	public IRefresher CloneWithId(string nodeId) => this with { NodeId = nodeId };
-	public PropChange[] GetInitialPropChanges() => Array.Empty<PropChange>();
-	public IDisposable Activate(RefreshCtx ctx) =>
-		ValObs.Subscribe(attrVal =>
-			ctx.SignalDomEvt(new PropChangeDomEvt(
-				PropChange.MkAttrChange(NodeId, AttrName, attrVal)
-			))
-		);
-}
-
-record ClsRefresher(string NodeId, IObservable<string?> ValObs) : IRefresher
-{
-	public IRefresher CloneWithId(string nodeId) => this with { NodeId = nodeId };
-	public PropChange[] GetInitialPropChanges() => Array.Empty<PropChange>();
-	public IDisposable Activate(RefreshCtx ctx) =>
-		ValObs.Subscribe(val =>
-		{
-			//ctx.SendServerMsg(ServerMsg.MkSetCls(NodeId, val));
-			
-			Console.WriteLine($"ClsRefresher: {PropChange.MkAttrChange(NodeId, "class", val)}");
-
-			ctx.SignalDomEvt(new PropChangeDomEvt(
-				PropChange.MkAttrChange(NodeId, "class", val)
-			));
-		});
-}*/
 
 
 record EvtRefresher(string NodeId, string EvtName, Func<Task> Action, bool StopPropagation) : IRefresher

@@ -31,17 +31,4 @@ static class UrlUtils
 			false => s
 		};
 	}
-
-	// Input:  http://box-pc:7000/abc/full-page-nested.html
-	// Output: abc\full-page-nested.html
-	/*public static string? GetRelPath(this string url)
-	{
-		var parts = url.Split(':');
-		if (parts.Length != 3) return null;
-		var s = parts[2];
-		var i = s.IndexOf('/');
-		if (i == -1) return null;
-		return s[(i + 1)..]
-			.Replace("/", @"\");
-	}*/
 }

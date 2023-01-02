@@ -1,6 +1,6 @@
 ﻿using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
-using DynaServeLib.DynaLogic.Utils;
+using DynaServeLib.DynaLogic.DomUtils;
 using PowRxVar;
 
 namespace DynaServeLib.DynaLogic;
@@ -13,7 +13,7 @@ static class DomCreator
 		var d = new Disp();
 
 		var doc = new HtmlParser().ParseDocument(InitialHtml).D(d);
-		DomUtils.AddExtraHtmlNodes(doc, extraHtmlNodes);
+		doc.AddExtraHtmlNodes(extraHtmlNodes);
 
 		return (doc, d);
 	}

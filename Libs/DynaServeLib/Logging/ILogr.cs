@@ -1,6 +1,4 @@
-﻿using DynaServeLib.Utils.Exts;
-
-namespace DynaServeLib.Logging;
+﻿namespace DynaServeLib.Logging;
 
 public interface ILogr
 {
