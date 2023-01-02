@@ -34,7 +34,6 @@ public static class HtmlNodeAttrStyleExt
 		[CallerArgumentExpression(nameof(valObs))] string? valObsName = null
 	)
 	{
-		//node.AddRefresher(new AttrRefresher(node.Id, attrName, valObs.ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
 		node.AddRefresher(PropChangeRefresher.MkAttr(node.Id, attrName, valObs.ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
 		return node;
 	}

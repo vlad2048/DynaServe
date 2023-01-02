@@ -3,7 +3,6 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using DynaServeLib.DynaLogic.DomLogic;
 using DynaServeLib.DynaLogic.Refreshers;
 using PowRxVar;
 
@@ -58,7 +57,7 @@ public class HtmlNode : IRoDispBase
 		TagName = "dummy";
 	}
 
-	internal IElement MakeElt(IHtmlDocument doc, IDomTweaker[] domTweakers)
+	internal IElement MakeElt(IHtmlDocument doc)
 	{
 		var elt = doc.CreateElement(TagName);
 		elt.Id = Id;
@@ -68,9 +67,6 @@ public class HtmlNode : IRoDispBase
 			elt.TextContent = Txt;
 		foreach (var (key, val) in Attrs)
 			elt.SetAttribute(key, val);
-
-		foreach (var domTweaker in domTweakers)
-			domTweaker.TweakNode(elt);
 
 		return elt;
 	}

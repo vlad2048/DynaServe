@@ -1,6 +1,144 @@
 ﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using AngleSharp.Html.Dom;
+using DynaServeLib.DynaLogic;
+using DynaServeLib.DynaLogic.DomLogic;
+using DynaServeLib.DynaLogic.Events;
+using DynaServeLib.Nodes;
+using DynaServeLib.Security;
+using DynaServeLib.Serving;
+using DynaServeLib.Serving.Debugging;
+using DynaServeLib.Serving.FileServing;
+using DynaServeLib.Serving.Repliers.ServeFiles;
+using DynaServeLib.Serving.Repliers.ServePage;
+using DynaServeLib.Serving.Syncing;
+using DynaServeLib.Serving.Syncing.Structs;
+using DynaServeLib.Utils;
+using PowRxVar;
+
+namespace DynaServeLib;
+
+public record ClientUserMsg(string Type, string Arg);
+
+class ServInst : IDisposable
+{
+	internal const string StatusEltId = "syncserv-status";
+	internal const string StatusEltClsAuto = "syncserv-status-auto";
+	internal const string StatusEltClsManual = "syncserv-status-manual";
+	internal const string DynaServVerCls = "DynaServVerCls";
+
+	private readonly Disp d = new();
+	public void Dispose() => d.Dispose();
+
+	private readonly Server server;
+	public readonly FileServer fileServer;
+	private readonly ISubject<IDomEvt> whenDomEvt;
+
+	public Messenger Messenger { get; }
+	public ServOpt Opt { get; }
+	public IHtmlDocument Dom { get;  }
+	public DomOps DomOps { get;  }
+	public ServDbg ServDbg { get; }
+	public IObservable<IDomEvt> WhenDomEvt => whenDomEvt.AsObservable();
+	public void SignalDomEvt(IDomEvt evt) => whenDomEvt.OnNext(evt);
+
+	public ServInst(Action<ServOpt>? optFun, HtmlNode[] rootNodes)
+	{
+		Opt = ServOpt.Build(optFun);
+		SecurityChecker.CheckPort(Opt.CheckSecurity, Opt.Port);
+		whenDomEvt = new Subject<IDomEvt>().D(d);
+
+		Opt.Register_WebsocketScripts();
+		Opt.Register_VersionDisplayer();
+
+		server = new Server(Opt.Port).D(d);
+		Messenger = new Messenger(server).D(d);
+		Dom = DomCreator.Create(Opt.ExtraHtmlNodes).D(d);
+		DomOps = new DomOps(Dom, SignalDomEvt, Messenger);
+		fileServer = new FileServer(
+			DomOps,
+			Opt.ServNfos,
+			Opt.ScssOutputFolder,
+			Opt.LINQPadRefs,
+			Opt.Logr
+		);
+		ServDbg = new ServDbg(DomOps, Messenger).D(d);
+
+		DomOps.AddInitialNodes(rootNodes);
+		DomEvtActioner.Setup(WhenDomEvt, DomOps).D(d);
+		server.AddRepliers(
+			new ServePageReplier(Dom),
+			new ServeFilesReplier(fileServer)
+		);
+		server.AddRepliers(Opt.Repliers);
+		Syncer.Setup(Dom, Messenger).D(d);
+		ServSetupUtils.HookClientUserMessages(Messenger, Opt).D(d);
+
+		Opt.Logr.OnSimpleMsg($"Listening on: {UrlUtils.GetLocalLink(Opt.Port)}");
+	}
+
+	public void Start()
+	{
+		fileServer.Start();
+		server.Start();
+	}
+}
+
+
+public static class Serv
+{
+	private static Disp? trackD;
+
+	internal static ServInst? I { get; private set; }
+	internal static bool IsStarted { get; private set; }
+
+	public static void Start(params HtmlNode[] rootNodes) => Start(null, rootNodes);
+	public static IDisposable Start(Action<ServOpt>? optFun, params HtmlNode[] rootNodes)
+	{
+		IsStarted = false;
+		trackD?.Dispose();
+		var d = trackD = new Disp();
+
+		I = new ServInst(optFun, rootNodes).D(d);
+		I.Start();
+		IsStarted = true;
+
+		return d;
+	}
+	public static ServDbg Dbg => I!.ServDbg;
+	public static HtmlNode StatusEltManual => new HtmlNode("div").Id(ServInst.StatusEltId).Cls(ServInst.StatusEltClsManual);
+	public static IDisposable AddNodeToBody(HtmlNode node)
+	{
+		if (I == null) throw new ArgumentException("Cannot call AddNodeToBody before the server is started");
+		var d = new Disp();
+		I.SignalDomEvt(new AddBodyNodeDomEvt(node));
+		Disposable.Create(() =>
+		{
+			I.SignalDomEvt(new RemoveBodyNodeDomEvt(node.Id));
+		}).D(d);
+		return d;
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using DynaServeLib.DynaLogic;
 using DynaServeLib.DynaLogic.DomLogic;
 using DynaServeLib.DynaLogic.Events;
@@ -11,6 +149,8 @@ using DynaServeLib.Nodes;
 using DynaServeLib.Security;
 using DynaServeLib.Serving;
 using DynaServeLib.Serving.Debugging;
+using DynaServeLib.Serving.FileServing;
+using DynaServeLib.Serving.FileServing.Utils;
 using DynaServeLib.Serving.Repliers;
 using DynaServeLib.Serving.Repliers.DynaServe;
 using DynaServeLib.Serving.Repliers.DynaServe.Holders;
@@ -27,21 +167,11 @@ public record ClientUserMsg(string Type, string Arg);
 
 public class ServOpt
 {
+	private ServOpt() {}
+
 	internal record ScriptJs(string Name, string Script);
 	internal record ScriptCss(string Name, string Script);
 	internal record ServResource(string Link, Reply Resource);
-	
-	//public ILogr Logr { get; set; } = new ConsoleLogr();
-	//public bool PlaceWebSocketsHtmlManually { get; set; }
-	//public bool ShowDynaServLibVersion { get; set; }
-
-	public bool CheckSecurity { get; set; } = true;
-	public int Port { get; set; } = 7000;
-	//public bool CheckSecurity { get; set; };
-	public ILogr Logr { get; set; } = new NullLogr();
-	public bool PlaceWebSocketsHtmlManually { get; set; } = true;
-	public bool ShowDynaServLibVersion { get; set; } = true;
-	public Action<ClientUserMsg> OnClientUserMsg { get; set; } = _ => { };
 	internal List<IReplier> Repliers { get; set; } = new();
 	internal List<string> CssFolders { get; } = new();
 	internal List<string> ImgFolders { get; } = new();
@@ -50,8 +180,44 @@ public class ServOpt
 	internal List<ScriptCss> CssScripts { get; } = new();
 	internal List<ServResource> ServResources { get; } = new();
 	internal Maybe<string> ManifestFile { get; private set; } = May.None<string>();
+	
+	/// <summary>
+	/// If using LINQPad, set this to Util.CurrentQuery.FileReferences
+	/// to allow DynaServ to serv the .css & .scss from the solution folder with live reload
+	/// </summary>
+	public IEnumerable<string>? LINQPadRefs { get; set; }
+	public bool CheckSecurity { get; set; } = true;
+	public int Port { get; set; } = 7000;
+	public ILogr Logr { get; set; } = new NullLogr();
+	public bool PlaceWebSocketsHtmlManually { get; set; } = true;
+	public bool ShowDynaServLibVersion { get; set; } = true;
+	public Action<ClientUserMsg> OnClientUserMsg { get; set; } = _ => { };
+	public void AddRepliers(params IReplier[] repliers) => Repliers.AddRange(repliers);
 
-	internal void KeepUniqueOnly()
+
+
+	public void AddCss(params string[] cssFolders) => CssFolders.AddRange(cssFolders);
+	public void AddImg(params string[] imgFolders) => ImgFolders.AddRange(imgFolders);
+	public void AddFonts(params string[] fontFolders) => FontFolders.AddRange(fontFolders);
+	public void SetManifest(string manifestFile) => ManifestFile = May.Some(manifestFile);
+	public void AddScriptJs(string name, string script) => JsScripts.Add(new ScriptJs(name, script));
+	public void AddScriptCss(string name, string script) => CssScripts.Add(new ScriptCss(name, script));
+	public void ServEmbeddedFontResources(EmbeddedFile[] files) => ServResources.AddRange(files.Select(file => new ServResource(
+		$"fonts/{file.Name}",
+		Reply.Mk(ReplyType.FontWoff2, file.Content)
+	)));
+
+
+
+	internal static ServOpt Build(Action<ServOpt>? optFun)
+	{
+		var opt = new ServOpt();
+		optFun?.Invoke(opt);
+		opt.KeepUniqueOnly();
+		return opt;
+	}
+
+	private void KeepUniqueOnly()
 	{
 		static void Do<T>(List<T> list)
 		{
@@ -64,29 +230,6 @@ public class ServOpt
 		Do(ImgFolders);
 		Do(FontFolders);
 		Do(ServResources);
-	}
-
-	private ServOpt() {}
-
-	public void AddRepliers(params IReplier[] repliers) => Repliers.AddRange(repliers);
-	public void AddCss(params string[] cssFolders) => CssFolders.AddRange(cssFolders);
-	public void AddImg(params string[] imgFolders) => ImgFolders.AddRange(imgFolders);
-	public void AddFonts(params string[] fontFolders) => FontFolders.AddRange(fontFolders);
-	public void SetManifest(string manifestFile) => ManifestFile = May.Some(manifestFile);
-	public void AddScriptJs(string name, string script) => JsScripts.Add(new ScriptJs(name, script));
-	public void AddScriptCss(string name, string script) => CssScripts.Add(new ScriptCss(name, script));
-
-	public void ServEmbeddedFontResources(EmbeddedFile[] files) => ServResources.AddRange(files.Select(file => new ServResource(
-		$"fonts/{file.Name}",
-		Reply.Mk(ReplyType.FontWoff2, file.Content)
-	)));
-
-	internal static ServOpt Build(Action<ServOpt>? optFun)
-	{
-		var opt = new ServOpt();
-		optFun?.Invoke(opt);
-		opt.KeepUniqueOnly();
-		return opt;
 	}
 }
 
@@ -125,6 +268,12 @@ class ServInst : IDisposable
 			new ImgDomTweaker(opt.ImgFolders, resourceHolder, opt.Logr)
 		};
 		Dom = new Dom(rootNodes, domTweakers, whenDomEvt.AsObservable(), resourceHolder, opt.Logr).D(d);
+
+
+		var fileServer = new FileServer(Dom.Doc, FuzzyFolderFinder.Find(opt.LINQPadRefs));
+
+
+
 
 		Dom.AddScriptJS("css-links", Embedded.Read("css-links.js", ("{{HttpLink}}", UrlUtils.GetLocalLink(opt.Port))));
 		Dom.AddScriptJS("websockets", Embedded.Read("websockets.js", ("{{WSLink}}", UrlUtils.GetWSLink(opt.Port)), ("{{StatusEltId}}", StatusEltId)));
@@ -175,8 +324,6 @@ class ServInst : IDisposable
 
 public static class Serv
 {
-	//internal static Disp D { get; private set; } = null!;
-
 	private static Disp? trackD;
 	internal static ServInst? ServInst { get; private set; }
 	internal static bool IsStarted { get; private set; }
@@ -225,3 +372,4 @@ static class St
 		I.Syncer.SendToClient(serverMsg);
 	}
 }
+*/

@@ -266,7 +266,7 @@ class FileSrcRequester
 
 
 
-static class VideoForwarderExt
+file static class VideoForwarderExt
 {
 	public static RngRes GetRngRes(this HttpResponseMessage res)
 	{

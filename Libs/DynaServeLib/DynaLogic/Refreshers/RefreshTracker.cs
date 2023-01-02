@@ -15,9 +15,8 @@ class RefreshTracker : IDisposable
 	public void Dispose() => d.Dispose();
 
 	private readonly Dictionary<string, Disp> refresherMap;
+	private readonly DomOps domOps;
 	private readonly Dictionary<string, IRefresher[]> dbgMap = new();
-	private RefreshCtx? ctx;
-	private RefreshCtx Ctx => ctx ?? throw new ArgumentException("Start not called");
 
 	public string DbgGetRefresherIds() => refresherMap.Keys.JoinText(", ");
 
@@ -26,18 +25,11 @@ class RefreshTracker : IDisposable
 		t => t.Value.SelectToArray(e => e.GetType().Name)
 	));
 
-	public RefreshTracker()
+	public RefreshTracker(DomOps domOps)
 	{
 		refresherMap = new Dictionary<string, Disp>().D(d);
+		this.domOps = domOps;
 	}
-
-	public void Start(RefreshCtx refreshCtx)
-	{
-		if (ctx != null) throw new ArgumentException();
-		ctx = refreshCtx;
-	}
-
-
 
 	public void ReplaceRefreshers(IEnumerable<string> refreshersPrevKeys, IEnumerable<IRefresher> refreshersNext)
 	{
@@ -49,8 +41,6 @@ class RefreshTracker : IDisposable
 	
 	public void AddRefreshers(IEnumerable<IRefresher> refreshers)
 	{
-		if (ctx == null) throw new ArgumentException("ctx == null");
-
 		var grps = refreshers.GroupBy(e => e.NodeId);
 		foreach (var grp in grps)
 		{
@@ -58,7 +48,7 @@ class RefreshTracker : IDisposable
 				throw new ArgumentException("refresherMap.ContainsKey(grp.Key)");
 			var rd = new Disp();
 			foreach (var refresher in grp)
-				refresher.Activate(Ctx).D(rd);
+				refresher.Activate(domOps).D(rd);
 
 			try
 			{
@@ -91,8 +81,6 @@ class RefreshTracker : IDisposable
 
 	private void RemoveRefresher(string id)
 	{
-		if (ctx == null) throw new ArgumentException();
-
 		if (refresherMap.TryGetValue(id, out var rd))
 		{
 			rd.Dispose();

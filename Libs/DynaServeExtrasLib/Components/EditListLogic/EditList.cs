@@ -11,9 +11,13 @@ using PowBasics.CollectionsExt;
 
 namespace DynaServeExtrasLib.Components.EditListLogic;
 
+static class EditListConsts
+{
+	public static readonly TimeSpan DebounceTime = TimeSpan.FromMilliseconds(50);
+}
+
 public class EditList<T> : IDisposable
 {
-	private static readonly TimeSpan DebounceTime = TimeSpan.FromMilliseconds(50);
 
     private readonly Disp d = new();
     public void Dispose() => d.Dispose();
@@ -35,7 +39,7 @@ public class EditList<T> : IDisposable
         SelItem.ToUnit(),
         SelItems.ToUnit(),
         opt.ItemDispWhenChange ?? Observable.Never<Unit>()
-    ).Throttle(DebounceTime).Prepend(Unit.Default);
+    ).Throttle(EditListConsts.DebounceTime).Prepend(Unit.Default);
 
 
     public EditList(
@@ -76,10 +80,6 @@ public class EditList<T> : IDisposable
                             .Select(ComputeItemDispNfo)
                             .Select(nfo =>
                                 itemDispFun(nfo)
-                                    /*.OnClick(() =>
-                                    {
-                                        OnItemClicked(nfo.Item);
-                                    }, true)*/
                                     .Hook("mousedown", () => OnItemClicked(nfo.Item), true)
                                     .OnClick(() => {}, true)
                             )

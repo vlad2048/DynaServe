@@ -12,6 +12,16 @@ public static class Embedded
 	internal static string Read(string name, params (string, string)[] substitutions) =>
 		Read(name, typeof(Embedded).Assembly, substitutions);
 
+	public static string GetNameFromFullName(string s)
+	{
+		var idx = s.LastIndexOf('.');
+		if (idx == -1) throw new ArgumentException();
+		var t = s[..idx];
+		idx = t.LastIndexOf('.');
+		if (idx == -1) throw new ArgumentException();
+		return s[(idx + 1)..];
+	}
+
 
 	public static EmbeddedFile[] ReadFolder(string folderName, Assembly assembly, string ext)
 	{

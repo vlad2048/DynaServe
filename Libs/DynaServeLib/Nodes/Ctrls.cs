@@ -25,7 +25,8 @@ public static class Ctrls
 
 		var node = new HtmlNode("input")
 			.Attr("type", "text")
-			.Attr("value", rxVar.V)
+			//.Attr("value", rxVar.V)
+			.Attr("value", rxVar.Where(_ => !isUiUpdate))
 			.HookArg("input", v =>
 			{
 				isUiUpdate = true;
@@ -33,7 +34,7 @@ public static class Ctrls
 				isUiUpdate = false;
 			}, "this.value");
 
-		rxVar
+		/*rxVar
 			.Where(_ => !isUiUpdate)
 			.Subscribe(val =>
 			{
@@ -42,7 +43,7 @@ public static class Ctrls
 				{
 					PropChange.MkAttrChange(node.Id, "value", val),
 				}));
-			}).D(node.D);
+			}).D(node.D);*/
 
 		return node;
 	}
@@ -53,7 +54,8 @@ public static class Ctrls
 
 		var node = new HtmlNode("input")
 			.Attr("type", "checkbox")
-			.Attr("checked", rxVar.V ? "" : null)
+			//.Attr("checked", rxVar.V ? "" : null)
+			.Attr("checked", rxVar.Where(_ => !isUiUpdate).Select(e => e ? "" : null))
 			.HookArg("change", valStr =>
 			{
 				var val = bool.Parse(valStr);
@@ -62,7 +64,7 @@ public static class Ctrls
 				isUiUpdate = false;
 			}, "this.checked");
 
-		rxVar
+		/*rxVar
 			.Where(_ => !isUiUpdate)
 			.Subscribe(val =>
 			{
@@ -72,7 +74,7 @@ public static class Ctrls
 				{
 					PropChange.MkAttrChange(node.Id, "checked", valStr),
 				}));
-			}).D(node.D);
+			}).D(node.D);*/
 
 		return node;
 	}
@@ -85,7 +87,8 @@ public static class Ctrls
 			.Attr("type", "range")
 			.Attr("min", $"{min}")
 			.Attr("max", $"{max}")
-			.Attr("value", $"{rxVar.V}")
+			//.Attr("value", $"{rxVar.V}")
+			.Attr("value", rxVar.Where(_ => !isUiUpdate).Select(e => $"{e}"))
 			.HookArg("change", valStr =>
 			{
 				var val = int.Parse(valStr);
@@ -94,7 +97,7 @@ public static class Ctrls
 				isUiUpdate = false;
 			}, "this.value");
 
-		rxVar
+		/*rxVar
 			.Where(_ => !isUiUpdate)
 			.Subscribe(val =>
 			{
@@ -104,7 +107,7 @@ public static class Ctrls
 				{
 					PropChange.MkAttrChange(node.Id, "value", valStr),
 				}));
-			}).D(node.D);
+			}).D(node.D);*/
 
 		return node;
 	}

@@ -5,8 +5,10 @@ namespace DynaServeLib.Security;
 
 public static class SecurityChecker
 {
-	public static bool CheckPort(int port, bool enableLog = false)
+	public static bool CheckPort(bool checkSecurity, int port, bool enableLog = false)
 	{
+		if (!checkSecurity) return true;
+
 		var isValid = true;
 
 		void L(string s)

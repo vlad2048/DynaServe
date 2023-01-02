@@ -6,7 +6,7 @@ using DynaServeExtrasLib.Components.DlgInputLogic;
 
 namespace ExtrasPlay;
 
-static class Demo_DlgInput
+static class Demo_Extras_DlgInput
 {
 	public static void Run()
 	{
@@ -16,7 +16,7 @@ static class Demo_DlgInput
 			opt =>
 			{
 				opt.RegisterDlgInput();
-				opt.AddScriptCss("demo", DemoCss);
+				opt.ServeHardcoded("demo.css", DemoCss);
 			},
 			Div("btnrow").Wrap(
 				Btn("Edit", async () =>

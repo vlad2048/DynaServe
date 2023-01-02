@@ -15,7 +15,7 @@ public class FolderWatcher : IDisposable
 	{
 		var watcher = new FileSystemWatcher(folder)
 		{
-			IncludeSubdirectories = true,
+			IncludeSubdirectories = false,
 			NotifyFilter = NotifyFilters.LastWrite,
 			Filter = filter,
 		}.D(d);

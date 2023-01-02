@@ -3,38 +3,32 @@ using DynaServeLib.Nodes;
 using DynaServeLib.Serving.Syncing.Structs;
 using System.Reactive.Linq;
 using System.Reactive;
-using PowMaybe;
 
 namespace DynaServeLib.DynaLogic.Refreshers;
 
-record RefreshCtx(
-	Action<IDomEvt> SignalDomEvt,
-	IObservable<ClientMsg> WhenClientMsg,
-	Action<ServerMsg> SendServerMsg
-);
 
 interface IRefresher
 {
 	string NodeId { get; }
 	IRefresher CloneWithId(string nodeId);
 	PropChange[] GetInitialPropChanges();
-	IDisposable Activate(RefreshCtx ctx);
+	IDisposable Activate(DomOps domOps);
 }
 
 record NodeRefresher(string NodeId, IDisposable NodeD) : IRefresher
 {
 	public IRefresher CloneWithId(string nodeId) => this with { NodeId = nodeId };
 	public PropChange[] GetInitialPropChanges() => Array.Empty<PropChange>();
-	public IDisposable Activate(RefreshCtx ctx) => NodeD;
+	public IDisposable Activate(DomOps domOps) => NodeD;
 }
 
 record ChildrenRefresher(string NodeId, IObservable<Unit> When, Func<HtmlNode[]> Fun) : IRefresher
 {
 	public IRefresher CloneWithId(string nodeId) => this with { NodeId = nodeId };
 	public PropChange[] GetInitialPropChanges() => Array.Empty<PropChange>();
-	public IDisposable Activate(RefreshCtx ctx) =>
+	public IDisposable Activate(DomOps domOps) =>
 		When.Subscribe(_ =>
-			ctx.SignalDomEvt(new UpdateChildrenDomEvt(NodeId, Fun()))
+			domOps.UpdateNodeChildren(NodeId, Fun())
 		);
 }
 
@@ -42,9 +36,9 @@ record PropChangeRefresher(string NodeId, PropChangeType Type, string? AttrName,
 {
 	public IRefresher CloneWithId(string nodeId) => this with { NodeId = nodeId };
 	public PropChange[] GetInitialPropChanges() => Array.Empty<PropChange>();
-	public IDisposable Activate(RefreshCtx ctx) =>
+	public IDisposable Activate(DomOps domOps) =>
 		ValObs.Subscribe(val =>
-			ctx.SignalDomEvt(new PropChangeDomEvt(
+			domOps.SignalDomEvt(new PropChangeDomEvt(
 				Type switch
 				{
 					PropChangeType.Attr => PropChange.MkAttrChange(NodeId, AttrName!, val),
@@ -100,16 +94,20 @@ record EvtRefresher(string NodeId, string EvtName, Func<Task> Action, bool StopP
 			$"{EvtRefresherUtils.MkStopPropagationStr(StopPropagation)}sockEvt('{NodeId}', '{EvtName}')"
 		)
 	};
-	public IDisposable Activate(RefreshCtx ctx) =>
-		ctx.WhenClientMsg
+
+	public IDisposable Activate(DomOps domOps) =>
+		domOps.WhenClientMsg
 			.Where(e => e.Type == ClientMsgType.HookCalled && e.Id == NodeId && e.EvtName == EvtName)
-			.Subscribe(async _ => await EvtRefresherUtils.WrapAsyncActionInTryCatch(
-				async _ => await Action(),
-				"EvtRefresher",
-				NodeId,
-				EvtName,
-				""
-			));
+			.SelectMany(_ => Observable.FromAsync(Action))
+			.Subscribe();
+
+	/*.Subscribe(async _ => await EvtRefresherUtils.WrapAsyncActionInTryCatch(
+		async _ => await Action(),
+		"EvtRefresher",
+		NodeId,
+		EvtName,
+		""
+	));*/
 }
 
 record EvtArgRefresher(string NodeId, string EvtName, Func<string, Task> Action, string ArgExpr, bool StopPropagation) : IRefresher
@@ -124,16 +122,19 @@ record EvtArgRefresher(string NodeId, string EvtName, Func<string, Task> Action,
 		)
 	};
 
-	public IDisposable Activate(RefreshCtx ctx) =>
-		ctx.WhenClientMsg
+	public IDisposable Activate(DomOps domOps) =>
+		domOps.WhenClientMsg
 			.Where(e => e.Type == ClientMsgType.HookArgCalled && e.Id == NodeId && e.EvtName == EvtName)
-			.Subscribe(async e => await EvtRefresherUtils.WrapAsyncActionInTryCatch(
-				Action,
-				"EvtRefresherArgs",
-				NodeId,
-				EvtName,
-				e.EvtArg!
-			));
+			.SelectMany(e => Observable.FromAsync(() => Action(e.EvtArg!)))
+			.Subscribe();
+
+	/*.Subscribe(async e => await EvtRefresherUtils.WrapAsyncActionInTryCatch(
+		Action,
+		"EvtRefresherArgs",
+		NodeId,
+		EvtName,
+		e.EvtArg!
+	));*/
 }
 
 

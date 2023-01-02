@@ -1,4 +1,4 @@
-﻿using DynaServeLib.DynaLogic;
+﻿using AngleSharp.Html.Dom;
 using DynaServeLib.Serving.Repliers.DynaServe.Holders;
 using DynaServeLib.Serving.Structs;
 using DynaServeLib.Utils;
@@ -9,9 +9,9 @@ namespace DynaServeLib.Serving.Repliers.DynaServe;
 class DynaServeReplier : IReplier
 {
 	private readonly ResourceHolder resourceHolder;
-	private readonly Dom dom;
+	private readonly IHtmlDocument dom;
 
-	public DynaServeReplier(ResourceHolder resourceHolder, Dom dom)
+	public DynaServeReplier(ResourceHolder resourceHolder, IHtmlDocument dom)
 	{
 		this.resourceHolder = resourceHolder;
 		this.dom = dom;
@@ -26,10 +26,9 @@ class DynaServeReplier : IReplier
 
 		if (url == "index.html")
 		{
-			var replyTxt = dom.Doc.Fmt();
+			var replyTxt = dom.Fmt();
 			var reply = Structs.Reply.MkTxt(ReplyType.Html, replyTxt);
 			await reply.WriteToResponse(res);
-			dom.LogEvt("sent index.html");
 			return true;
 		}
 

@@ -4,7 +4,7 @@ using static DynaServeExtrasLib.Components.FontAwesomeLogic.FontAwesomeCtrls;
 
 namespace ExtrasPlay;
 
-static class Demo_FontAwesome
+static class Demo_Extras_FontAwesome
 {
 	public static void Run()
 	{

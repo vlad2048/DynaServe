@@ -1,86 +1,82 @@
 ﻿using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using DynaServeLib.DynaLogic;
+using AngleSharp.Dom;
+using AngleSharp.Html.Dom;
+using DynaServeLib.DynaLogic.Utils;
 using DynaServeLib.Serving.Syncing.Structs;
-using DynaServeLib.Serving.Syncing.Utils;
 using DynaServeLib.Utils.Exts;
 using PowBasics.CollectionsExt;
 using PowRxVar;
 
 namespace DynaServeLib.Serving.Syncing;
 
-
-class Syncer : IDisposable
+static class Syncer
 {
-	private readonly Disp d = new();
-	public void Dispose() => d.Dispose();
-
-	private readonly ISubject<ClientMsg> whenClientMsg;
-	private readonly ISubject<ServerMsg> whenServerMsg;
-
-	public IObservable<ClientMsg> WhenClientMsg => whenClientMsg.AsObservable();
-	public IObservable<ServerMsg> WhenServerMsg => whenServerMsg.AsObservable();
-
-	public void SendToClient(ServerMsg msg) => whenServerMsg.OnNext(msg);
-	private static void L(string s) => Console.WriteLine(s);
-
-	public Syncer(Server server, Dom dom)
+	public static IDisposable Setup(IHtmlDocument dom, Messenger messenger)
 	{
-		whenClientMsg = new Subject<ClientMsg>().D(d);
-		whenServerMsg = new Subject<ServerMsg>().D(d);
+		var d = new Disp();
 
-		server.WhenWsOpen
+		messenger.WhenClientConnects
 			.Subscribe(_ =>
 			{
 				var bodyFmt = dom.GetPageBodyNodes().Fmt();
-				SendToClient(ServerMsg.MkFullUpdate(bodyFmt));
+				messenger.SendToClient(ServerMsg.MkFullUpdate(bodyFmt));
 			}).D(d);
 
-		server.WhenWsMsg
-			.Select(e => SyncJsonUtils.Deser<ClientMsg>(e.Msg))
+		messenger.WhenClientMsg
+			.Where(e => e.Type == ClientMsgType.ReqScriptsSync)
+			.Select(e => e.ReqScriptsSyncMsg!)
 			.Subscribe(msg =>
 			{
-				switch (msg.Type)
-				{
-					case ClientMsgType.ReqCssSync:
-					{
-						var domLinks = dom.GetCssLinks();
-						var webLinks = msg.CssLinks!;
+				var cssDomLinks = dom.GetCssLinks();
+				var cssWebLinks = msg.CssLinks;
+				var cssDel = cssWebLinks.WhereNotToArray(cssDomLinks.Contains);
+				var cssAdd = cssDomLinks.WhereNotToArray(cssWebLinks.Contains);
 
-						static void L(string s) => Console.WriteLine(s);
-						static void LogArr(string header, string[] arr)
-						{
-							L(header);
-							L(new string('=', header.Length));
-							foreach (var elt in arr) L($"  {elt}");
-						}
+				var jsDomLinks = dom.GetJsLinks();
+				var jsWebLinks = msg.JsLinks;
+				var jsDel = jsWebLinks.WhereNotToArray(jsDomLinks.Contains);
+				var jsAdd = jsDomLinks.WhereNotToArray(jsWebLinks.Contains);
 
-						//L("ReqCssSync");
-						//LogArr("Dom Links", domLinks);
-						//LogArr("Web Links", webLinks);
-
-						var remove = webLinks.WhereNotToArray(domLinks.Contains);
-						var add = domLinks.WhereNotToArray(webLinks.Contains);
-
-						SendToClient(ServerMsg.MkCssSync(remove, add));
-
-						break;
-					}
-
-					default:
-					{
-						whenClientMsg.OnNext(msg);
-						break;
-					}
-				}
+				messenger.SendToClient(ServerMsg.MkReplyScriptsSync(new ReplyScriptsSyncMsg(
+					cssDel,
+					cssAdd,
+					jsDel,
+					jsAdd
+				)));
 			}).D(d);
 
-		WhenServerMsg
-			.Synchronize()
-			.Subscribe(msg =>
-			{
-				var str = SyncJsonUtils.Ser(msg);
-				server.WsSend(_ => Task.FromResult(str)).Wait();
-			}).D(d);
+		return d;
 	}
+
+
+	private static IElement[] GetPageBodyNodes(this IHtmlDocument dom) =>
+		dom
+			.FindDescendant<IHtmlBodyElement>()!
+			.Children
+			.Where(e => e.Id != ServInst.StatusEltId)
+			.ToArray();
+
+	private static string[] GetCssLinks(this IHtmlDocument dom) =>
+		dom.GetCssLinkNodes()
+			.Select(e => e.Href!.CssNorm())
+			.ToArray();
+
+	private static string[] GetJsLinks(this IHtmlDocument dom) =>
+		dom.GetJsLinkNodes()
+			.Select(e => e.Source!.CssNorm())
+			.ToArray();
+
+	private static IHtmlLinkElement[] GetCssLinkNodes(this IHtmlDocument dom) =>
+		dom
+			.FindDescendant<IHtmlHeadElement>()!
+			.Children
+			.FilterCssLinks()
+			.ToArray();
+
+	private static IHtmlScriptElement[] GetJsLinkNodes(this IHtmlDocument dom) =>
+		dom
+			.FindDescendant<IHtmlHeadElement>()!
+			.Children
+			.FilterJsLinks()
+			.ToArray();
 }

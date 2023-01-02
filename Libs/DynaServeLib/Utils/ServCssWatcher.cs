@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿/*
+using System.Diagnostics;
 using System.Reactive.Disposables;
 using CliWrap;
 using DynaServeLib.DynaLogic;
@@ -142,17 +143,17 @@ static class ServCssWatcher
 			Directory.Delete(dir, true);
 	}
 
-	/*private static string GetFolderOut(string folderIn)
-	{
-		var baseFolder = Path.GetDirectoryName(folderIn)!;
-		var name = Path.GetFileNameWithoutExtension(folderIn);
-		var folderOut = Path.Combine(baseFolder, $"{name}-compiled");
-		if (!Directory.Exists(folderOut))
-			Directory.CreateDirectory(folderOut);
-		foreach (var file in Directory.GetFiles(folderOut))
-			File.Delete(file);
-		return folderOut;
-	}*/
+	//private static string GetFolderOut(string folderIn)
+	//{
+	//	var baseFolder = Path.GetDirectoryName(folderIn)!;
+	//	var name = Path.GetFileNameWithoutExtension(folderIn);
+	//	var folderOut = Path.Combine(baseFolder, $"{name}-compiled");
+	//	if (!Directory.Exists(folderOut))
+	//		Directory.CreateDirectory(folderOut);
+	//	foreach (var file in Directory.GetFiles(folderOut))
+	//		File.Delete(file);
+	//	return folderOut;
+	//}
 
 	private static void CopySingle(string fileSrc, string folderDst)
 	{
@@ -215,3 +216,4 @@ static class ServCssWatcher
 			proc.Kill();
 	}
 }
+*/

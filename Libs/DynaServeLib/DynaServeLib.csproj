@@ -5,16 +5,16 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Remove="_embedded\css-links.js" />
 		<None Remove="_embedded\dynaservver.css" />
 		<None Remove="_embedded\dynaservver.html" />
+		<None Remove="_embedded\websockets-utils.js" />
 		<None Remove="_embedded\websockets.css" />
 		<None Remove="_embedded\websockets.html" />
 		<None Remove="_embedded\websockets.js" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="_embedded\css-links.js" />
+		<EmbeddedResource Include="_embedded\websockets-utils.js" />
 		<EmbeddedResource Include="_embedded\dynaservver.css" />
 		<EmbeddedResource Include="_embedded\dynaservver.html" />
 		<EmbeddedResource Include="_embedded\websockets.css" />
@@ -31,8 +31,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="DynaLogic\DomUtils\" />
 	  <Folder Include="Gizmos\" />
 	  <Folder Include="Serving\Debugging\Structs\" />
+	  <Folder Include="Serving\Repliers\ServeFiles\" />
+	  <Folder Include="Serving\Repliers\ServePage\" />
 	</ItemGroup>
 
 </Project>

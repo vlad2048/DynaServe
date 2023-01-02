@@ -2,7 +2,7 @@
 
 namespace DynaServeLib.Utils.Exts;
 
-static class StrExt
+public static class StrExt
 {
 	public static string[] ToLines(this string s) => s.Split(Environment.NewLine);
 	public static string FromLines(this IEnumerable<string> ls) => string.Join(Environment.NewLine, ls);

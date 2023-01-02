@@ -1,12 +1,12 @@
 ﻿using AngleSharp.Dom;
-using DynaServeLib.DynaLogic.Refreshers;
+using AngleSharp.Html.Dom;
 using PowBasics.CollectionsExt;
 
 namespace DynaServeLib.DynaLogic;
 
 static class DomExt
 {
-	public static IElement GetById(this Dom dom, string id) => dom.Doc.GetElementById(id) ?? throw new ArgumentException();
+	public static IElement GetById(this IHtmlDocument dom, string id) => dom.GetElementById(id) ?? throw new ArgumentException();
 
 	public static void RemoveAllChildren(this IElement elt)
 	{
@@ -42,6 +42,7 @@ static class DomExt
 
 	public static string[] GetAllChildrenIds(this IElement elt, bool includeRoot)
 	{
+		if (elt.Id == null) throw new ArgumentException();
 		var list = new List<string>();
 
 		if (includeRoot)
@@ -49,6 +50,7 @@ static class DomExt
 
 		void Recurse(IElement e)
 		{
+			if (e.Id == null) throw new ArgumentException();
 			list.Add(e.Id);
 			foreach (var ec in e.Children)
 				Recurse(ec);
@@ -59,22 +61,4 @@ static class DomExt
 
 		return list.ToArray();
 	}
-
-
-
-	/*private static IElement[] GetAllChildrenRecursively(this IElement node)
-	{
-		var list = new List<IElement>();
-		void Recurse(IElement n)
-		{
-			if (n.Id != null)
-				list.Add(n);
-			foreach (var child in n.Children)
-				Recurse(child);
-		}
-
-		foreach (var child in node.Children)
-			Recurse(child);
-		return list.ToArray();
-	}*/
 }

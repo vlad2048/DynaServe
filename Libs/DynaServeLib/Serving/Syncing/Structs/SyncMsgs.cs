@@ -2,12 +2,17 @@
 
 enum ClientMsgType
 {
-	ReqCssSync,
+	ReqScriptsSync,
 	HookCalled,
 	HookArgCalled,
 	AnswerDomSnapshot,
 	User
 }
+
+record ReqScriptsSyncMsg(
+	string[] CssLinks,
+	string[] JsLinks
+);
 
 record ClientDomSnapshot(
 	string Head,
@@ -17,11 +22,11 @@ record ClientDomSnapshot(
 class ClientMsg
 {
 	public ClientMsgType Type { get; init; }
+	public ReqScriptsSyncMsg? ReqScriptsSyncMsg { get; init; }
 	public string? Id { get; init; }
 	public string? EvtName { get; init; }
 	public string? EvtArg { get; init; }
 	public string? Html { get; init; }
-	public string[]? CssLinks { get; init; }
 	public ClientDomSnapshot? ClientDomSnapshot { get; init; }
 	public string? UserType { get; init; }
 	public string? UserArg { get; init; }
@@ -30,18 +35,34 @@ class ClientMsg
 public enum ServerMsgType
 {
 	FullUpdate,
+	ReplyScriptsSync,
+	ScriptRefresh,
 
 	PropChangesDomUpdate,
 	ReplaceChildrenDomUpdate,
 
 	ReqDomSnapshot,
 
-	CssSync,
 	AddChildToBody,
 	RemoveChildFromBody,
-	RefreshCss,
 	ReqCallMethodOnNode
 }
+
+public record ReplyScriptsSyncMsg(
+	string[] CssLinksDel,
+	string[] CssLinksAdd,
+	string[] JsLinksDel,
+	string[] JsLinksAdd
+);
+
+public enum ScriptType
+{
+	Css,
+	Js
+}
+
+// Type:Css  Link:css/edit-list?c=6
+public record ScriptRefreshNfo(ScriptType Type, string Link);
 
 public enum PropChangeType
 {
@@ -82,13 +103,10 @@ public class ServerMsg
 {
 	public ServerMsgType Type { get; }
 	public string? Html { get; private init; }
+	public ReplyScriptsSyncMsg? ReplyScriptsSyncMsg { get; private init; }
+	public ScriptRefreshNfo? ScriptRefreshNfo { get; private init; }
 	public PropChange[]? PropChanges { get; private init; }
-	public string[]? CssSyncRemove { get; private init; }
-	public string[]? CssSyncAdd { get; private init; }
 	public string? NodeId { get; private init; }
-	public string? CssLinkRefresh { get; private init; }
-	public string? AttrName { get; private init; }
-	public string? AttrVal { get; private init; }
 	public string? MethodName { get; private init; }
 
 	private ServerMsg(ServerMsgType type) => Type = type;
@@ -96,6 +114,16 @@ public class ServerMsg
 	public static ServerMsg MkFullUpdate(string html) => new(ServerMsgType.FullUpdate)
 	{
 		Html = html,
+	};
+
+	public static ServerMsg MkReplyScriptsSync(ReplyScriptsSyncMsg replyScriptsSyncMsg) => new(ServerMsgType.ReplyScriptsSync)
+	{
+		ReplyScriptsSyncMsg = replyScriptsSyncMsg
+	};
+
+	public static ServerMsg MkScriptRefresh(ScriptType scriptType, string link) => new(ServerMsgType.ScriptRefresh)
+	{
+		ScriptRefreshNfo = new ScriptRefreshNfo(scriptType, link)
 	};
 
 	public static ServerMsg MkPropChangesDomUpdate(PropChange[] propChanges) => new(ServerMsgType.PropChangesDomUpdate)
@@ -111,12 +139,6 @@ public class ServerMsg
 
 	public static ServerMsg MkReqDomSnapshot() => new(ServerMsgType.ReqDomSnapshot);
 
-	public static ServerMsg MkCssSync(string[] remove, string[] add) => new(ServerMsgType.CssSync)
-	{
-		CssSyncRemove = remove,
-		CssSyncAdd = add,
-	};
-
 	public static ServerMsg MkAddChildToBody(string html) => new(ServerMsgType.AddChildToBody)
 	{
 		Html = html,
@@ -125,11 +147,6 @@ public class ServerMsg
 	public static ServerMsg MkRemoveChildFromBody(string nodeId) => new(ServerMsgType.RemoveChildFromBody)
 	{
 		NodeId = nodeId,
-	};
-
-	public static ServerMsg MkRefreshCss(string cssLinkRefresh) => new(ServerMsgType.RefreshCss)
-	{
-		CssLinkRefresh = cssLinkRefresh,
 	};
 
 	public static ServerMsg MkReqCallMethodOnNode(string nodeId, string methodName) => new(ServerMsgType.ReqCallMethodOnNode)

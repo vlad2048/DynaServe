@@ -30,6 +30,8 @@ void OnStart()
 
 void Main()
 {
+	//typeof(DynaServeExtrasLib.DynaServeExtrasDebug).Assembly.GetManifestResourceNames().Dump(); return;
+	
 	IDisposable? ctrlD = null;
 	var ctrlRef = new Ref();
 	Util.InvokeScript(false, "eval", "document.body.style = 'font-family: consolas'");

@@ -22,7 +22,7 @@ public sealed class Server : IDisposable
     public void Dispose() => d.Dispose();
 
     private readonly ISubject<Unit> whenWsOpen;
-    private readonly IReadOnlyList<IReplier> repliers;
+    private readonly List<IReplier> repliers = new();
     private readonly HttpListener listener;
     private readonly ISubject<WsMsg> whenWsMsg;
     private readonly ConcurrentDictionary<WebSocket, WebSocket> sockets = new();
@@ -30,15 +30,17 @@ public sealed class Server : IDisposable
     public IObservable<Unit> WhenWsOpen => whenWsOpen.AsObservable();
     public IObservable<WsMsg> WhenWsMsg => whenWsMsg.AsObservable();
 
-    public Server(int port, IReadOnlyList<IReplier> repliers)
+    public Server(int port)
     {
 	    whenWsOpen = new Subject<Unit>().D(d);
-	    this.repliers = repliers;
         whenWsMsg = new Subject<WsMsg>().D(d);
         listener = new HttpListener();
 		Disposable.Create(listener.Stop).D(d);
         listener.Prefixes.Add(UrlAclOps.MkUrl(port));
     }
+
+    public void AddRepliers(IEnumerable<IReplier> source) => repliers.AddRange(source);
+    public void AddRepliers(params IReplier[] repliersArr) => repliers.AddRange(repliersArr);
 
     public void Start()
     {
@@ -164,6 +166,7 @@ public sealed class Server : IDisposable
 
 				    case WebSocketMessageType.Binary:
 					    throw new ArgumentException("Cannot handle binary websocket messages");
+
 				    case WebSocketMessageType.Text:
 					    var str = await ws.ReadString(buffer, recv, cancelToken);
 					    var wsMsg = new WsMsg(ws, str);

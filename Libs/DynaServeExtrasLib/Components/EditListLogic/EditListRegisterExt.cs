@@ -2,6 +2,7 @@
 using DynaServeExtrasLib.Components.FontAwesomeLogic;
 using DynaServeExtrasLib.Utils;
 using DynaServeLib;
+using DynaServeLib.Serving.FileServing.StructsEnum;
 
 namespace DynaServeExtrasLib.Components.EditListLogic;
 
@@ -11,6 +12,6 @@ public static class EditListRegisterExt
 	{
 		opt.RegisterFontAwesome();
 		opt.RegisterDlgInput();
-		opt.AddDynaServeExtraCssFolder("edit-list");
+		opt.Serve(FCat.Css, "edit-list");
 	}
 }

@@ -1,29 +1,16 @@
 ﻿using System.Text.Json;
-using DynaServeLib.DynaLogic;
-using DynaServeLib.Utils;
 using PowMaybe;
 
 namespace DynaServeLib.Gizmos;
 
 static class DynaServVerDisplayer
 {
-	private const string DynaServVerCls = "DynaServVerCls";
-
-	public static void Show(bool show, Dom dom)
-	{
-		if (!show) return;
-		var version = GetVer();
-		dom.AddHtml(Embedded.Read("dynaservver.html", ("{{DynaServVerCls}}", DynaServVerCls), ("{{DynaServVerVersion}}", $"{version}")));
-		dom.AddScriptCss("dynaservver", Embedded.Read("dynaservver.css", ("DynaServVerCls", DynaServVerCls)));
-	}
-
-
 	private record VerTime(
 		int Ver,
 		DateTime Time
 	);
 
-	private static int GetVer()
+	public static int GetVer()
 	{
 		var nfoPrev = JsonUtils.Load(VerFile, MkNewVerTime);
 		var nfoNext = MkNewVerTime();

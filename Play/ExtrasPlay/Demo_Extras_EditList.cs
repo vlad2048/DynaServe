@@ -9,7 +9,7 @@ using PowRxVar;
 
 namespace ExtrasPlay;
 
-static class Demo_EditList
+static class Demo_Extras_EditList
 {
 	public static void Run()
 	{
@@ -50,7 +50,7 @@ static class Demo_EditList
 			opt =>
 			{
 				opt.RegisterEditList();
-				opt.AddScriptCss("test", TestCss);
+				opt.ServeHardcoded("test.css", TestCss);
 			},
 			listMaster.UI,
 			listSlaves.UI

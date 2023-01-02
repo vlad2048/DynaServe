@@ -2,7 +2,6 @@
 using AngleSharp.Html.Dom;
 using DynaServeLib.DynaLogic;
 using DynaServeLib.Serving.Debugging.Structs;
-using DynaServeLib.Serving.Syncing;
 using DynaServeLib.Serving.Syncing.Structs;
 using DynaServeLib.Utils.Exts;
 using PowMaybe;
@@ -15,18 +14,18 @@ public class ServDbg : IDisposable
 	private readonly Disp d = new();
 	public void Dispose() => d.Dispose();
 
-	private readonly Dom dom;
-	private readonly Syncer syncer;
+	private readonly DomOps domOps;
+	private readonly Messenger messenger;
 	private readonly SemaphoreSlim slim;
 	private Maybe<ClientDomSnapshot> receivedSnap = May.None<ClientDomSnapshot>();
 
-	internal ServDbg(Dom dom, Syncer syncer)
+	internal ServDbg(DomOps domOps, Messenger messenger)
 	{
-		this.dom = dom;
-		this.syncer = syncer;
+		this.domOps = domOps;
+		this.messenger = messenger;
 		slim = new SemaphoreSlim(0).D(d);
 
-		syncer.WhenClientMsg
+		messenger.WhenClientMsg
 			.Where(e => e.Type == ClientMsgType.AnswerDomSnapshot)
 			.Subscribe(e =>
 			{
@@ -37,9 +36,9 @@ public class ServDbg : IDisposable
 
 	public async Task<DbgSnap> GetSnap()
 	{
-		var domDbg = dom.GetDbgNfo();
+		var domDbg = domOps.GetDbgNfo();
 		receivedSnap = May.None<ClientDomSnapshot>();
-		syncer.SendToClient(ServerMsg.MkReqDomSnapshot());
+		messenger.SendToClient(ServerMsg.MkReqDomSnapshot());
 		await slim.WaitAsync();
 		var receivedSnapVal = receivedSnap.Ensure();
 

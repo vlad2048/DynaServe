@@ -23,8 +23,8 @@ function init() {
 		socket.onopen = () => {
 			updateState();
 			sockSend({
-				type: 'ReqCssSync',
-				cssLinks: cssGetWebLinks()
+				type: 'ReqScriptsSync',
+				reqScriptsSyncMsg: getReqScriptsSyncMsg()
 			});
 		}
 		socket.onclose = () => {
@@ -37,17 +37,16 @@ function init() {
 			let data = {
 				type: '',
 				html: '',
+				replyScriptsSyncMsg: {},
+				scriptRefreshNfo: {},
 				propChanges: [],
-				cssSyncRemove: [],
-				cssSyncAdd: [],
 				nodeId: '',
-				cssLinkRefresh: '',
 				methodName: ''
 			}
 // ReSharper restore AssignedValueIsNeverUsed
 			data = JSON.parse(e.data);
 
-			//console.log(`RECEIVED: ${data.type}`);
+			console.log(`RECEIVED: ${data.type}`);
 
 
 			// ****************************
@@ -67,6 +66,18 @@ function init() {
 					}
 					// Add the dynamic nodes to body
 					body.innerHTML += data.html;
+					break;
+				}
+					
+				case 'ReplyScriptsSync':
+				{
+					handleReplyScriptsSync(data.replyScriptsSyncMsg);
+          break;
+				}
+
+				case 'ScriptRefresh':
+				{
+					handleScriptRefresh(data.scriptRefreshNfo);
 					break;
 				}
 
@@ -128,15 +139,6 @@ function init() {
 
 
 
-				case 'CssSync':
-				{
-					cssNormalizeAllWebLinks();
-					for (let lnk of data.cssSyncRemove)
-						cssRemoveWebLink(lnk);
-					for (let lnk of data.cssSyncAdd)
-						cssAddWebLink(lnk);
-					break;
-				}
 
 				case 'AddChildToBody':
 				{
@@ -155,15 +157,6 @@ function init() {
 					var node = document.getElementById(nodeId);
 					if (!!node)
 						node.remove();
-					break;
-				}
-
-				case 'RefreshCss':
-				{
-					const cssLinkRefresh = data.cssLinkRefresh;
-					cssGetWebLinkNodes()
-						.filter(e => cssCleanLink(e.href) === cssCleanLink(cssLinkRefresh))
-						.forEach(e => e.href = cssLinkRefresh);
 					break;
 				}
 

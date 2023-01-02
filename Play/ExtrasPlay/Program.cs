@@ -7,9 +7,10 @@ static class Program
 {
 	static void Main()
 	{
-		//Demo_DlgInput.Run();
-		Demo_EditList.Run();
-		//Demo_FontAwesome.Run();
+		Demo_LiveReload.Run();
+		//Demo_Extras_DlgInput.Run();
+		//Demo_Extras_EditList.Run();
+		//Demo_Extras_FontAwesome.Run();
 	}
 }
 

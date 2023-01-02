@@ -22,6 +22,16 @@ static class UrlUtils
 		false => s
 	};
 
+	public static string RemoveQueryParams(this string s)
+	{
+		var idx = s.IndexOf('?');
+		return (idx != -1) switch
+		{
+			true => s[..idx],
+			false => s
+		};
+	}
+
 	// Input:  http://box-pc:7000/abc/full-page-nested.html
 	// Output: abc\full-page-nested.html
 	/*public static string? GetRelPath(this string url)

@@ -2,11 +2,34 @@
 using DynaServeLib.DynaLogic.DiffLogic;
 using DynaServeLib.Gizmos;
 using DynaServeLib.Nodes;
+using DynaServeLib.Serving.FileServing.Utils;
 using DynaServeLib.Utils.Exts;
+using PowMaybe;
 using PowRxVar;
 using static DynaServeLib.Nodes.Ctrls;
 
 namespace ServPlay;
+
+static class DynaServSlnFolderFinder
+{
+	private const string SlnName = @"DynaServe";
+
+	public static Maybe<string> TryFindFromVS() =>
+		from dllFile in May.Some(Environment.CurrentDirectory)
+		from idx in dllFile.IndexOfMaybe(SlnName)
+		select dllFile[..(idx + 9)];
+
+
+	private static Maybe<int> IndexOfMaybe(this string str, string s)
+	{
+		var idx = str.IndexOf(s, StringComparison.Ordinal);
+		return (idx != -1) switch
+		{
+			true => May.Some(idx),
+			false => May.None<int>()
+		};
+	}
+}
 
 static class Program
 {
@@ -59,10 +82,6 @@ static class Program
 
 	public static void Main()
 	{
-
-		//Console.WriteLine($"{DynaServVerDisplayer.GetVer()}");
-		return;
-
 		var isOn = Var.Make(true);
 
 		Serv.Start(

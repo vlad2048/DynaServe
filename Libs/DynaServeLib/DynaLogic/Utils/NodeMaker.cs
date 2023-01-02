@@ -1,6 +1,5 @@
 ﻿using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
-using DynaServeLib.DynaLogic.DomLogic;
 using DynaServeLib.DynaLogic.Refreshers;
 using DynaServeLib.Nodes;
 
@@ -8,20 +7,20 @@ namespace DynaServeLib.DynaLogic.Utils;
 
 static class NodeMaker
 {
-	public static (IElement[], IRefresher[]) CreateNodes(this IHtmlDocument doc, HtmlNode[] nodes, IDomTweaker[] domTweakers)
+	public static (IElement[], IRefresher[]) CreateNodes(this IHtmlDocument doc, HtmlNode[] nodes)
 	{
 		var list = new List<IElement>();
 		var refreshers = new List<IRefresher>();
 		foreach (var node in nodes)
 		{
-			var (nodeElt, nodeRefreshers) = doc.CreateNode(node, domTweakers);
+			var (nodeElt, nodeRefreshers) = doc.CreateNode(node);
 			list.Add(nodeElt);
 			refreshers.AddRange(nodeRefreshers);
 		}
 		return (list.ToArray(), refreshers.ToArray());
 	}
 
-	public static (IElement, IRefresher[]) CreateNode(this IHtmlDocument doc, HtmlNode node, IDomTweaker[] domTweakers)
+	public static (IElement, IRefresher[]) CreateNode(this IHtmlDocument doc, HtmlNode node)
 	{
 		var refreshers = new List<IRefresher>();
 
@@ -29,7 +28,7 @@ static class NodeMaker
 		{
 			if (n.IsTxt)
 				return doc.CreateTextNode(n.Txt!);
-			var elt = n.MakeElt(doc, domTweakers);
+			var elt = n.MakeElt(doc);
 			refreshers.AddRange(n.Refreshers);
 			foreach (var child in n.Children)
 			{
