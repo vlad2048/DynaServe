@@ -71,7 +71,7 @@ static class Program
 				L($"  {chg}");
 			L("");
 
-			DiffAlgo.ApplyPropChanges_In_DomNodeTrees(childrenPrev, chgs);
+			DiffAlgo.ApplyChgs_In_DomNodeTrees(childrenPrev, chgs);
 			L(childrenPrev.Fmt());
 		}
 	}

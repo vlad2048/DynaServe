@@ -60,6 +60,9 @@ public static class Embedded
 		return text;
 	}
 
+	internal static string ReadExact(string exactName, Assembly assembly) =>
+		assembly.GetManifestResourceStream(exactName)!.ToText();
+
 	private static string ToText(this Stream stream)
 	{
 		using var ms = new MemoryStream();

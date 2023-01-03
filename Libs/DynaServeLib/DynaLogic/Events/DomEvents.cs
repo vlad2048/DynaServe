@@ -7,4 +7,5 @@ interface IDomEvt {}
 record UpdateChildrenDomEvt(string NodeId, HtmlNode[] Children) : IDomEvt;
 record AddBodyNodeDomEvt(HtmlNode Node) : IDomEvt;
 record RemoveBodyNodeDomEvt(string NodeId) : IDomEvt;
-record PropChangeDomEvt(PropChange Chg) : IDomEvt;
+record ChgDomEvt(Chg Chg) : IDomEvt;
+//record PropChangeDomEvt(PropChange Chg) : IDomEvt;

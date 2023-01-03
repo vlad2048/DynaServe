@@ -3,6 +3,8 @@
 function init() {
 	const socketUrl = "{{WSLink}}";
 	const statusEltId = '{{StatusEltId}}';
+	//const socketUrl = "ws://box-pc:7000/";
+	//const statusEltId = 'syncserv-status';
 
 	function updateState() {
 		const elt = document.getElementById(statusEltId);
@@ -39,7 +41,7 @@ function init() {
 				html: '',
 				replyScriptsSyncMsg: {},
 				scriptRefreshNfo: {},
-				propChanges: [],
+				chgs: [],
 				nodeId: '',
 				methodName: ''
 			}
@@ -84,24 +86,44 @@ function init() {
 
 
 
-				case 'PropChangesDomUpdate':
+				case 'ChgsDomUpdate':
 				{
-					for (let chg of data.propChanges) {
+					for (let chg of data.chgs) {
+            console.log(chg);
 						const node = document.getElementById(chg.nodeId);
 						switch (chg.type) {
+
+							case 'Text':
+								node.innerText = chg.val;
+								break;
+
 							case 'Attr':
-								if (chg.attrName === 'class') {
-									node.className = chg.attrVal;
+								if (chg.name === 'class') {
+									node.className = chg.val;
 								} else {
-									if (chg.attrVal === undefined || chg.attrVal === null)
-										node.removeAttribute(chg.attrName);
+									if (chg.val === undefined || chg.val === null)
+										node.removeAttribute(chg.name);
 									else
-										node.setAttribute(chg.attrName, chg.attrVal);
+										node.setAttribute(chg.name, chg.val);
 								}
 								break;
-							case 'Text':
-								node.innerText = chg.textVal;
-								break;
+
+              case 'Prop':
+                switch (chg.propType) {
+                  case 'Str':
+                    node[chg.name] = chg.val;
+                    break;
+                  
+                  case 'Bool':
+                    node[chg.name] = !!chg.val;
+                    break;
+                  
+                  default:
+                    throw new Error(`Invalid PropType: ${chg.chg.propType}`)
+                }
+                //node[chg.propName] = chg.propVal;
+                break;
+
 							default:
 								throw new Error(`Invalid PropChangeType: ${chg.type}`)
 						}
@@ -158,9 +180,7 @@ function init() {
 				case 'ReqCallMethodOnNode':
 				{
 					const elt = document.getElementById(data.nodeId);
-					//console.log(`calling ${data.methodName} on ${data.nodeId}`);
 					elt[data.methodName]();
-					//console.log('after calling');
 					break;
 				}
 
@@ -200,8 +220,6 @@ function sockEvt(id, evtName) {
 	
 function sockEvtArg(id, evtName, evtArg) {
 	if (Object.prototype.toString.call(evtArg) !== "[object String]") {
-		//console.error(`Argument for ${evtName} in ${id} is not of type string`);
-		//console.error(`Argument is (${typeof evtArg})`, evtArg);
 		evtArg = evtArg.toString();
 	}
 	sockSend({

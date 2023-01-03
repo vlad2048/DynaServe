@@ -8,7 +8,7 @@ const string ImgV2 = @"C:\tmp\ImagePad\ver_2\img.png";
 const string LiveImg = @"C:\Dev_Nuget\Libs\DynaServe\Play\ExtrasPlay\serv\demo-livereload\img.png";
 const string LiveCode = @"C:\Dev_Nuget\Libs\DynaServe\Play\ExtrasPlay\serv\demo-livereload\code.js";
 
-static int CodeIdx = 20;
+static int CodeIdx = 22;
 
 void Main()
 {

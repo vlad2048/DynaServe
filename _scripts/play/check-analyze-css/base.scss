@@ -1,0 +1,24 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+* {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+html, body {
+  height: 100%;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+body {
+  font-family: consolas;
+  font-size: 12px;
+  color: #fff;
+  background-color: #030526;
+  display: flex;
+  flex-direction: column;
+}

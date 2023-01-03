@@ -25,7 +25,7 @@ static class ScssWatchCompiler
 				.WithArguments(
 					$@"""{inputFolder}"":""{outputFolder}"" --no-source-map --watch"
 				)
-				.WithStandardErrorPipe(PipeTarget.ToDelegate(logr.OnCssError))
+				.WithStandardErrorPipe(PipeTarget.ToDelegate(logr.CssError))
 				.ExecuteAsync(cancelToken);
 		}
 

@@ -1,4 +1,5 @@
 ﻿var httpLink = "{{HttpLink}}";
+//var httpLink = "http://box-pc:7000/";
 
 // *********
 // * Utils *
@@ -6,9 +7,9 @@
 // Input : file:///C:/folder/js/simple.js?c=3
 // Output:                   js/simple.js?c=3
 function delPrefix(lnk) {
-	let idx = lnk.indexOf('css/');
+	let idx = lnk.indexOf("css/");
 	if (idx !== -1) lnk = lnk.substring(idx);
-  idx = lnk.indexOf('js/');
+	idx = lnk.indexOf("js/");
 	if (idx !== -1) lnk = lnk.substring(idx);
 	return lnk;
 }
@@ -16,30 +17,34 @@ function delPrefix(lnk) {
 // Input : file:///C:/folder/js/simple.js?c=3
 // Output: file:///C:/folder/js/simple.js
 function delSuffix(lnk) {
-  let idx = lnk.indexOf('?');
+	let idx = lnk.indexOf("?");
 	if (idx !== -1) lnk = lnk.substring(0, idx);
-  return lnk;
+	return lnk;
 }
 
 // Input :                   js/simple.js?c=3
 // Output:                   js/simple.js
 // Input : file:///C:/folder/js/simple.js
 // Output:                   js/simple.js
-function getBaseLnk(lnk) { return delPrefix(delSuffix(lnk)); }
-function isMatch(l1, l2) { return getBaseLnk(l1) === getBaseLnk(l2); }
+function getBaseLnk(lnk) {
+	return delPrefix(delSuffix(lnk));
+}
+function isMatch(l1, l2) {
+	return getBaseLnk(l1) === getBaseLnk(l2);
+}
 
 // Input :                   js/simple.js?c=3
 // Output:                   js/simple.js?c=4
 // Input : file:///C:/folder/js/simple.js
 // Output:                   js/simple.js?c=1
 function bumpLnk(lnk) {
-  lnk = delPrefix(lnk);
-  const baseLnk = getBaseLnk(lnk);
-  const idx = lnk.indexOf('?c=');
-  if (idx === -1) return `${baseLnk}?c=1`;
-  const numStr = lnk.substring(idx + 3);
-  const num = +numStr;
-  return `${baseLnk}?c=${num + 1}`;
+	lnk = delPrefix(lnk);
+	const baseLnk = getBaseLnk(lnk);
+	const idx = lnk.indexOf("?c=");
+	if (idx === -1) return `${baseLnk}?c=1`;
+	const numStr = lnk.substring(idx + 3);
+	const num = +numStr;
+	return `${baseLnk}?c=${num + 1}`;
 }
 
 // Input : http://box-pc:7000/css/websockets.css
@@ -50,54 +55,63 @@ function bumpLnk(lnk) {
 // Output: true
 // Input : http://google.com/...
 // Output: false
-function relevantUrl(url) { return !!url && (url.includes('css/') || url.includes('js/')) && (url.startsWith('file:///') || url.startsWith(httpLink)); }
+function relevantUrl(url) {
+	return (
+		!!url &&
+		(url.includes("css/") || url.includes("js/")) &&
+		(url.startsWith("file:///") || url.startsWith(httpLink))
+	);
+}
 
 // Input : 'script'
 // Output: Node[]
 function getHeadTags(tagName) {
-	const tagsSource = document.getElementsByTagName('head')[0].getElementsByTagName(tagName);
+	const tagsSource = document
+		.getElementsByTagName("head")[0]
+		.getElementsByTagName(tagName);
 	const tags = [];
 	for (let i = 0; i < tagsSource.length; i++) tags.push(tagsSource[i]);
 	return tags;
 }
 
 function getCssScripts() {
-	return getHeadTags('link')
-		.filter(e => e.rel === 'stylesheet')
-		.filter(e => relevantUrl(e.href));
+	return getHeadTags("link")
+		.filter((e) => e.rel === "stylesheet")
+		.filter((e) => relevantUrl(e.href));
 }
 
 function getJsScripts() {
-	return getHeadTags('script')
-		.filter(e => relevantUrl(e.src));
+	return getHeadTags("script").filter((e) => relevantUrl(e.src));
 }
 
 function mkCssScript(lnk) {
-	const head = document.getElementsByTagName('head')[0];
-	const tag = document.createElement('link');
-	tag.rel = 'stylesheet';
-	tag.type = 'text/css';
+	const head = document.getElementsByTagName("head")[0];
+	const tag = document.createElement("link");
+	tag.rel = "stylesheet";
+	tag.type = "text/css";
 	tag.href = lnk;
 	head.appendChild(tag);
 }
 
 function mkJsScript(lnk) {
-	const head = document.getElementsByTagName('head')[0];
-	const tag = document.createElement('script');
+	const head = document.getElementsByTagName("head")[0];
+	const tag = document.createElement("script");
 	tag.src = lnk;
 	head.appendChild(tag);
 }
 
 function isSysJsLnk(lnk) {
-  return lnk.includes('js/websockets.js') || lnk.includes('js/websockets-utils.js') || lnk.includes('js/dynaservver.js');
+	return (
+		lnk.includes("js/websockets.js") ||
+		lnk.includes("js/websockets-utils.js") ||
+		lnk.includes("js/dynaservver.js")
+	);
 }
-
 
 function play() {
-  console.log(bumpLnk(                  'js/simple.js?c=3'))
-  console.log(bumpLnk('file:///C:/folder/js/simple.js'))
+	console.log(bumpLnk("js/simple.js?c=3"));
+	console.log(bumpLnk("file:///C:/folder/js/simple.js"));
 }
-
 
 // ************************
 // * getReqScriptsSyncMsg *
@@ -110,10 +124,10 @@ Output:
 }
 */
 function getReqScriptsSyncMsg() {
-  return {
-    cssLinks: getCssScripts().map(e => getBaseLnk(e.href)),
-    jsLinks: getJsScripts().map(e => getBaseLnk(e.src)),
-  };
+	return {
+		cssLinks: getCssScripts().map((e) => getBaseLnk(e.href)),
+		jsLinks: getJsScripts().map((e) => getBaseLnk(e.src)),
+	};
 }
 
 // **************************
@@ -128,23 +142,36 @@ Input:
 	jsLinksAdd: string[];
 }
 */
-let isFirstTime = true;
+//let isFirstTime = true;
 function handleReplyScriptsSync(msg) {
+	getCssScripts()
+		.filter((e) => msg.cssLinksDel.some((f) => isMatch(f, e.href)))
+		.forEach((e) => e.remove());
+	//if (!isFirstTime)
+	//getCssScripts().forEach((e) => (e.href = bumpLnk(e.href)));
+	getCssScripts().forEach(e => {
+		mkCssScript(bumpLnk(e.href));
+		setTimeout(() => {
+			e.remove();
+		}, 100); // <=50 causes the styles to disappear shortly on reload
+	});
+	msg.cssLinksAdd.forEach(mkCssScript);
 
-  console.log(isFirstTime);
-  console.log(msg);
+	getJsScripts()
+		.filter(e => msg.jsLinksDel.some(f => isMatch(f, e.src)))
+		.forEach(e => e.remove());
+	//if (!isFirstTime)
+	//getJsScripts().forEach((e) => (e.src = bumpLnk(e.src)));
+	getJsScripts().forEach(e => {
+		mkJsScript(bumpLnk(e.src));
+		setTimeout(() => {
+			e.remove();
+		}, 1000); // <=50 causes the styles to disappear shortly on reload
+	});
+	msg.jsLinksAdd.forEach(mkJsScript);
 
-  getCssScripts().filter(e => msg.cssLinksDel.some(f => isMatch(f, e.href))).forEach(e => e.remove());
-  if (!isFirstTime) getCssScripts().forEach(e => e.href = bumpLnk(e.href));
-  msg.cssLinksAdd.forEach(mkCssScript);
-
-  getJsScripts().filter(e => msg.jsLinksDel.some(f => isMatch(f, e.src))).forEach(e => e.remove());
-  if (!isFirstTime) getJsScripts().forEach(e => e.src = bumpLnk(e.src));
-  msg.jsLinksAdd.forEach(mkJsScript);
-
-  if (isFirstTime) isFirstTime = false;
+	//if (isFirstTime) isFirstTime = false;
 }
-
 
 // ***********************
 // * handleScriptRefresh *
@@ -158,39 +185,44 @@ Input:
 */
 function handleScriptRefresh(msg) {
 	switch (msg.type) {
-    case 'Css':
-    {
-      const nodes = getCssScripts().filter(e => isMatch(e.href, msg.link));
-      if (nodes.length === 0) throw new Error('Failed to find the CSS script to refresh');
-      if (nodes.length > 1) throw new Error('Found too many CSS scripts to refresh');
-      const node = nodes[0];
-      const bl = bumpLnk(node.href);
+		case "Css": {
+			const nodes = getCssScripts().filter((e) =>
+				isMatch(e.href, msg.link)
+			);
+			if (nodes.length === 0)
+				throw new Error("Failed to find the CSS script to refresh");
+			if (nodes.length > 1)
+				throw new Error("Found too many CSS scripts to refresh");
+			const node = nodes[0];
+			const bl = bumpLnk(node.href);
 
-      node.href = bl;
+			node.href = bl;
 
-      break;
-    }
+			break;
+		}
 
-    case 'Js':
-    {
-      const nodes = getJsScripts().filter(e => isMatch(e.src, msg.link));
-      if (nodes.length === 0) throw new Error('Failed to find the JS script to refresh');
-      if (nodes.length > 1) throw new Error('Found too many JS scripts to refresh');
-      const node = nodes[0];
-      const bl = bumpLnk(node.src);
+		case "Js": {
+			const nodes = getJsScripts().filter((e) =>
+				isMatch(e.src, msg.link)
+			);
+			if (nodes.length === 0)
+				throw new Error("Failed to find the JS script to refresh");
+			if (nodes.length > 1)
+				throw new Error("Found too many JS scripts to refresh");
+			const node = nodes[0];
+			const bl = bumpLnk(node.src);
 
-      if (isSysJsLnk(node.src)) {
-        node.src = bl;
-      } else {
-        console.log('code -> remove 2');
-        node.remove();
-        mkJsScript(bl);
-      }
+			if (isSysJsLnk(node.src)) {
+				node.src = bl;
+			} else {
+				node.remove();
+				mkJsScript(bl);
+			}
 
-      break;
-    }
-    
-    default:
-      throw new Error(`Invalid ScriptType: ${msg.type}`);
-  }
+			break;
+		}
+
+		default:
+			throw new Error(`Invalid ScriptType: ${msg.type}`);
+	}
 }

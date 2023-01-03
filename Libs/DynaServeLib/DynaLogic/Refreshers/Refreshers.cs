@@ -11,7 +11,6 @@ interface IRefresher
 {
 	string NodeId { get; }
 	IRefresher CloneWithId(string nodeId);
-	PropChange[] GetInitialPropChanges();
 	IDisposable Activate(DomOps domOps);
 }
 
@@ -19,7 +18,6 @@ interface IRefresher
 record NodeRefresher(string NodeId, IDisposable NodeD) : IRefresher
 {
 	public IRefresher CloneWithId(string nodeId) => this with { NodeId = nodeId };
-	public PropChange[] GetInitialPropChanges() => Array.Empty<PropChange>();
 	public IDisposable Activate(DomOps domOps) => NodeD;
 }
 
@@ -27,7 +25,6 @@ record NodeRefresher(string NodeId, IDisposable NodeD) : IRefresher
 record ChildrenRefresher(string NodeId, IObservable<Unit> When, Func<HtmlNode[]> Fun) : IRefresher
 {
 	public IRefresher CloneWithId(string nodeId) => this with { NodeId = nodeId };
-	public PropChange[] GetInitialPropChanges() => Array.Empty<PropChange>();
 	public IDisposable Activate(DomOps domOps) =>
 		When.Subscribe(_ =>
 			domOps.UpdateNodeChildren(NodeId, Fun())
@@ -35,38 +32,24 @@ record ChildrenRefresher(string NodeId, IObservable<Unit> When, Func<HtmlNode[]>
 }
 
 
-record PropChangeRefresher(string NodeId, PropChangeType Type, string? AttrName, IObservable<string?> ValObs) : IRefresher
+record ChgRefresher(ChgKey Key, IObservable<string?> ValObs) : IRefresher
 {
-	public IRefresher CloneWithId(string nodeId) => this with { NodeId = nodeId };
-	public PropChange[] GetInitialPropChanges() => Array.Empty<PropChange>();
+	public string NodeId => Key.NodeId;
+
+	public IRefresher CloneWithId(string nodeId) => this with { Key = Key with { NodeId = nodeId } };
+
 	public IDisposable Activate(DomOps domOps) =>
 		ValObs.Subscribe(val =>
-			domOps.SignalDomEvt(new PropChangeDomEvt(
-				Type switch
-				{
-					PropChangeType.Attr => PropChange.MkAttrChange(NodeId, AttrName!, val),
-					PropChangeType.Text => PropChange.MkTextChange(NodeId, val),
-					_ => throw new ArgumentException()
-				}
-			))
-		);
-
-	public static PropChangeRefresher MkAttr(string nodeId, string? attrName, IObservable<string?> valObs) => new(nodeId, PropChangeType.Attr, attrName, valObs);
-	public static PropChangeRefresher MkText(string nodeId, IObservable<string?> valObs) => new(nodeId, PropChangeType.Text, null, valObs);
+		{
+			var chg = new Chg(Key.NodeId, Key.Type, Key.PropType, Key.Name, val);
+			domOps.SignalDomEvt(new ChgDomEvt(chg));
+		});
 }
 
 
 record EvtRefresher(string NodeId, string EvtName, Func<Task> Action, bool StopPropagation) : IRefresher
 {
 	public IRefresher CloneWithId(string nodeId) => this with { NodeId = nodeId };
-	public PropChange[] GetInitialPropChanges() => new[]
-	{
-		PropChange.MkAttrChange(
-			NodeId,
-			$"on{EvtName}",
-			$"{EvtRefresherUtils.MkStopPropagationStr(StopPropagation)}sockEvt('{NodeId}', '{EvtName}')"
-		)
-	};
 
 	public IDisposable Activate(DomOps domOps) =>
 		domOps.WhenClientMsg
@@ -86,14 +69,6 @@ record EvtRefresher(string NodeId, string EvtName, Func<Task> Action, bool StopP
 record EvtArgRefresher(string NodeId, string EvtName, Func<string, Task> Action, string ArgExpr, bool StopPropagation) : IRefresher
 {
 	public IRefresher CloneWithId(string nodeId) => this with { NodeId = nodeId };
-	public PropChange[] GetInitialPropChanges() => new[]
-	{
-		PropChange.MkAttrChange(
-			NodeId,
-			$"on{EvtName}",
-			$"{EvtRefresherUtils.MkStopPropagationStr(StopPropagation)}sockEvtArg('{NodeId}', '{EvtName}', {ArgExpr})"
-		)
-	};
 
 	public IDisposable Activate(DomOps domOps) =>
 		domOps.WhenClientMsg

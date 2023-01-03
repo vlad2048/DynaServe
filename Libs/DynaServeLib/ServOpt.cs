@@ -11,16 +11,17 @@ public class ServOpt
 	private ServOpt() {}
 
 	internal List<IReplier> Repliers { get; } = new();
+	internal List<string> SlnFolders { get; } = new()
+	{
+		@"C:\Dev_Nuget\Libs\DynaServe",
+		@"C:\Dev_Nuget\Libs\ImdbLib",
+		@"C:\Dev\Creepy",
+	};
 	internal List<IServNfo> ServNfos { get; } = new();
 	internal List<string> ExtraHtmlNodes { get; } = new();
 
 	public void AddRepliers(params IReplier[] repliers) => Repliers.AddRange(repliers);
-	/// <summary>
-	/// If using LINQPad, set this to Util.CurrentQuery.FileReferences
-	/// to allow DynaServ to serv the .css & .scss from the solution folder with live reload
-	/// </summary>
-	public IEnumerable<string>? LINQPadRefs { get; set; }
-	public bool CheckSecurity { get; set; } = true;
+	public bool CheckSecurity { get; set; } = false;
 	public int Port { get; set; } = 7000;
 	public ILogr Logr { get; set; } = new NullLogr();
 	public bool PlaceWebSocketsHtmlManually { get; set; } = true;
@@ -39,13 +40,18 @@ public class ServOpt
 
 public static class ServOptFileServExt
 {
+	public static void AddSlnFolder(
+		this ServOpt opt,
+		params string[] slnFolders
+	) =>
+		opt.SlnFolders.AddRange(slnFolders);
+
 	internal static void AddEmbeddedHtml(
 		this ServOpt opt,
 		string name,
 		params (string, string)[] substitutions
 	) =>
 		opt.ExtraHtmlNodes.Add(Embedded.Read(name, substitutions));
-
 
 	public static void Serve(
 		this ServOpt opt,

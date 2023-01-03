@@ -30,6 +30,8 @@ class ClientMsg
 	public ClientDomSnapshot? ClientDomSnapshot { get; init; }
 	public string? UserType { get; init; }
 	public string? UserArg { get; init; }
+
+	public override string ToString() => $"{Type}";
 }
 
 public enum ServerMsgType
@@ -38,7 +40,7 @@ public enum ServerMsgType
 	ReplyScriptsSync,
 	ScriptRefresh,
 
-	PropChangesDomUpdate,
+	ChgsDomUpdate,
 	ReplaceChildrenDomUpdate,
 
 	ReqDomSnapshot,
@@ -64,39 +66,7 @@ public enum ScriptType
 // Type:Css  Link:css/edit-list?c=6
 public record ScriptRefreshNfo(ScriptType Type, string Link);
 
-public enum PropChangeType
-{
-	Attr,
-	Text
-}
 
-public class PropChange
-{
-	public PropChangeType Type { get; }
-	public string NodeId { get; }
-	public string? AttrName { get; private init; }
-	public string? AttrVal { get; private init; }
-	public string? TextVal { get; private init; }
-
-	private PropChange(PropChangeType type, string nodeId)
-	{
-		Type = type;
-		NodeId = nodeId;
-	}
-
-	public static PropChange MkAttrChange(string nodeId, string attrName, string? attrVal) =>
-		new(PropChangeType.Attr, nodeId)
-		{
-			AttrName = attrName,
-			AttrVal = attrVal,
-		};
-
-	public static PropChange MkTextChange(string nodeId, string? textVal) =>
-		new(PropChangeType.Text, nodeId)
-		{
-			TextVal = textVal,
-		};
-}
 
 
 public class ServerMsg
@@ -105,7 +75,7 @@ public class ServerMsg
 	public string? Html { get; private init; }
 	public ReplyScriptsSyncMsg? ReplyScriptsSyncMsg { get; private init; }
 	public ScriptRefreshNfo? ScriptRefreshNfo { get; private init; }
-	public PropChange[]? PropChanges { get; private init; }
+	public Chg[]? Chgs { get; private init; }
 	public string? NodeId { get; private init; }
 	public string? MethodName { get; private init; }
 
@@ -126,9 +96,9 @@ public class ServerMsg
 		ScriptRefreshNfo = new ScriptRefreshNfo(scriptType, link)
 	};
 
-	public static ServerMsg MkPropChangesDomUpdate(PropChange[] propChanges) => new(ServerMsgType.PropChangesDomUpdate)
+	public static ServerMsg MkChgsDomUpdate(params Chg[] chgs) => new(ServerMsgType.ChgsDomUpdate)
 	{
-		PropChanges = propChanges,
+		Chgs = chgs
 	};
 
 	public static ServerMsg MkReplaceChildrenDomUpdate(string html, string nodeId) => new(ServerMsgType.ReplaceChildrenDomUpdate)

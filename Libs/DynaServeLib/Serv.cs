@@ -37,16 +37,18 @@ class ServInst : IDisposable
 	public Messenger Messenger { get; }
 	public ServOpt Opt { get; }
 	public IHtmlDocument Dom { get;  }
-	public DomOps DomOps { get;  }
+	public DomOps DomOps { get; }
 	public ServDbg ServDbg { get; }
 	public IObservable<IDomEvt> WhenDomEvt => whenDomEvt.AsObservable();
 	public void SignalDomEvt(IDomEvt evt) => whenDomEvt.OnNext(evt);
+
+
+
 
 	public ServInst(Action<ServOpt>? optFun, HtmlNode[] rootNodes)
 	{
 		Opt = ServOpt.Build(optFun);
 		SecurityChecker.CheckPort(Opt.CheckSecurity, Opt.Port);
-		whenDomEvt = new Subject<IDomEvt>().D(d);
 
 		Opt.Register_WebsocketScripts();
 		Opt.Register_VersionDisplayer();
@@ -54,18 +56,19 @@ class ServInst : IDisposable
 		server = new Server(Opt.Port).D(d);
 		Messenger = new Messenger(server).D(d);
 		Dom = DomCreator.Create(Opt.ExtraHtmlNodes).D(d);
-		DomOps = new DomOps(Dom, SignalDomEvt, Messenger);
+		DomOps = new DomOps(Dom, Opt.Logr, SignalDomEvt, Messenger);
+		whenDomEvt = new Subject<IDomEvt>().D(d);
+		DomEvtActioner.Setup(WhenDomEvt, DomOps).D(d);
 		fileServer = new FileServer(
 			DomOps,
 			Opt.ServNfos,
 			Opt.ScssOutputFolder,
-			Opt.LINQPadRefs,
+			Opt.SlnFolders,
 			Opt.Logr
 		);
 		ServDbg = new ServDbg(DomOps, Messenger).D(d);
 
 		DomOps.AddInitialNodes(rootNodes);
-		DomEvtActioner.Setup(WhenDomEvt, DomOps).D(d);
 		server.AddRepliers(
 			new ServePageReplier(Dom),
 			new ServeFilesReplier(fileServer)
@@ -74,13 +77,19 @@ class ServInst : IDisposable
 		Syncer.Setup(Dom, Messenger).D(d);
 		ServSetupUtils.HookClientUserMessages(Messenger, Opt).D(d);
 
-		Opt.Logr.OnSimpleMsg($"Listening on: {UrlUtils.GetLocalLink(Opt.Port)}");
+		//Messenger.WhenClientConnects.Subscribe(_ => Opt.Logr.Log("[WebSockets] ClientConnected")).D(d);
+		//Messenger.WhenClientMsg.Subscribe(msg => Opt.Logr.Log($"[WebSockets] Msg:{msg.Type}")).D(d);
+
+		//Messenger.WhenClientMsg.Subscribe(evt => Opt.Logr.LogTransition($"WsEvt[{evt.GetType().Name}] {evt}", Dom.FmtBody())).D(d);
+
+		Opt.Logr.Log("Serv.new() finished");
 	}
 
 	public void Start()
 	{
 		fileServer.Start();
 		server.Start();
+		Opt.Logr.Log($"Serv.Start() finished ({UrlUtils.GetLocalLink(Opt.Port)})");
 	}
 }
 

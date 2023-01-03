@@ -4,6 +4,7 @@ using DynaServeExtrasLib.Components.EditListLogic;
 using DynaServeExtrasLib.Components.EditListLogic.EditListConstraints;
 using DynaServeExtrasLib.Components.EditListLogic.StructsEnum;
 using DynaServeLib;
+using ExtrasPlay.Utils;
 using PowMaybe;
 using PowRxVar;
 
@@ -54,13 +55,9 @@ static class Demo_Extras_EditList
 			},
 			listMaster.UI,
 			listSlaves.UI
-		);
+		).D(d);
 
-		//slavesLinkNfo.Slaves.InspectArr();
-		//listSlaves.SelItem.Inspect();
-
-		Console.WriteLine("Running ...");
-		Console.ReadKey();
+		PlayUtils.WaitForKeyPress();
 	}
 
 

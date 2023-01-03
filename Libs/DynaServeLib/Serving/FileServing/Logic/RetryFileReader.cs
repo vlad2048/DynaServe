@@ -53,7 +53,7 @@ static class RetryFileReader
 			// The process cannot access the file 'C:\tmp\css-compiled\idx-2\log-dlg.css' because it is being used by another process.
 			catch (IOException ex) when (ex.HResult == -2147024864)
 			{
-				logr.OnSimpleMsg(ex.Message);
+				logr.Log(ex.Message);
 				return null;
 			}
 		}
@@ -67,7 +67,7 @@ static class RetryFileReader
 			Thread.Sleep(retryIntervals[idx]);
 			idx++;
 		}
-		logr.OnSimpleMsg($"FATAL failed to read this file multiple times: '{file}'");
+		logr.Log($"FATAL failed to read this file multiple times: '{file}'");
 
 		throw new ArgumentException($"Failed to read file: '{file}' (because it is being used by another process)");
 	}

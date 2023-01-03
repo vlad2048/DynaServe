@@ -19,7 +19,7 @@ class FileServer : IDisposable
 	private readonly IReadOnlyList<IServNfo> servNfos;
 	private readonly string scssOutputFolder;
 	private readonly DomOps domOps;
-	private readonly IEnumerable<string>? linqPadRefs;
+	private readonly IReadOnlyList<string> slnFolders;
 	private readonly ILogr logr;
 	private readonly Dictionary<string, IReg> regMap = new();
 
@@ -27,25 +27,43 @@ class FileServer : IDisposable
 		DomOps domOps,
 		IReadOnlyList<IServNfo> servNfos,
 		string scssOutputFolder,
-		IEnumerable<string>? linqPadRefs,
+		IReadOnlyList<string> slnFolders,
 		ILogr logr
 	)
 	{
 		this.servNfos = servNfos;
 		this.scssOutputFolder = scssOutputFolder;
 		this.domOps = domOps;
-		this.linqPadRefs = linqPadRefs;
+		this.slnFolders = slnFolders;
 		this.logr = logr;
 	}
 
 	public void Start()
 	{
-		var localFolds = servNfos.OfType<LocalFolderServNfo>().ToArray();
+		var localFoldNfos = servNfos.OfType<LocalFolderServNfo>().ToArray();
+		var (folds, foldsNotFound) = FuzzyFolderFinder.Find(localFoldNfos, slnFolders);
+
+
 		var directFiles = servNfos.OfType<DirectFileServNfo>().ToArray();
 
-		SetupLocalFolders(localFolds);
+		SetupLocalFolders(folds);
 		SetupDirectFiles(directFiles);
-		//LogRegs();
+		LogFoldsNotFound(foldsNotFound);
+	}
+
+	private void LogFoldsNotFound(LocalFolderServNfo[] folds)
+	{
+		if (folds.Length == 0) return;
+		void L(string s) => Console.Error.WriteLine(s);
+		var title = $"{folds.Length} folders not found:";
+		L(title);
+		L(new string('=', title.Length));
+		foreach (var fold in folds)
+			L($"  {fold.Cat} - '{fold.FuzzyFolder}'");
+		L("");
+		L("You need to specify the solution folders they are located in:");
+		L("""    opt.AddSlnFolder(@"C:\git\MySolution");""");
+		throw new ArgumentException("Resources not found");
 	}
 
 	public async Task<Maybe<RegData>> TryGetContent(string link)
@@ -55,11 +73,8 @@ class FileServer : IDisposable
 		return await reg.GetContent();
 	}
 
-
-
-	private void SetupLocalFolders(LocalFolderServNfo[] localFolds)
+	private void SetupLocalFolders(ServFold[] folds)
 	{
-		var folds = FuzzyFolderFinder.Find(localFolds, linqPadRefs);
 		var filesToLink = GetFilesToLink(folds);
 		var filesToServe = GetFilesToServe(folds);
 		var foldersToCompile = folds.Where(e => e.FCat == FCat.Css).SelectToArray(e => e.Folder);
@@ -112,7 +127,7 @@ class FileServer : IDisposable
 		// ===========
 		foreach (var file in files)
 		{
-			var link = file.Name.ToLink();
+			var link = file.Link;
 			regMap[link] = new DirectReg(file.Name, file.Content);
 		}
 	}

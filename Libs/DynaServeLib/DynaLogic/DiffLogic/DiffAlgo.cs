@@ -23,27 +23,59 @@ static class DiffAlgo
 
 	public static IRefresher[] KeepPrevIds_In_StructurallyIdentical_DomNodesTree_And_GetUpdatedRefreshers(IElement[] rootsPrev, IElement[] rootsNext, IRefresher[] refreshersNext)
 	{
+		var map = MakeNodeMap(rootsPrev, rootsNext);
+		rootsPrev.Zip(rootsNext).ForEach(t => Recurse(t.First, t.Second, (eltPrev, eltNext) =>
+		{
+			Fix(eltPrev, eltNext, eltNext.Id!, map[eltNext.Id!]);
+		}));
+		return refreshersNext.SelectToArray(e => e.CloneWithId(map[e.NodeId]));
+	}
+
+	private static void Fix(IElement eltPrev, IElement eltNext, string idSrc, string idDst)
+	{
+		eltNext.Id = eltPrev.Id;
+
+		eltNext.Attributes
+			.Where(attr => attr.Value.Contains("sockEvt('") || attr.Value.Contains("sockEvtArg('"))
+			.ForEach(attr =>
+			{
+				var attrValPrev = attr.Value;
+				var attrValNext = attrValPrev.Replace(idSrc, idDst);
+				attr.Value = attrValNext;
+			});
+	}
+
+	private static void Recurse(IElement eltPrev, IElement eltNext, Action<IElement, IElement> action)
+	{
+		action(eltPrev, eltNext);
+		var childrenPrev = eltPrev.Children.ToArray();
+		var childrenNext = eltNext.Children.ToArray();
+		foreach (var (childPrev, childNext) in childrenPrev.Zip(childrenNext))
+			Recurse(childPrev, childNext, action);
+	}
+
+
+	private static Dictionary<string, string> MakeNodeMap(IElement[] rootsPrev, IElement[] rootsNext)
+	{
 		var map = new Dictionary<string, string>();
-		void Recurse(IElement nodePrev, IElement nodeNext)
+		void RecurseLoc(IElement nodePrev, IElement nodeNext)
 		{
 			map[nodeNext.Id!] = nodePrev.Id!;
-			nodeNext.Id = nodePrev.Id;
 			var childrenPrev = nodePrev.Children.ToArray();
 			var childrenNext = nodeNext.Children.ToArray();
 			foreach (var (childPrev, childNext) in childrenPrev.Zip(childrenNext))
-				Recurse(childPrev, childNext);
+				RecurseLoc(childPrev, childNext);
 		}
 		foreach (var (childPrev, childNext) in rootsPrev.Zip(rootsNext))
-			Recurse(childPrev, childNext);
-
-		return refreshersNext.SelectToArray(e => e.CloneWithId(map[e.NodeId]));
+			RecurseLoc(childPrev, childNext);
+		return map;
 	}
 
 
 
-	public static PropChange[] ComputePropChanges_In_StructurallyIdentical_DomNodesTree(IElement[] rootsPrev, IElement[] rootsNext)
+	public static Chg[] ComputePropChanges_In_StructurallyIdentical_DomNodesTree(IElement[] rootsPrev, IElement[] rootsNext)
 	{
-		var list = new List<PropChange>();
+		var list = new List<Chg>();
 
 		void Recurse(IElement nodePrev, IElement nodeNext)
 		{
@@ -61,16 +93,16 @@ static class DiffAlgo
 			var attrsRemoved = attrsPrev.WhereNotToArray(attrsNext.Contains);
 			var attrsChanged = attrsNext.Where(attrsPrev.Contains).WhereToArray(e => nodeNext.GetAttribute(e) != nodePrev.GetAttribute(e));
 
-			list.AddRange(attrsAdded.Select(e => PropChange.MkAttrChange(nodeId, e, nodeNext.GetAttribute(e))));
-			list.AddRange(attrsRemoved.Select(e => PropChange.MkAttrChange(nodeId, e, null)));
-			list.AddRange(attrsChanged.Select(e => PropChange.MkAttrChange(nodeId, e, nodeNext.GetAttribute(e))));
+			list.AddRange(attrsAdded.Select(e => ChgMk.Attr(nodeId, e, nodeNext.GetAttribute(e))));
+			list.AddRange(attrsRemoved.Select(e => ChgMk.Attr(nodeId, e, null)));
+			list.AddRange(attrsChanged.Select(e => ChgMk.Attr(nodeId, e, nodeNext.GetAttribute(e))));
 
 
 			// ********
 			// * Text *
 			// ********
 			if (nodeNext.GetOnlyThisNodeText() != nodePrev.GetOnlyThisNodeText())
-				list.Add(PropChange.MkTextChange(nodeId, nodeNext.GetOnlyThisNodeText()));
+				list.Add(ChgMk.Text(nodeId, nodeNext.GetOnlyThisNodeText()));
 
 
 			//if (nodeNext.ClassName != nodePrev.ClassName)
@@ -88,23 +120,29 @@ static class DiffAlgo
 		return list.ToArray();
 	}
 
-	public static void ApplyPropChanges_In_DomNodeTrees(IElement[] rootsNext, PropChange[] propChanges)
+	public static void ApplyChgs_In_DomNodeTrees(IElement rootsNext, params Chg[] chgs) => ApplyChgs_In_DomNodeTrees(new[] { rootsNext }, chgs);
+	public static void ApplyChgs_In_DomNodeTrees(IElement[] rootsNext, params Chg[] chgs)
 	{
 		var nodeMap = rootsNext.GetNodeMap();
-		foreach (var chg in propChanges)
+		foreach (var chg in chgs)
 		{
 			var node = nodeMap[chg.NodeId];
 			switch (chg.Type)
 			{
-				case PropChangeType.Attr:
-					if (chg.AttrVal != null)
-						node.SetAttribute(chg.AttrName!, chg.AttrVal);
+				case ChgType.Attr:
+					if (chg.Val != null)
+						node.SetAttribute(chg.Name!, chg.Val);
 					else
-						node.RemoveAttribute(chg.AttrName!);
+						node.RemoveAttribute(chg.Name!);
 					break;
-				case PropChangeType.Text:
-					node.TextContent = chg.TextVal ?? "";
+
+				case ChgType.Prop:
 					break;
+
+				case ChgType.Text:
+					node.TextContent = chg.Val ?? "";
+					break;
+
 				default:
 					throw new ArgumentException();
 			}

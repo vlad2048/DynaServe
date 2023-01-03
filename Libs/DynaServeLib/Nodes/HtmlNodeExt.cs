@@ -37,16 +37,6 @@ public static class HtmlNodeExt
 		[CallerArgumentExpression(nameof(valObs))] string? valObsName = null
 	) =>
 		node.Attr("class", valObs, valObsName);
-
-	public static HtmlNode Txt(
-		this HtmlNode node,
-		IObservable<string?> valObs,
-		[CallerArgumentExpression(nameof(valObs))] string? valObsName = null
-	)
-	{
-		node.AddRefresher(PropChangeRefresher.MkText(node.Id, valObs.ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
-		return node;
-	}
 	
 
 	// *******

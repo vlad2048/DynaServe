@@ -1,4 +1,5 @@
-﻿using AngleSharp.Html.Dom;
+﻿using System.Runtime.Intrinsics.Arm;
+using AngleSharp.Html.Dom;
 using DynaServeLib.DynaLogic.DiffLogic;
 using DynaServeLib.DynaLogic.Events;
 using DynaServeLib.DynaLogic.Refreshers;
@@ -10,6 +11,7 @@ using DynaServeLib.DynaLogic.DomUtils;
 using DynaServeLib.Utils.Exts;
 using PowBasics.CollectionsExt;
 using DynaServeLib.DynaLogic.DomLogic;
+using DynaServeLib.Logging;
 
 namespace DynaServeLib.DynaLogic;
 
@@ -26,6 +28,7 @@ class DomOps
 	private readonly RefreshTracker refreshTracker;
 
 	public IHtmlDocument Dom { get; }
+	public ILogr Logr { get; }
 	public Action<IDomEvt> SignalDomEvt { get; }
 	public IObservable<ClientMsg> WhenClientMsg => messenger.WhenClientMsg;
 	public void SendToClient(ServerMsg msg) => messenger.SendToClient(msg);
@@ -33,15 +36,19 @@ class DomOps
 
 	public DomOps(
 		IHtmlDocument dom,
+		ILogr logr,
 		Action<IDomEvt> signalDomEvt,
 		Messenger messenger
 	)
 	{
 		Dom = dom;
+		Logr = logr;
 		SignalDomEvt = signalDomEvt;
 		this.messenger = messenger;
 		refreshTracker = new RefreshTracker(this);
 	}
+
+	public void Log(string s) => Logr.Log(s);
 
 	// ******************
 	// * new ServInst() *
@@ -52,12 +59,30 @@ class DomOps
 		foreach (var rootNode in rootNodes)
 		{
 			var (node, refreshers) = Dom.CreateNode(rootNode);
-			var refreshersInitialPropChanges = refreshers.SelectMany(f => f.GetInitialPropChanges()).ToArray();
-			DiffAlgo.ApplyPropChanges_In_DomNodeTrees(new[] { node }, refreshersInitialPropChanges);
 			body.AppendChild(node);
 			refreshTracker.AddRefreshers(refreshers);
 		}
 	}
+
+	/*private void LogNode(string title)
+	{
+		void L(string s) => Logr.Log($"=============> {s}");
+		Logr.Log(" ");
+		L($"[{title}]");
+		var nod = Dom.GetElementById("id-16");
+		if (nod == null)
+		{
+			L("NOD-16 not found");
+			return;
+		}
+		var attr = nod.GetAttribute("onclick");
+		if (attr == null)
+		{
+			L("NOD-16 onclick == null");
+			return;
+		}
+		L($"NOD-16 onclick == '{attr}'");
+	}*/
 
 	// ******************
 	// * DomEvtActioner *
@@ -72,18 +97,16 @@ class DomOps
 		{
 			// (optimization: keep the same NodeIds as before to avoid sending updates for those)
 			refreshersNext = DiffAlgo.KeepPrevIds_In_StructurallyIdentical_DomNodesTree_And_GetUpdatedRefreshers(childrenPrev, childrenNext, refreshersNext);
-			var refreshersNextInitialPropChanges = refreshersNext.SelectMany(f => f.GetInitialPropChanges()).ToArray();
-			var propChanges = DiffAlgo.ComputePropChanges_In_StructurallyIdentical_DomNodesTree(childrenPrev, childrenNext);
-			propChanges = propChanges.Concat(refreshersNextInitialPropChanges).ToArray();
+			var chgs = DiffAlgo.ComputePropChanges_In_StructurallyIdentical_DomNodesTree(childrenPrev, childrenNext);
 
 			// Dom
-			DiffAlgo.ApplyPropChanges_In_DomNodeTrees(childrenPrev, propChanges);
+			DiffAlgo.ApplyChgs_In_DomNodeTrees(childrenPrev, chgs);
 
 			// Refreshers
 			refreshTracker.ReplaceRefreshers(refreshersPrevKeys, refreshersNext);
 
 			// Client
-			if (propChanges.Any()) messenger.SendToClient(ServerMsg.MkPropChangesDomUpdate(propChanges));
+			if (chgs.Any()) messenger.SendToClient(ServerMsg.MkChgsDomUpdate(chgs));
 		}
 		else
 		{
@@ -93,29 +116,38 @@ class DomOps
 
 			// Refreshers
 			refreshTracker.ReplaceRefreshers(refreshersPrevKeys, refreshersNext);
-			var refreshersNextInitialPropChanges = refreshersNext.SelectMany(f => f.GetInitialPropChanges()).ToArray();
-			DiffAlgo.ApplyPropChanges_In_DomNodeTrees(childrenNext, refreshersNextInitialPropChanges);
 
 			// Client
 			messenger.SendToClient(ServerMsg.MkReplaceChildrenDomUpdate(childrenNext.Fmt(), evt.NodeId));
 		}
 	}
 
-	public void Handle_PropChangeDomEvt(PropChangeDomEvt evt)
+	public void Handle_ChgDomEvt(ChgDomEvt[] evts)
 	{
-		var node = Dom.GetById(evt.Chg.NodeId);
-		var propChanges = new[] { evt.Chg };
-		DiffAlgo.ApplyPropChanges_In_DomNodeTrees(new [] { node }, propChanges);
-		messenger.SendToClient(ServerMsg.MkPropChangesDomUpdate(propChanges));
+		foreach (var evt in evts)
+		{
+			var chg = evt.Chg;
+			var node = Dom.GetById(chg.NodeId);
+			DiffAlgo.ApplyChgs_In_DomNodeTrees(node, chg);
+		}
+
+		var chgs = evts.SelectToArray(e => e.Chg);
+		messenger.SendToClient(ServerMsg.MkChgsDomUpdate(chgs));
 	}
+
+	/*public void Handle_ChgDomEvt(ChgDomEvt evt)
+	{
+		var chg = evt.Chg;
+		var node = Dom.GetById(chg.NodeId);
+		DiffAlgo.ApplyChgs_In_DomNodeTrees(node, chg);
+		messenger.SendToClient(ServerMsg.MkChgsDomUpdate(chg));
+	}*/
 
 	public void Handle_AddBodyNodeDomEvt(AddBodyNodeDomEvt evt)
 	{
 		var node = evt.Node;
 
 		var (domNode, refreshers) = Dom.CreateNode(node);
-		var refreshersInitialPropChanges = refreshers.SelectMany(f => f.GetInitialPropChanges()).ToArray();
-		DiffAlgo.ApplyPropChanges_In_DomNodeTrees(new [] { domNode }, refreshersInitialPropChanges);
 		var body = Dom.FindDescendant<IHtmlBodyElement>()!;
 
 		body.AppendChild(domNode);
@@ -147,7 +179,7 @@ class DomOps
 			.GetAllImgNodes()
 			.WhereToArray(e => e.Id != null && e.Source.GetRelevantLinkEnsure().IsSameAsWithoutQueryParams(imgUrl));
 		foreach (var node in nodes)
-			SignalDomEvt(new PropChangeDomEvt(PropChange.MkAttrChange(
+			SignalDomEvt(new ChgDomEvt(ChgMk.Attr(
 				node.Id!,
 				"src",
 				node.Source.GetRelevantLinkEnsure().BumpQueryParamCounter()

@@ -25,6 +25,20 @@ record DirectFileServNfo(
 			contentString = contentString.Replace(key, val);
 		return new DirectFileServNfo(cat, name, contentString.ToBytes());
 	}
+
+	public string Link
+	{
+		get
+		{
+			if (Name.Count(e => e == '.') <= 1) return Name.ToLink();
+			var idx = Name.LastIndexOf('.');
+			if (idx == -1) throw new ArgumentException();
+			var t = Name[..idx];
+			idx = t.LastIndexOf('.');
+			if (idx == -1) throw new ArgumentException();
+			return Name[(idx + 1)..].ToLink();
+		}
+	}
 }
 
 

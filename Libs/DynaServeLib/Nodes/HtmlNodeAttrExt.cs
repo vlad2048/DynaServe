@@ -2,10 +2,11 @@
 using DynaServeLib.DynaLogic.Refreshers;
 using DynaServeLib.Utils.Exts;
 using System.Runtime.CompilerServices;
+using DynaServeLib.Serving.Syncing.Structs;
 
 namespace DynaServeLib.Nodes;
 
-public static class HtmlNodeAttrStyleExt
+public static class HtmlNodeAttrExt
 {
 	// **********
 	// * Static *
@@ -27,6 +28,16 @@ public static class HtmlNodeAttrStyleExt
 	// ***********
 	// * Dynamic *
 	// ***********
+	public static HtmlNode Txt(
+		this HtmlNode node,
+		IObservable<string?> valObs,
+		[CallerArgumentExpression(nameof(valObs))] string? valObsName = null
+	)
+	{
+		node.AddRefresher(new ChgRefresher(ChgKeyMk.Text(node.Id), valObs.ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
+		return node;
+	}
+
 	public static HtmlNode Attr(
 		this HtmlNode node,
 		string attrName,
@@ -34,7 +45,29 @@ public static class HtmlNodeAttrStyleExt
 		[CallerArgumentExpression(nameof(valObs))] string? valObsName = null
 	)
 	{
-		node.AddRefresher(PropChangeRefresher.MkAttr(node.Id, attrName, valObs.ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
+		node.AddRefresher(new ChgRefresher(ChgKeyMk.Attr(node.Id, attrName), valObs.ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
+		return node;
+	}
+
+	public static HtmlNode PropStr(
+		this HtmlNode node,
+		string propName,
+		IObservable<string?> valObs,
+		[CallerArgumentExpression(nameof(valObs))] string? valObsName = null
+	)
+	{
+		node.AddRefresher(new ChgRefresher(ChgKeyMk.PropStr(node.Id, propName), valObs.ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
+		return node;
+	}
+
+	public static HtmlNode PropBool(
+		this HtmlNode node,
+		string propName,
+		IObservable<bool> valObs,
+		[CallerArgumentExpression(nameof(valObs))] string? valObsName = null
+	)
+	{
+		node.AddRefresher(new ChgRefresher(ChgKeyMk.PropBool(node.Id, propName), valObs.Select(e => e ? "true" : "").ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
 		return node;
 	}
 

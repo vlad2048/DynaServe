@@ -1,0 +1,43 @@
+.main {
+  display: flex;
+}
+
+table {
+  border-collapse: collapse;
+}
+td, th {
+  border: 1px solid #999;
+  padding: 5px;
+  text-align: left;
+}
+
+thead {
+  background-color: #505050;
+  font-family: 'Segoe UI Semibold';
+  font-size: 11.4px;
+}
+
+
+.col-ret {
+  color: #c14071;
+}
+
+.col-name {
+  color: #52fe7f;
+}
+
+.col-params {
+  display: flex;
+  .seg-sp {
+    width: 6px;
+  }
+  .seg-off {
+    color: #8f8f8f;
+  }
+  .seg-type {
+    color: #5eaaf5;
+  }
+  .seg-name {
+    color: #bdbdbd;
+  }
+}
