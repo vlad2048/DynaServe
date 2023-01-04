@@ -62,6 +62,14 @@ public static class ServOptFileServExt
 			fuzzyFolders.Select(fuzzyFolder => new LocalFolderServNfo(cat, fuzzyFolder))
 		);
 
+	public static void ServeFile(
+		this ServOpt opt,
+		string fuzzyFolder,
+		string file,
+		params (string, string)[] substitutions
+	) =>
+		opt.ServNfos.Add(new LocalFileServNfo(fuzzyFolder, file, substitutions));
+
 	public static void ServeEmbedded(
 		this ServOpt opt,
 		string embeddedName,

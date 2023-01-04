@@ -5,6 +5,20 @@ using PowRxVar;
 
 namespace DynaServeLib.DynaLogic.Refreshers;
 
+/*class RefreshTracker : IDisposable
+{
+	private readonly Disp d = new();
+	public void Dispose() => d.Dispose();
+
+	private readonly Dictionary<IElement, Disp> map;
+
+	public RefreshTracker()
+	{
+		map = new Dictionary<IElement, Disp>().D(d);
+	}
+}*/
+
+
 record RefreshTrackerDbgNfo(
 	Dictionary<string, string[]> Map
 );
@@ -88,6 +102,4 @@ class RefreshTracker : IDisposable
 			dbgMap.Remove(id);
 		}
 	}
-
-	//private static void L(string s) => Console.WriteLine(s);
 }

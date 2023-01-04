@@ -13,6 +13,15 @@ record LocalFolderServNfo(
 	string FuzzyFolder
 ) : IServNfo;
 
+record LocalFileServNfo(
+	string FuzzyFolder,
+	string File,
+	(string, string)[] Substitutions
+) : IServNfo
+{
+	public FCat Cat => File.ToCat();
+}
+
 record DirectFileServNfo(
 	FCat Cat,
 	string Name,
@@ -49,15 +58,14 @@ record ServFold(
 	FCat FCat
 );
 
-
-record ServLinkFile(
-	string Filename,
-	FCat Cat
+record ServFile(
+	string File,
+	(string, string)[] Substitutions
 );
 
 
 record WatchFold(
 	string Folder,
-	string Ext,
+	string Pattern,
 	FileReg[] Regs
 );

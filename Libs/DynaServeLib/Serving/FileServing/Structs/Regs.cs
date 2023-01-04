@@ -2,6 +2,7 @@
 using System.Text;
 using DynaServeLib.Serving.FileServing.Logic;
 using DynaServeLib.Serving.FileServing.StructsEnum;
+using DynaServeLib.Utils.Exts;
 using PowMaybe;
 
 namespace DynaServeLib.Serving.FileServing.Structs;
@@ -56,23 +57,38 @@ class FileReg : IReg
 
 	public string Name => Path.GetFileName(Filename);
 	public string Filename { get; }
+	public (string, string)[]? Substitutions { get; }
 
-	public FileReg(string filename)
+	public FileReg(string filename, (string, string)[]? substitutions)
 	{
 		Filename = filename;
+		Substitutions = substitutions;
 	}
 
 	public async Task<Maybe<RegData>> GetContent()
 	{
 		if (mayData.IsSome()) return mayData;
 		mayData =
-			from bytes in await RetryFileReader.ReadFileBytes(Filename)
-			select new RegData(Filename.ToType(), bytes);
+			from bytes in (await RetryFileReader.ReadFileBytes(Filename))
+			select new RegData(Filename.ToType(), bytes.ApplySubstitutions(Substitutions));
 		return mayData;
 	}
 
 	public void Invalidate()
 	{
 		mayData = May.None<RegData>();
+	}
+}
+
+
+file static class FileRegExt
+{
+	public static byte[] ApplySubstitutions(this byte[] data, (string, string)[]? substitutions)
+	{
+		if (substitutions == null) return data;
+		var text = data.FromBytes();
+		foreach (var substitution in substitutions)
+			text = text.Replace(substitution.Item1, substitution.Item2);
+		return text.ToBytes();
 	}
 }

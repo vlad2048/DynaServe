@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using DynaServeLib.Serving.FileServing.Structs;
-using DynaServeLib.Utils;
+﻿using DynaServeLib.Serving.FileServing.Structs;
 using DynaServeLib.Utils.Exts;
 using PowBasics.CollectionsExt;
 
@@ -13,8 +11,25 @@ record FolderFindResult(
 
 static class FuzzyFolderFinder
 {
-	public static FolderFindResult Find(LocalFolderServNfo[] foldNfos, IReadOnlyList<string> slnFolders)
+	public static (IReadOnlyDictionary<string, string>, string[]) MakeFolderMap(IEnumerable<LocalFileServNfo> fileNfos, IReadOnlyList<string> slnFolders)
 	{
+		var foldersToFind = fileNfos.Select(e => e.FuzzyFolder).Distinct();
+		var foldersNotFound = new List<string>();
+		var map = new Dictionary<string, string>();
+		foreach (var folderToFind in foldersToFind)
+		{
+			var res = Find(new[] { new LocalFolderServNfo(0, folderToFind) }, slnFolders);
+			if (res.Folds.Length > 1) throw new ArgumentException();
+			if (res.Folds.Length == 1)
+				map[folderToFind] = res.Folds[0].Folder;
+			foldersNotFound.AddRange(res.FoldsNotFound.Select(e => e.FuzzyFolder));
+		}
+		return (map, foldersNotFound.ToArray());
+	}
+
+	public static FolderFindResult Find(IEnumerable<LocalFolderServNfo> foldNfosSource, IReadOnlyList<string> slnFolders)
+	{
+		var foldNfos = foldNfosSource.ToArray();
 		var fuzzyFolderSet = foldNfos.SelectToHashSet(e => e.FuzzyFolder);
 		var folderMap = (
 				from slnFolder in slnFolders

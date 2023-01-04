@@ -21,7 +21,7 @@ static class LiveReloader
 		var d = new Disp();
 
 		var watchers = folds.SelectToArray(fold =>
-			new FolderWatcher(fold.Folder, $"*{fold.Ext}", debounceTime).D(d)
+			new FolderWatcher(fold.Folder, fold.Pattern, debounceTime).D(d)
 		);
 		Observable.Merge(
 			watchers.Select((watcher, idx) =>

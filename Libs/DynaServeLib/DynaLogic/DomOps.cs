@@ -12,6 +12,7 @@ using DynaServeLib.Utils.Exts;
 using PowBasics.CollectionsExt;
 using DynaServeLib.DynaLogic.DomLogic;
 using DynaServeLib.Logging;
+using PowRxVar;
 
 namespace DynaServeLib.DynaLogic;
 
@@ -22,8 +23,11 @@ record DomDbgNfo(
 );
 
 
-class DomOps
+class DomOps : IDisposable
 {
+	private readonly Disp d = new();
+	public void Dispose() => d.Dispose();
+
 	private readonly Messenger messenger;
 	private readonly RefreshTracker refreshTracker;
 
@@ -45,7 +49,7 @@ class DomOps
 		Logr = logr;
 		SignalDomEvt = signalDomEvt;
 		this.messenger = messenger;
-		refreshTracker = new RefreshTracker(this);
+		refreshTracker = new RefreshTracker(this).D(d);
 	}
 
 	public void Log(string s) => Logr.Log(s);

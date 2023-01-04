@@ -1,7 +1,6 @@
 ﻿using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using DynaServeLib.DynaLogic;
-using DynaServeLib.Serving.FileServing.Structs;
 using DynaServeLib.Serving.FileServing.StructsEnum;
 using PowBasics.CollectionsExt;
 
@@ -17,15 +16,15 @@ static class LinkCreator
 	};
 
 	
-	public static void CreateLink(DomOps domOps, IEnumerable<ServLinkFile> linkFiles) =>
+	public static void CreateLink(DomOps domOps, IEnumerable<string> linkFiles) =>
 		linkFiles.ForEach(e => CreateLink(domOps, e));
 
 
 
-	private static void CreateLink(DomOps domOps, ServLinkFile linkFile)
+	private static void CreateLink(DomOps domOps, string linkFile)
 	{
-		var creator = creatorMap[linkFile.Cat];
-		creator.Create(domOps, linkFile.Filename.ToLink());
+		var creator = creatorMap[linkFile.ToCat()];
+		creator.Create(domOps, linkFile.ToLink());
 	}
 
 	private interface ICreator

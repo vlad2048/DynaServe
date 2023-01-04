@@ -1,6 +1,4 @@
-﻿using System.Reactive.Linq;
-using DynaServeExtrasLib.Utils;
-using DynaServeLib;
+﻿using DynaServeLib;
 using DynaServeLib.Nodes;
 using DynaServeLib.Utils.Exts;
 using PowRxVar;
@@ -25,6 +23,7 @@ static class Demo_BoundCtrls
 				opt.ServeHardcoded("test.css", TestCss);
 			},
 			Div("main").Wrap(
+				new HtmlNode("button").Txt("Check").Attr("onclick", "runCheck()"),
 				CheckBox(varBool),
 				TextBox(varTxt),
 				RangeSlider(varNum, 0, 30)
@@ -55,7 +54,7 @@ static class Demo_BoundCtrls
 					break;
 
 				case ConsoleKey.Q:
-					break;
+					return;
 			}
 		}
 	}

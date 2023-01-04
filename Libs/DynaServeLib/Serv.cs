@@ -56,7 +56,7 @@ class ServInst : IDisposable
 		server = new Server(Opt.Port).D(d);
 		Messenger = new Messenger(server).D(d);
 		Dom = DomCreator.Create(Opt.ExtraHtmlNodes).D(d);
-		DomOps = new DomOps(Dom, Opt.Logr, SignalDomEvt, Messenger);
+		DomOps = new DomOps(Dom, Opt.Logr, SignalDomEvt, Messenger).D(d);
 		whenDomEvt = new Subject<IDomEvt>().D(d);
 		DomEvtActioner.Setup(WhenDomEvt, DomOps).D(d);
 		fileServer = new FileServer(
@@ -65,7 +65,7 @@ class ServInst : IDisposable
 			Opt.ScssOutputFolder,
 			Opt.SlnFolders,
 			Opt.Logr
-		);
+		).D(d);
 		ServDbg = new ServDbg(DomOps, Messenger).D(d);
 
 		DomOps.AddInitialNodes(rootNodes);

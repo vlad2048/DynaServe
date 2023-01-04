@@ -24,4 +24,15 @@ public static class DictExt
 		}).D(d);
 		return list;
 	}
+
+	/*public static Dictionary<K, V[]> D<K, V>(this Dictionary<K, V[]> dict, IRoDispBase d) where K : notnull where V : IDisposable
+	{
+		Disposable.Create(() =>
+		{
+			foreach (var arr in dict.Values)
+			foreach (var elt in arr)
+				elt.Dispose();
+		}).D(d);
+		return dict;
+	}*/
 }

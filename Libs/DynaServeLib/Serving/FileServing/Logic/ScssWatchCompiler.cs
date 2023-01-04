@@ -18,15 +18,21 @@ static class ScssWatchCompiler
 		var d = new Disp();
 		var cancelToken = CancelUtils.MakeFromDisp(d);
 
-		foreach (var inputFolder in inputFolders)
+		try
 		{
-			var outputFolder = Path.Combine(rootOutputFolder, Path.GetFileName(inputFolder));
-			Cli.Wrap("sass")
-				.WithArguments(
-					$@"""{inputFolder}"":""{outputFolder}"" --no-source-map --watch"
-				)
-				.WithStandardErrorPipe(PipeTarget.ToDelegate(logr.CssError))
-				.ExecuteAsync(cancelToken);
+			foreach (var inputFolder in inputFolders)
+			{
+				var outputFolder = Path.Combine(rootOutputFolder, Path.GetFileName(inputFolder));
+				Cli.Wrap("sass")
+					.WithArguments(
+						$@"""{inputFolder}"":""{outputFolder}"" --no-source-map --watch"
+					)
+					.WithStandardErrorPipe(PipeTarget.ToDelegate(logr.CssError))
+					.ExecuteAsync(CancellationToken.None, cancelToken);
+			}
+		}
+		catch (OperationCanceledException)
+		{
 		}
 
 		return d;

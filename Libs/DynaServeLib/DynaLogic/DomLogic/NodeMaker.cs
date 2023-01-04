@@ -2,25 +2,25 @@
 using AngleSharp.Html.Dom;
 using DynaServeLib.DynaLogic.Refreshers;
 using DynaServeLib.Nodes;
+using PowBasics.CollectionsExt;
 
 namespace DynaServeLib.DynaLogic.DomLogic;
 
+record NodsRefs(IElement[] Nods, IRefresher[] AllRefs);
+record NodRefs(IElement Nod, IRefresher[] AllRefs);
+
 static class NodeMaker
 {
-    public static (IElement[], IRefresher[]) CreateNodes(this IHtmlDocument doc, HtmlNode[] nodes)
-    {
-        var list = new List<IElement>();
-        var refreshers = new List<IRefresher>();
-        foreach (var node in nodes)
-        {
-            var (nodeElt, nodeRefreshers) = doc.CreateNode(node);
-            list.Add(nodeElt);
-            refreshers.AddRange(nodeRefreshers);
-        }
-        return (list.ToArray(), refreshers.ToArray());
-    }
+	public static NodsRefs CreateNodes(this IHtmlDocument doc, HtmlNode[] nodes)
+	{
+		var arr = nodes.SelectToArray(doc.CreateNode);
+		return new NodsRefs(
+			arr.SelectToArray(e => e.Nod),
+			arr.SelectMany(e => e.AllRefs).ToArray()
+		);
+	}
 
-    public static (IElement, IRefresher[]) CreateNode(this IHtmlDocument doc, HtmlNode node)
+    public static NodRefs CreateNode(this IHtmlDocument doc, HtmlNode node)
     {
         var refreshers = new List<IRefresher>();
 
@@ -41,6 +41,7 @@ static class NodeMaker
 
         var nodeElt = Recurse(node);
 
-        return ((IElement)nodeElt, refreshers.ToArray());
+		// Cast works because we don't allow the root node to be a text node
+        return new NodRefs((IElement)nodeElt, refreshers.ToArray());
     }
 }
