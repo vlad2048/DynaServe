@@ -34,7 +34,7 @@ public class ServDbg : IDisposable
 			}).D(d);
 	}
 
-	public async Task<DbgSnap> GetSnap()
+	/*public async Task<DbgSnap> GetSnap()
 	{
 		var domDbg = domOps.GetDbgNfo();
 		receivedSnap = May.None<ClientDomSnapshot>();
@@ -48,7 +48,7 @@ public class ServDbg : IDisposable
 			domDbg.RefreshTrackerDbgNfo.Map
 		);
 		return dbgSnap;
-	}
+	}*/
 
 	private static IHtmlDocument ReconstructClientDom(ClientDomSnapshot snap) =>
 		$"""

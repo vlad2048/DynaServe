@@ -2,34 +2,36 @@
 using AngleSharp.Html.Dom;
 using DynaServeLib.DynaLogic.Refreshers;
 using DynaServeLib.Nodes;
+using DynaServeLib.Utils.Exts;
 using PowBasics.CollectionsExt;
 
 namespace DynaServeLib.DynaLogic.DomLogic;
 
-record NodsRefs(IElement[] Nods, IRefresher[] AllRefs);
-record NodRefs(IElement Nod, IRefresher[] AllRefs);
+record NodsRefs(IElement[] Nods, RefreshMap RefreshMap);
+record NodRefs(IElement Nod, RefreshMap RefreshMap);
 
 static class NodeMaker
 {
-	public static NodsRefs CreateNodes(this IHtmlDocument doc, HtmlNode[] nodes)
+	public static NodsRefs CreateNodes(this HtmlNode[] nodes, IHtmlDocument doc)
 	{
-		var arr = nodes.SelectToArray(doc.CreateNode);
+		var arr = nodes.SelectToArray(node => node.CreateNode(doc));
 		return new NodsRefs(
 			arr.SelectToArray(e => e.Nod),
-			arr.SelectMany(e => e.AllRefs).ToArray()
+			arr.Select(e => e.RefreshMap).MergeEnsure()
 		);
 	}
 
-    public static NodRefs CreateNode(this IHtmlDocument doc, HtmlNode node)
+    public static NodRefs CreateNode(this HtmlNode node, IHtmlDocument doc)
     {
-        var refreshers = new List<IRefresher>();
+        var refreshMap = new Dictionary<IElement, IRefresher[]>();
 
         INode Recurse(HtmlNode n)
         {
             if (n.IsTxt)
                 return doc.CreateTextNode(n.Txt!);
             var elt = n.MakeElt(doc);
-            refreshers.AddRange(n.Refreshers);
+			if (n.Refreshers.Any())
+				refreshMap[elt] = n.Refreshers;
             foreach (var child in n.Children)
             {
                 var childElt = Recurse(child);
@@ -42,6 +44,6 @@ static class NodeMaker
         var nodeElt = Recurse(node);
 
 		// Cast works because we don't allow the root node to be a text node
-        return new NodRefs((IElement)nodeElt, refreshers.ToArray());
+        return new NodRefs((IElement)nodeElt, refreshMap);
     }
 }

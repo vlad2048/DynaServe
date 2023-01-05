@@ -9,6 +9,8 @@ public static class HtmlExt
 {
 	public static IHtmlDocument Parse(this string html) => new HtmlParser().ParseDocument(html);
 
+	public static IElement[] ParseFrag(this string html) => new HtmlParser().ParseDocument(html).FindDescendant<IHtmlBodyElement>()!.Children.ToArray();
+
 	public static string FmtBody(this IHtmlDocument dom) => dom
 		.FindDescendant<IHtmlBodyElement>()!
 		.Children

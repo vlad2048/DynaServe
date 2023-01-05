@@ -21,7 +21,7 @@ public static class HtmlNodeWrapExt
 	// ***********
 	public static HtmlNode Wrap(this HtmlNode node, IObservable<Unit> when, Func<IEnumerable<HtmlNode>> fun)
 	{
-		node.AddRefresher(new ChildrenRefresher(node.Id, when, () => fun().ToArray()));
+		node.AddRefresher(new ChildrenRefresher(when, () => fun().ToArray()));
 		return node;
 	}
 

@@ -3,12 +3,13 @@ using DynaServeLib;
 using PowMaybe;
 using DynaServeExtrasLib.Components.DlgInputLogic.Comps;
 using DynaServeExtrasLib.Components.DlgInputLogic;
+using PowRxVar;
 
 namespace ExtrasPlay;
 
 static class Demo_Extras_DlgInput
 {
-	public static void Run()
+	public static void Run(Disp d)
 	{
 		var mayRec = May.None<Rec>();
 	
@@ -35,10 +36,7 @@ static class Demo_Extras_DlgInput
 					Console.WriteLine($"{mayRec}");
 				})
 			)
-		);
-
-		Console.WriteLine("Running ...");
-		Console.ReadKey();
+		).D(d);
 	}
 
 

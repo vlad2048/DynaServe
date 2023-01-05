@@ -14,7 +14,11 @@
   <Namespace>System.Threading.Tasks</Namespace>
   <Namespace>DynaServeLib.Logging</Namespace>
   <Namespace>LINQPad.Controls</Namespace>
+  <Namespace>DynaServeExtrasLib.Components.EditListLogic.EditListConstraints</Namespace>
 </Query>
+
+#load ".\libs\sys"
+
 
 void Main()
 {
@@ -25,72 +29,119 @@ static class Demo_EditList
 {
 	public static void Run()
 	{
-		//Util.ReadLine();
-		
-		var list = Var.Make(recArr);
-		var editList = new EditList<EditListRec>(
-			list,
-			"Items",
-			DlgRec,
+		Util.ReadLine();
+
+		var masters = Var.Make(masterArr).D(D);
+
+		var listMaster = new EditList<RecMaster>(
+			masters,
+			"Masters",
+			DlgMaster,
 			opt =>
 			{
 				opt.SelectMode = EditListSelectMode.Single;
 				opt.Width = 300;
 			}
-		);
+		).D(D);
+
+		var slavesLinkNfo = EditListConstraintMaker.OwnsMultiple(
+			listMaster,
+			master => master.Slaves,
+			(master, slaves) => master with { Slaves = slaves }
+		).D(D);
+
+		var listSlaves = new EditList<RecSlave>(
+			slavesLinkNfo.Slaves,
+			"Slaves",
+			DlgSlave,
+			opt =>
+			{
+				opt.SelectMode = EditListSelectMode.Multiple;
+				opt.Width = 300;
+				opt.WhenCanAdd = slavesLinkNfo.WhenSlaveCanAdd;
+			}
+		).D(D);
 
 		Serv.Start(
 			opt =>
 			{
-				//opt.Logr = new LPLogger();
-				opt.LINQPadRefs = Util.CurrentQuery.FileReferences;
 				opt.RegisterEditList();
+				opt.ServeHardcoded("test.css", TestCss);
 			},
-			editList.UI
-		);
+			listMaster.UI,
+			listSlaves.UI
+		).D(D);
 
 		Console.WriteLine("Running ...");
 	}
 
 
-	private record EditListRec(
+	private record RecMaster(
 		string Name,
-		bool Enabled
+		RecSlave[] Slaves
+	)
+	{
+		public override string ToString() => $"{Name} ({Slaves.Length})";
+	}
+
+	private record RecSlave(
+		string Name
 	)
 	{
 		public override string ToString() => Name;
 	}
 
-	private static readonly EditListRec[] recArr =
+	private static readonly RecMaster[] masterArr =
 	{
-		new("Vlad", false),
-		new("Milou", false),
-		new("Erik", false),
-		new("Goncalo", false),
-		new("Marek", false),
+		new("Vlad", new RecSlave[] { new("slave_0"), new("slave_1"), new("slave_2") }),
+		new("Erik", new RecSlave[] { new("slave_0"), new("slave_1"), new("slave_2"), new("slave_3"), new("slave_4") }),
+		new("Milou", new RecSlave[] { }),
 	};
 
-	private static async Task<Maybe<EditListRec>> DlgRec(Maybe<EditListRec> prev)
+	private static async Task<Maybe<RecMaster>> DlgMaster(Maybe<RecMaster> prev)
 	{
 		const string keyName = "name";
 
-		EditListRec Mk(IDlgReader r) => new(r.GetString(keyName), prev.Select(e => e.Enabled).FailWith(true));
-	
+		RecMaster Mk(IDlgReader r) => new(r.GetString(keyName), prev.Select(e => e.Slaves).FailWith(Array.Empty<RecSlave>()));
+
 		var mayRead = await DlgInput.Make(
-			prev.IsSome() ? "Edit Rec" : "Add Rec",
+			prev.IsSome() ? "Edit Master" : "Add Master",
 			dlg =>
 			{
 				dlg.ValidFun = r => !string.IsNullOrWhiteSpace(Mk(r).Name);
 				dlg.EditString(keyName, "Name", prev.Select(e => e.Name).FailWith(""));
 			}
 		);
-	
+
 		return mayRead.Select(Mk);
 	}
+
+	private static async Task<Maybe<RecSlave>> DlgSlave(Maybe<RecSlave> prev)
+	{
+		const string keyName = "name";
+
+		static RecSlave Mk(IDlgReader r) => new(r.GetString(keyName));
+
+		var mayRead = await DlgInput.Make(
+			prev.IsSome() ? "Edit Slave" : "Add Slave",
+			dlg =>
+			{
+				dlg.ValidFun = r => !string.IsNullOrWhiteSpace(Mk(r).Name);
+				dlg.EditString(keyName, "Name", prev.Select(e => e.Name).FailWith(""));
+			}
+		);
+
+		return mayRead.Select(Mk);
+	}
+
+	private const string TestCss = """
+		body {
+			display: flex;
+			flex-direction: row;
+			gap: 10px;
+		}
+		""";
 }
-
-
-
 
 
 

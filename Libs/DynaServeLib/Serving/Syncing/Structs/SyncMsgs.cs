@@ -41,13 +41,34 @@ public enum ServerMsgType
 	ScriptRefresh,
 
 	ChgsDomUpdate,
-	ReplaceChildrenDomUpdate,
+
+	DomOp,
+	//ReplaceChildrenDomUpdate,
+	//AddChildToBody,
+	//RemoveChildFromBody,
 
 	ReqDomSnapshot,
-
-	AddChildToBody,
-	RemoveChildFromBody,
 	ReqCallMethodOnNode
+}
+
+public enum DomOpType
+{
+	InsertHtmlUnderBody,
+	InsertHtmlUnderParent,
+	DeleteHtmlUnderParent,
+	DeleteParent,
+}
+
+public record DomOp(
+	DomOpType Type,
+	string? Html,
+	string? ParentId
+)
+{
+	public static DomOp MkInsertHtmlUnderBody(string html) => new(DomOpType.InsertHtmlUnderBody, html, null);
+	public static DomOp MkInsertHtmlUnderParent(string html, string parentId) => new(DomOpType.InsertHtmlUnderParent, html, parentId);
+	public static DomOp MkDeleteHtmlUnderParent(string parentId) => new(DomOpType.DeleteHtmlUnderParent, null, parentId);
+	public static DomOp MkDeleteParent(string parentId) => new(DomOpType.DeleteParent, null, parentId);
 }
 
 public record ReplyScriptsSyncMsg(
@@ -76,6 +97,7 @@ public class ServerMsg
 	public ReplyScriptsSyncMsg? ReplyScriptsSyncMsg { get; private init; }
 	public ScriptRefreshNfo? ScriptRefreshNfo { get; private init; }
 	public Chg[]? Chgs { get; private init; }
+	public DomOp? DomOp { get; private init; }
 	public string? NodeId { get; private init; }
 	public string? MethodName { get; private init; }
 
@@ -101,13 +123,16 @@ public class ServerMsg
 		Chgs = chgs
 	};
 
-	public static ServerMsg MkReplaceChildrenDomUpdate(string html, string nodeId) => new(ServerMsgType.ReplaceChildrenDomUpdate)
+
+	public static ServerMsg MkDomOp(DomOp domOp) => new(ServerMsgType.DomOp)
+	{
+		DomOp = domOp
+	};
+	/*public static ServerMsg MkReplaceChildrenDomUpdate(string html, string nodeId) => new(ServerMsgType.ReplaceChildrenDomUpdate)
 	{
 		Html = html,
 		NodeId = nodeId,
 	};
-
-	public static ServerMsg MkReqDomSnapshot() => new(ServerMsgType.ReqDomSnapshot);
 
 	public static ServerMsg MkAddChildToBody(string html) => new(ServerMsgType.AddChildToBody)
 	{
@@ -117,7 +142,11 @@ public class ServerMsg
 	public static ServerMsg MkRemoveChildFromBody(string nodeId) => new(ServerMsgType.RemoveChildFromBody)
 	{
 		NodeId = nodeId,
-	};
+	};*/
+
+
+
+	public static ServerMsg MkReqDomSnapshot() => new(ServerMsgType.ReqDomSnapshot);
 
 	public static ServerMsg MkReqCallMethodOnNode(string nodeId, string methodName) => new(ServerMsgType.ReqCallMethodOnNode)
 	{

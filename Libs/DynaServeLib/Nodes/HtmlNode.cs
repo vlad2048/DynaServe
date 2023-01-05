@@ -4,37 +4,22 @@ using System.Reactive.Subjects;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using DynaServeLib.DynaLogic.Refreshers;
-using PowRxVar;
 
 namespace DynaServeLib.Nodes;
 
 
-public class HtmlNode : IRoDispBase
+public class HtmlNode
 {
-	public Disp D { get; } = new();
-	public bool IsDisposed { get; private set; }
-
-	public void Dispose()
-	{
-		if (IsDisposed) return;
-		IsDisposed = true;
-		whenDisposed.OnNext(Unit.Default);
-		whenDisposed.OnCompleted();
-		D.Dispose();
-	}
-
 	private readonly ISubject<Unit> whenDisposed = new AsyncSubject<Unit>();
 	public IObservable<Unit> WhenDisposed => whenDisposed.AsObservable();
 
-	private static int idCnt;
-
 	internal readonly List<IRefresher> refreshers = new();
-	internal IReadOnlyList<IRefresher> Refreshers => refreshers.AsReadOnly();
+	internal IRefresher[] Refreshers => refreshers.ToArray();
 	internal void AddRefresher(IRefresher refresher) => refreshers.Add(refresher);
 
 	public bool IsTxt { get; }
 	public string TagName { get; }
-	public string Id { get; set; } = $"id-{idCnt++}";
+	public string? Id { get; set; }
 	public string? Cls { get; set; }
 	public string? Txt { get; set; }
 	public Dictionary<string, string> Attrs { get; } = new();
@@ -45,7 +30,6 @@ public class HtmlNode : IRoDispBase
 	public HtmlNode(string tagName) : this(false, null)
 	{
 		TagName = tagName;
-		refreshers.Add(new NodeRefresher(Id, D));
 	}
 
 	public static HtmlNode MkTxt(string txt) => new(true, txt);
@@ -60,7 +44,8 @@ public class HtmlNode : IRoDispBase
 	internal IElement MakeElt(IHtmlDocument doc)
 	{
 		var elt = doc.CreateElement(TagName);
-		elt.Id = Id;
+		if (Id != null)
+			elt.Id = Id;
 		if (Cls != null)
 			elt.ClassName = Cls;
 		if (Txt != null)

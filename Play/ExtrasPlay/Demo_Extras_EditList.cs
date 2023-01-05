@@ -4,7 +4,6 @@ using DynaServeExtrasLib.Components.EditListLogic;
 using DynaServeExtrasLib.Components.EditListLogic.EditListConstraints;
 using DynaServeExtrasLib.Components.EditListLogic.StructsEnum;
 using DynaServeLib;
-using ExtrasPlay.Utils;
 using PowMaybe;
 using PowRxVar;
 
@@ -12,10 +11,8 @@ namespace ExtrasPlay;
 
 static class Demo_Extras_EditList
 {
-	public static void Run()
+	public static void Run(Disp d)
 	{
-		using var d = new Disp();
-
 		var masters = Var.Make(masterArr).D(d);
 
 		var listMaster = new EditList<RecMaster>(
@@ -56,8 +53,6 @@ static class Demo_Extras_EditList
 			listMaster.UI,
 			listSlaves.UI
 		).D(d);
-
-		PlayUtils.WaitForKeyPress();
 	}
 
 

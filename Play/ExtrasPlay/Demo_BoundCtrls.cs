@@ -7,11 +7,11 @@ namespace ExtrasPlay;
 
 static class Demo_BoundCtrls
 {
-	public static void Run()
+	public static void Run(Disp d)
 	{
-		var varBool = Var.Make(true);
-		var varTxt = Var.Make("Hello there");
-		var varNum = Var.Make(22);
+		var varBool = Var.Make(true).D(d);
+		var varTxt = Var.Make("Hello there").D(d);
+		var varNum = Var.Make(22).D(d);
 
 		varBool.Inspect();
 		varTxt.Inspect();
@@ -28,7 +28,7 @@ static class Demo_BoundCtrls
 				TextBox(varTxt),
 				RangeSlider(varNum, 0, 30)
 			)
-		);
+		).D(d);
 		
 		Console.WriteLine("Running ...");
 		Console.WriteLine("Press:");

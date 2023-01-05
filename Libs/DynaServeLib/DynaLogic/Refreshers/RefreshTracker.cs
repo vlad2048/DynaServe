@@ -1,24 +1,50 @@
-﻿using AngleSharp.Dom;
+﻿/*
+using AngleSharp.Dom;
+using AngleSharp.Html.Dom;
+using DynaServeLib.DynaLogic.DomLogic;
 using DynaServeLib.Utils.Exts;
 using PowBasics.CollectionsExt;
 using PowRxVar;
 
 namespace DynaServeLib.DynaLogic.Refreshers;
 
-/*class RefreshTracker : IDisposable
+class RefreshTracker : IDisposable
 {
 	private readonly Disp d = new();
 	public void Dispose() => d.Dispose();
 
+	private readonly DomOps domOps;
+	private IHtmlDocument dom => domOps.Dom;
 	private readonly Dictionary<IElement, Disp> map;
 
-	public RefreshTracker()
+	public RefreshTracker(DomOps domOps)
 	{
+		this.domOps = domOps;
 		map = new Dictionary<IElement, Disp>().D(d);
 	}
-}*/
+
+	public void Add(IElement parent, NodsRefs nodsRefs)
+	{
+		parent.AppendChildren(nodsRefs.Nods);
+		AddRefs(nodsRefs.RefreshMap);
+	}
+
+	private void AddRefs(RefreshMap refMap)
+	{
+		foreach (var (node, refs) in refMap)
+		{
+			if (map.ContainsKey(node)) throw new ArgumentException();
+			var refD = new Disp();
+			foreach (var @ref in refs)
+				@ref.Activate(domOps);
+			map[node] = refD;
+		}
+	}
+}
+*/
 
 
+/*
 record RefreshTrackerDbgNfo(
 	Dictionary<string, string[]> Map
 );
@@ -86,7 +112,7 @@ class RefreshTracker : IDisposable
 
 	public void RemoveChildrenRefreshers(IElement node, bool includeRoot)
 	{
-		var ids = node.GetAllChildrenIds(includeRoot);
+		var ids = node.GetAllChildrenIds(includeRoot);														
 		ids.ForEach(RemoveRefresher);
 	}
 
@@ -103,3 +129,4 @@ class RefreshTracker : IDisposable
 		}
 	}
 }
+*/

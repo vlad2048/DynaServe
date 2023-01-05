@@ -33,7 +33,7 @@ static class Program
 {
 	static void Test()
 	{
-		var htmlPrev = """
+		/*var htmlPrev = """
 			<body id="root">
 				<span id="sp0" class="id_0"></span>
 				<section id="sec0" class="id_2"></section>
@@ -73,7 +73,7 @@ static class Program
 
 			DiffAlgo.ApplyChgs_In_DomNodeTrees(childrenPrev, chgs);
 			L(childrenPrev.Fmt());
-		}
+		}*/
 	}
 
 

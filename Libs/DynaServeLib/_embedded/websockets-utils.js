@@ -232,3 +232,12 @@ function handleScriptRefresh(msg) {
             throw new Error(`Invalid ScriptType: ${msg.type}`);
     }
 }
+
+
+
+function fixAutofocus() {
+	const autofocusElt = document.querySelector("[autofocus]");
+	if (!!autofocusElt) {
+		autofocusElt.focus();
+	}
+}

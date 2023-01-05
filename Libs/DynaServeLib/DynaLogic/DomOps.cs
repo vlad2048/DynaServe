@@ -1,12 +1,10 @@
-﻿using System.Runtime.Intrinsics.Arm;
-using AngleSharp.Html.Dom;
-using DynaServeLib.DynaLogic.DiffLogic;
+﻿using AngleSharp.Html.Dom;
 using DynaServeLib.DynaLogic.Events;
-using DynaServeLib.DynaLogic.Refreshers;
 using DynaServeLib.Nodes;
 using DynaServeLib.Serving;
 using DynaServeLib.Serving.Syncing.Structs;
 using AngleSharp.Dom;
+using DynaServeLib.DynaLogic.DiffLogic;
 using DynaServeLib.DynaLogic.DomUtils;
 using DynaServeLib.Utils.Exts;
 using PowBasics.CollectionsExt;
@@ -17,10 +15,10 @@ using PowRxVar;
 namespace DynaServeLib.DynaLogic;
 
 
-record DomDbgNfo(
+/*record DomDbgNfo(
 	IHtmlDocument ServerDom,
 	RefreshTrackerDbgNfo RefreshTrackerDbgNfo
-);
+);*/
 
 
 class DomOps : IDisposable
@@ -29,14 +27,16 @@ class DomOps : IDisposable
 	public void Dispose() => d.Dispose();
 
 	private readonly Messenger messenger;
-	private readonly RefreshTracker refreshTracker;
+	private readonly Dictionary<IElement, Disp> map;
+	private IHtmlBodyElement Body => Dom.FindDescendant<IHtmlBodyElement>()!;
+	//private readonly RefreshTracker refreshTracker;
 
 	public IHtmlDocument Dom { get; }
 	public ILogr Logr { get; }
 	public Action<IDomEvt> SignalDomEvt { get; }
 	public IObservable<ClientMsg> WhenClientMsg => messenger.WhenClientMsg;
 	public void SendToClient(ServerMsg msg) => messenger.SendToClient(msg);
-	public DomDbgNfo GetDbgNfo() => new(Dom, refreshTracker.GetDbgNfo());
+	//public DomDbgNfo GetDbgNfo() => new(Dom, refreshTracker.GetDbgNfo());
 
 	public DomOps(
 		IHtmlDocument dom,
@@ -49,7 +49,8 @@ class DomOps : IDisposable
 		Logr = logr;
 		SignalDomEvt = signalDomEvt;
 		this.messenger = messenger;
-		refreshTracker = new RefreshTracker(this).D(d);
+		map = new Dictionary<IElement, Disp>().D(d);
+		//refreshTracker = new RefreshTracker(this).D(d);
 	}
 
 	public void Log(string s) => Logr.Log(s);
@@ -59,39 +60,30 @@ class DomOps : IDisposable
 	// ******************
 	public void AddInitialNodes(HtmlNode[] rootNodes)
 	{
-		var body = Dom.FindDescendant<IHtmlBodyElement>()!;
-		foreach (var rootNode in rootNodes)
-		{
-			var (node, refreshers) = Dom.CreateNode(rootNode);
-			body.AppendChild(node);
-			refreshTracker.AddRefreshers(refreshers);
-		}
+		var nodRefs = rootNodes.CreateNodes(Dom);
+		AddUnder(Body, nodRefs, false);
 	}
 
-	/*private void LogNode(string title)
-	{
-		void L(string s) => Logr.Log($"=============> {s}");
-		Logr.Log(" ");
-		L($"[{title}]");
-		var nod = Dom.GetElementById("id-16");
-		if (nod == null)
-		{
-			L("NOD-16 not found");
-			return;
-		}
-		var attr = nod.GetAttribute("onclick");
-		if (attr == null)
-		{
-			L("NOD-16 onclick == null");
-			return;
-		}
-		L($"NOD-16 onclick == '{attr}'");
-	}*/
 
 	// ******************
 	// * DomEvtActioner *
 	// ******************
 	public void Handle_UpdateChildrenDomEvt(UpdateChildrenDomEvt evt)
+	{
+		var node = Dom.GetById(evt.NodeId);
+		var nodsRefs = evt.Children.CreateNodes(Dom);
+		if (false) //DiffAlgo.Are_DomNodeTrees_StructurallyIdentical(node.Children, nodsRefs.Nods))
+		{
+
+		}
+		else
+		{
+			DelUnder(node, true);
+			AddUnder(node, nodsRefs, true);
+		}
+	}
+
+	/*public void Handle_UpdateChildrenDomEvt(UpdateChildrenDomEvt evt)
 	{
 		var node = Dom.GetById(evt.NodeId);
 		var (childrenPrev, refreshersPrevKeys) = node.GetChildrenAndTheirRefresherKeys();
@@ -124,6 +116,19 @@ class DomOps : IDisposable
 			// Client
 			messenger.SendToClient(ServerMsg.MkReplaceChildrenDomUpdate(childrenNext.Fmt(), evt.NodeId));
 		}
+	}*/
+
+	public void Handle_AddBodyNodeDomEvt(AddBodyNodeDomEvt evt)
+	{
+		var nodRefs = evt.Node.CreateNode(Dom);
+		AddUnder(Body, nodRefs, true);
+	}
+
+	public void Handle_RemoveBodyNodeDomEvt(RemoveBodyNodeDomEvt evt)
+	{
+		var nodeId = evt.NodeId;
+		var domNode = Dom.GetById(nodeId);
+		DelParent(domNode, true);
 	}
 
 	public void Handle_ChgDomEvt(ChgDomEvt[] evts)
@@ -139,38 +144,6 @@ class DomOps : IDisposable
 		messenger.SendToClient(ServerMsg.MkChgsDomUpdate(chgs));
 	}
 
-	/*public void Handle_ChgDomEvt(ChgDomEvt evt)
-	{
-		var chg = evt.Chg;
-		var node = Dom.GetById(chg.NodeId);
-		DiffAlgo.ApplyChgs_In_DomNodeTrees(node, chg);
-		messenger.SendToClient(ServerMsg.MkChgsDomUpdate(chg));
-	}*/
-
-	public void Handle_AddBodyNodeDomEvt(AddBodyNodeDomEvt evt)
-	{
-		var node = evt.Node;
-
-		var (domNode, refreshers) = Dom.CreateNode(node);
-		var body = Dom.FindDescendant<IHtmlBodyElement>()!;
-
-		body.AppendChild(domNode);
-		refreshTracker.AddRefreshers(refreshers);
-
-		messenger.SendToClient(ServerMsg.MkAddChildToBody(domNode.Fmt()));
-	}
-
-	public void Handle_RemoveBodyNodeDomEvt(RemoveBodyNodeDomEvt evt)
-	{
-		var nodeId = evt.NodeId;
-
-		var domNode = Dom.GetById(nodeId);
-		refreshTracker.RemoveChildrenRefreshers(domNode, true);
-		domNode.Remove();
-
-		messenger.SendToClient(ServerMsg.MkRemoveChildFromBody(nodeId));
-	}
-
 
 
 	// ****************
@@ -179,7 +152,9 @@ class DomOps : IDisposable
 	// image/img.png
 	public void BumpImageUrl(string imgUrl)
 	{
-		var nodes = Dom
+		// TODO: image auto updates
+
+		/*var nodes = Dom
 			.GetAllImgNodes()
 			.WhereToArray(e => e.Id != null && e.Source.GetRelevantLinkEnsure().IsSameAsWithoutQueryParams(imgUrl));
 		foreach (var node in nodes)
@@ -187,7 +162,7 @@ class DomOps : IDisposable
 				node.Id!,
 				"src",
 				node.Source.GetRelevantLinkEnsure().BumpQueryParamCounter()
-			)));
+			)));*/
 	}
 
 
@@ -198,5 +173,83 @@ class DomOps : IDisposable
 	public void UpdateNodeChildren(string nodeId, HtmlNode[] children)
 	{
 		SignalDomEvt(new UpdateChildrenDomEvt(nodeId, children));
+	}
+
+
+
+
+
+	// ******************************************
+	// * private Node & Refreshers manipulation *
+	// ******************************************
+	private void AddUnder(IElement parent, NodRefs nodRefs, bool sendMsg)
+	{
+		parent.AppendChild(nodRefs.Nod);
+		AddRefs(nodRefs.RefreshMap);
+		if (sendMsg)
+			messenger.SendToClient(ServerMsg.MkDomOp(
+				DomOp.MkInsertHtmlUnderParent(nodRefs.Nod.Fmt(), parent.Id ?? throw new ArgumentException())
+			));
+	}
+
+	private void AddUnder(IElement parent, NodsRefs nodsRefs, bool sendMsg)
+	{
+		parent.AppendChildren(nodsRefs.Nods);
+		AddRefs(nodsRefs.RefreshMap);
+		if (sendMsg)
+			messenger.SendToClient(ServerMsg.MkDomOp(
+				DomOp.MkInsertHtmlUnderParent(nodsRefs.Nods.Fmt(), parent.Id ?? throw new ArgumentException())
+			));
+	}
+
+	private void DelUnder(IElement parent, bool sendMsg)
+	{
+		DelRefs(parent.Children);
+		parent.RemoveAllChildren();
+		if (sendMsg)
+			messenger.SendToClient(ServerMsg.MkDomOp(
+				DomOp.MkDeleteHtmlUnderParent(parent.Id ?? throw new ArgumentException())
+			));
+	}
+
+	private void DelParent(IElement parent, bool sendMsg)
+	{
+		DelRefs(parent);
+		parent.Remove();
+		if (sendMsg)
+			messenger.SendToClient(ServerMsg.MkDomOp(
+				DomOp.MkDeleteParent(parent.Id ?? throw new ArgumentException())
+			));
+	}
+
+
+
+	public int idCnt;
+
+	private void AddRefs(RefreshMap refMap)
+	{
+		foreach (var (node, refs) in refMap)
+		{
+			if (map.ContainsKey(node)) throw new ArgumentException();
+			node.Id = $"id-{idCnt++}";;
+			var refD = new Disp();
+			foreach (var @ref in refs)
+				@ref.Activate(node, this).D(refD);
+			map[node] = refD;
+		}
+	}
+
+	private void DelRefs(IEnumerable<IElement> roots) => roots.ForEach(DelRefs);
+
+	private void DelRefs(IElement root)
+	{
+		root.Recurse<IElement>(node =>
+		{
+			if (map.TryGetValue(node, out var refD))
+			{
+				refD.Dispose();
+				map.Remove(node);
+			}
+		});
 	}
 }

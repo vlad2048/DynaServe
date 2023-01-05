@@ -34,7 +34,7 @@ public static class HtmlNodeAttrExt
 		[CallerArgumentExpression(nameof(valObs))] string? valObsName = null
 	)
 	{
-		node.AddRefresher(new ChgRefresher(ChgKeyMk.Text(node.Id), valObs.ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
+		node.AddRefresher(new ChgRefresher(ChgKeyMk.Text(), valObs.ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
 		return node;
 	}
 
@@ -45,7 +45,7 @@ public static class HtmlNodeAttrExt
 		[CallerArgumentExpression(nameof(valObs))] string? valObsName = null
 	)
 	{
-		node.AddRefresher(new ChgRefresher(ChgKeyMk.Attr(node.Id, attrName), valObs.ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
+		node.AddRefresher(new ChgRefresher(ChgKeyMk.Attr(attrName), valObs.ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
 		return node;
 	}
 
@@ -56,7 +56,7 @@ public static class HtmlNodeAttrExt
 		[CallerArgumentExpression(nameof(valObs))] string? valObsName = null
 	)
 	{
-		node.AddRefresher(new ChgRefresher(ChgKeyMk.PropStr(node.Id, propName), valObs.ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
+		node.AddRefresher(new ChgRefresher(ChgKeyMk.PropStr(propName), valObs.ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
 		return node;
 	}
 
@@ -67,7 +67,7 @@ public static class HtmlNodeAttrExt
 		[CallerArgumentExpression(nameof(valObs))] string? valObsName = null
 	)
 	{
-		node.AddRefresher(new ChgRefresher(ChgKeyMk.PropBool(node.Id, propName), valObs.Select(e => e ? "true" : "").ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
+		node.AddRefresher(new ChgRefresher(ChgKeyMk.PropBool(propName), valObs.Select(e => e ? "true" : "").ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
 		return node;
 	}
 

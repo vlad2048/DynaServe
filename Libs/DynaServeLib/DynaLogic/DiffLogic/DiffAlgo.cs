@@ -1,4 +1,43 @@
 ﻿using AngleSharp.Dom;
+using DynaServeLib.Serving.Syncing.Structs;
+
+namespace DynaServeLib.DynaLogic.DiffLogic;
+
+static class DiffAlgo
+{
+	public static void ApplyChgs_In_DomNodeTrees(IElement rootsNext, params Chg[] chgs) => ApplyChgs_In_DomNodeTrees(new[] { rootsNext }, chgs);
+	public static void ApplyChgs_In_DomNodeTrees(IElement[] rootsNext, params Chg[] chgs)
+	{
+		var nodeMap = rootsNext.GetNodeMap();
+		foreach (var chg in chgs)
+		{
+			var node = nodeMap[chg.NodeId];
+			switch (chg.Type)
+			{
+				case ChgType.Attr:
+					if (chg.Val != null)
+						node.SetAttribute(chg.Name!, chg.Val);
+					else
+						node.RemoveAttribute(chg.Name!);
+					break;
+
+				case ChgType.Prop:
+					break;
+
+				case ChgType.Text:
+					node.TextContent = chg.Val ?? "";
+					break;
+
+				default:
+					throw new ArgumentException();
+			}
+		}
+	}
+}
+
+
+/*
+using AngleSharp.Dom;
 using DynaServeLib.DynaLogic.Refreshers;
 using DynaServeLib.Serving.Syncing.Structs;
 using PowBasics.CollectionsExt;
@@ -7,7 +46,7 @@ namespace DynaServeLib.DynaLogic.DiffLogic;
 
 static class DiffAlgo
 {
-	public static bool Are_DomNodeTrees_StructurallyIdentical(IElement[] rootsPrev, IElement[] rootsNext) =>
+	public static bool Are_DomNodeTrees_StructurallyIdentical(IHtmlCollection<IElement> rootsPrev, IElement[] rootsNext) =>
 		rootsPrev.Length == rootsNext.Length &&
 		rootsPrev.Zip(rootsNext).All(t => Is_DomNodeTree_StructurallyIdentical(t.First, t.Second));
 
@@ -156,3 +195,4 @@ static class DiffAlgo
 		true => node.Text(),
 	};
 }
+*/

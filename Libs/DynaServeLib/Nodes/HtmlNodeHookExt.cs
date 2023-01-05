@@ -1,5 +1,4 @@
-﻿using AngleSharp.Dom;
-using DynaServeLib.DynaLogic.Refreshers;
+﻿using DynaServeLib.DynaLogic.Refreshers;
 
 namespace DynaServeLib.Nodes;
 
@@ -11,12 +10,10 @@ public static class HtmlNodeHookExt
 		node.HookArg(evtName, async str => action(str), argExpr, stopPropagation);
 
 	public static HtmlNode Hook(this HtmlNode node, string evtName, Func<Task> action, bool stopPropagation = false) => node
-		.AddRefr(new EvtRefresher(node.Id, evtName, action, stopPropagation))
-		.Attr($"on{evtName}", $"{MkStopPropagationStr(stopPropagation)}sockEvt('{node.Id}', '{evtName}')");
+		.AddRefr(new EvtRefresher(evtName, action, stopPropagation));
 
 	public static HtmlNode HookArg(this HtmlNode node, string evtName, Func<string, Task> action, string argExpr, bool stopPropagation = false) => node
-		.AddRefr(new EvtArgRefresher(node.Id, evtName, action, argExpr, stopPropagation))
-		.Attr($"on{evtName}", $"{MkStopPropagationStr(stopPropagation)}sockEvtArg('{node.Id}', '{evtName}', {argExpr})");
+		.AddRefr(new EvtArgRefresher(evtName, action, argExpr, stopPropagation));
 
 	
 	

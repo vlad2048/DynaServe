@@ -6,13 +6,16 @@ namespace DynaServeLib.DynaLogic;
 
 static class DomExt
 {
-	public static IElement GetById(this IHtmlDocument dom, string id) => dom.GetElementById(id) ?? throw new ArgumentException();
+	public static string GetIdEnsure(this IElement node) => node.Id ?? throw new ArgumentException();
+
+	public static IElement GetById(this IHtmlDocument dom, string id) => dom.GetElementById(id) ?? throw new ArgumentException($"Cannot find node {id}");
 
 	public static void RemoveAllChildren(this IElement elt)
 	{
 		var children = elt.Children.ToArray();
 		foreach (var child in children)
-			elt.RemoveChild(child);
+			child.Remove();
+			//elt.RemoveChild(child);
 	}
 
 	public static void AppendChildren(this IElement node, IEnumerable<IElement> children) =>
@@ -29,8 +32,9 @@ static class DomExt
 		var map = new Dictionary<string, IElement>();
 		void Recurse(IElement node)
 		{
-			if (node.Id == null) throw new ArgumentException();
-			map[node.Id] = node;
+			//if (node.Id == null) throw new ArgumentException();
+			if (node.Id != null)
+				map[node.Id] = node;
 			foreach (var child in node.Children)
 				Recurse(child);
 		}

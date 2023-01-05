@@ -1,12 +1,13 @@
 ﻿using DynaServeExtrasLib.Components.FontAwesomeLogic;
 using DynaServeLib;
+using PowRxVar;
 using static DynaServeExtrasLib.Components.FontAwesomeLogic.FontAwesomeCtrls;
 
 namespace ExtrasPlay;
 
 static class Demo_Extras_FontAwesome
 {
-	public static void Run()
+	public static void Run(Disp d)
 	{
 		Serv.Start(
 			opt =>
@@ -14,9 +15,6 @@ static class Demo_Extras_FontAwesome
 				opt.RegisterFontAwesome();
 			},
 			IconBtn("fa-solid fa-pen-to-square", () => { })
-		);
-
-		Console.WriteLine("Running ...");
-		Console.ReadKey();
+		).D(d);
 	}
 }

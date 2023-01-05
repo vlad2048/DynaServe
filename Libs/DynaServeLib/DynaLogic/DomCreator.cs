@@ -1,6 +1,7 @@
 ﻿using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using DynaServeLib.DynaLogic.DomUtils;
+using DynaServeLib.Utils.Exts;
 using PowRxVar;
 
 namespace DynaServeLib.DynaLogic;
@@ -12,7 +13,7 @@ static class DomCreator
 	{
 		var d = new Disp();
 
-		var doc = new HtmlParser().ParseDocument(InitialHtml).D(d);
+		var doc = InitialHtml.Parse().D(d);
 		doc.AddExtraHtmlNodes(extraHtmlNodes);
 
 		return (doc, d);
@@ -28,7 +29,7 @@ static class DomCreator
 				<title>DynaServe</title>
 				<link href='http://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900italic,900' rel='stylesheet' type='text/css'>
 			</head>
-			<body>
+			<body id="body">
 			</body>
 		</html>
 		""";

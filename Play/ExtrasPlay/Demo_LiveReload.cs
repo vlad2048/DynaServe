@@ -1,12 +1,13 @@
 ﻿using DynaServeLib;
 using DynaServeLib.Nodes;
 using DynaServeLib.Serving.FileServing.StructsEnum;
+using PowRxVar;
 
 namespace ExtrasPlay;
 
 static class Demo_LiveReload
 {
-	public static void Run()
+	public static void Run(Disp d)
 	{
 		Serv.Start(
 			opt =>
@@ -20,9 +21,6 @@ static class Demo_LiveReload
 				Img("images/img.png"),
 				Btn("Run").Attr("onclick", "myFun()")
 			)
-		);
-
-		Console.WriteLine("Running ...");
-		Console.ReadKey();
+		).D(d);
 	}
 }
