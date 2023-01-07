@@ -168,10 +168,10 @@ class LinkSrcRequester
 			whenEvt.OnNext(new ErrTimeoutVidFwEvt(reqId));
 		}
 		//	The specified network name is no longer available.
-		/*catch (HttpListenerException ex) when (ex.ErrorCode == 64)
-		{
-			whenEvt.OnNext(new ErrNetworkUnavailableVidFwEvt(reqId));
-		}*/
+		//catch (HttpListenerException ex) when (ex.ErrorCode == 64)
+		//{
+		//	whenEvt.OnNext(new ErrNetworkUnavailableVidFwEvt(reqId));
+		//}
 		catch (Exception ex)
 		{
 			whenEvt.OnNext(new ErrUnexpectedException(reqId, ex));

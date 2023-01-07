@@ -2,20 +2,20 @@
 
 namespace DynaServeLib.DynaLogic.DomUtils;
 
-/*
-In Chrome:
-	http://box-pc:7000/css/websockets.css
-	(or file:///C:/Dev/Creepy/_infos/js-play/css/pane-scroller.css)
 
-UrlUtils.GetLocalLink(opt.Port) = http://box-pc:7000/
+//	In Chrome:
+//		http://box-pc:7000/css/websockets.css
+//		(or file:///C:/Dev/Creepy/_infos/js-play/css/pane-scroller.css)
+//
+//	UrlUtils.GetLocalLink(opt.Port) = http://box-pc:7000/
+//
+//	But displayed as (in the dev tools):
+//		css/websockets.css?c=3
+//
+//	In AngleSharp:
+//		http://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900italic,900
+//		about:///css/websockets.css?c=3
 
-But displayed as (in the dev tools):
-	css/websockets.css?c=3
-
-In AngleSharp:
-	http://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900italic,900
-	about:///css/websockets.css?c=3
-*/
 static class DomUrlUtils
 {
 	private const string Prefix = "about:///";

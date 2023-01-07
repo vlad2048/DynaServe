@@ -19,27 +19,6 @@ static class ServRegisterExt
 			("{{StatusEltId}}", ServInst.StatusEltId)
 		);
 
-
-		/*opt.ServeFile(
-			"_embedded-utils",
-			"link-utils.js",
-			("{{HttpLink}}", UrlUtils.GetLocalLink(opt.Port))
-		);
-		opt.ServeFile(
-			"_embedded",
-			"websockets-utils.js"
-		);
-		opt.ServeFile(
-			"_embedded",
-			"websockets-handlers.js",
-			("{{StatusEltId}}", ServInst.StatusEltId)
-		);
-		opt.ServeEmbedded("websockets.js",
-			("{{WSLink}}", UrlUtils.GetWSLink(opt.Port)),
-			("{{StatusEltId}}", ServInst.StatusEltId)
-		);*/
-		
-
 		opt.ServeEmbedded("websockets.css",
 			("StatusEltClsAuto", ServInst.StatusEltClsAuto),
 			("StatusEltClsManual", ServInst.StatusEltClsManual)

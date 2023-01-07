@@ -100,47 +100,4 @@ file static class EvtRefresherUtils
 		true => "event.stopPropagation();",
 		false => null
 	};
-
-	/*public static async Task WrapAsyncActionInTryCatch(
-		Func<string, Task> action,
-		string title,
-		string nodeId,
-		string evtName,
-		string argStr
-	)
-	{
-		try
-		{
-			await action(argStr);
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"Exception in {title}");
-			Console.WriteLine($"  NodeId : {nodeId}");
-			Console.WriteLine($"  EvtName: {evtName}");
-			Console.WriteLine($"  Ex.Msg : {ex.Message}");
-			Console.WriteLine("  Ex:");
-			Console.WriteLine($"{ex}");
-		}
-	}*/
 }
-
-
-
-
-/*.Subscribe(async _ => await EvtRefresherUtils.WrapAsyncActionInTryCatch(
-	async _ => await Action(),
-	"EvtRefresher",
-	NodeId,
-	EvtName,
-	""
-));
-
-
-.Subscribe(async e => await EvtRefresherUtils.WrapAsyncActionInTryCatch(
-	Action,
-	"EvtRefresherArgs",
-	NodeId,
-	EvtName,
-	e.EvtArg!
-));*/

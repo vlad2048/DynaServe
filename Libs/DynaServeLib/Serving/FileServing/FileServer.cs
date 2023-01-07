@@ -1,6 +1,5 @@
 ﻿using DynaServeLib.DynaLogic;
 using DynaServeLib.Logging;
-using DynaServeLib.Nodes;
 using DynaServeLib.Serving.FileServing.Logic;
 using DynaServeLib.Serving.FileServing.Structs;
 using DynaServeLib.Serving.FileServing.StructsEnum;
@@ -47,12 +46,7 @@ class FileServer : IDisposable
 		//LogRegs();
 	}
 
-	private void AddReg(string link, IReg reg)
-	{
-		regMap[link] = reg;
-		//if (link.EndsWith(".js"))
-		//	regMap[link[..^3]] = reg;
-	}
+	private void AddReg(string link, IReg reg) => regMap[link] = reg;
 
 
 	private void LogRegs()
@@ -64,20 +58,6 @@ class FileServer : IDisposable
 	}
 	private static void L(string s) => Console.Error.WriteLine(s);
 
-	/*private void LogFoldsNotFound(LocalFolderServNfo[] folds)
-	{
-		if (folds.Length == 0) return;
-		void L(string s) => Console.Error.WriteLine(s);
-		var title = $"{folds.Length} folders not found:";
-		L(title);
-		L(new string('=', title.Length));
-		foreach (var fold in folds)
-			L($"  {fold.Cat} - '{fold.FuzzyFolder}'");
-		L("");
-		L("You need to specify the solution folders they are located in:");
-		L("""    opt.AddSlnFolder(@"C:\git\MySolution");""");
-		throw new ArgumentException("Resources not found");
-	}*/
 
 	public async Task<Maybe<RegData>> TryGetContent(string link)
 	{

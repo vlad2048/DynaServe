@@ -34,7 +34,6 @@
 	<ItemGroup>
 		<Folder Include="DynaLogic\DomUtils\" />
 		<Folder Include="Gizmos\" />
-		<Folder Include="Serving\Debugging\Structs\" />
 		<Folder Include="Serving\Repliers\ServeFiles\" />
 		<Folder Include="Serving\Repliers\ServePage\" />
 	</ItemGroup>
