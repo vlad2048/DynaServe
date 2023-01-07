@@ -11,9 +11,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Play", "Play", "{B6A7EFCB-8
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServPlay", "Play\ServPlay\ServPlay.csproj", "{6462DC91-41C7-4B0B-AA4E-A2DC7E423841}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynaServeExtrasLib", "Libs\DynaServeExtrasLib\DynaServeExtrasLib.csproj", "{2F5C4146-4A97-483A-BDA9-22ADD3A79EB0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynaServeExtrasLib", "Libs\DynaServeExtrasLib\DynaServeExtrasLib.csproj", "{2F5C4146-4A97-483A-BDA9-22ADD3A79EB0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtrasPlay", "Play\ExtrasPlay\ExtrasPlay.csproj", "{7A9DF5AF-FBD1-4C47-9F65-7170535D4080}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExtrasPlay", "Play\ExtrasPlay\ExtrasPlay.csproj", "{7A9DF5AF-FBD1-4C47-9F65-7170535D4080}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

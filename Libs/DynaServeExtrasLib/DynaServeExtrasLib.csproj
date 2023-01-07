@@ -5,35 +5,35 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Remove="_dynaserve-extras-css\dlg-input\dlg-input.scss" />
-		<None Remove="_dynaserve-extras-css\edit-list\edit-list.scss" />
+		<None Remove="_dynaserve-extras-css\dlg-input\dlg-input.css" />
+		<None Remove="_dynaserve-extras-css\edit-list\edit-list.css" />
 		<None Remove="_dynaserve-extras-css\fontawesome\fontawesome-css\brands.css" />
 		<None Remove="_dynaserve-extras-css\fontawesome\fontawesome-css\fontawesome.css" />
 		<None Remove="_dynaserve-extras-css\fontawesome\fontawesome-css\regular.css" />
 		<None Remove="_dynaserve-extras-css\fontawesome\fontawesome-css\solid.css" />
-		<None Remove="_dynaserve-extras-css\fontawesome\fontawesome-custom-css\fontawesome-ctrls.scss" />
+		<None Remove="_dynaserve-extras-css\fontawesome\fontawesome-custom-css\fontawesome-ctrls.css" />
 		<None Remove="_dynaserve-extras-css\fontawesome\fontawesome-webfonts\fa-brands-400.woff2" />
 		<None Remove="_dynaserve-extras-css\fontawesome\fontawesome-webfonts\fa-regular-400.woff2" />
 		<None Remove="_dynaserve-extras-css\fontawesome\fontawesome-webfonts\fa-solid-900.woff2" />
-		<None Remove="_dynaserve-extras-css\_theme\0_vars.scss" />
-		<None Remove="_dynaserve-extras-css\_theme\1_reset.scss" />
-		<None Remove="_dynaserve-extras-css\_theme\2_ctrls.scss" />
+		<None Remove="_dynaserve-extras-css\_theme\0_vars.css" />
+		<None Remove="_dynaserve-extras-css\_theme\1_reset.css" />
+		<None Remove="_dynaserve-extras-css\_theme\2_ctrls.css" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="_dynaserve-extras-css\dlg-input\dlg-input.scss" />
-		<EmbeddedResource Include="_dynaserve-extras-css\edit-list\edit-list.scss" />
+		<EmbeddedResource Include="_dynaserve-extras-css\dlg-input\dlg-input.css" />
+		<EmbeddedResource Include="_dynaserve-extras-css\edit-list\edit-list.css" />
 		<EmbeddedResource Include="_dynaserve-extras-css\fontawesome\fontawesome-css\brands.css" />
 		<EmbeddedResource Include="_dynaserve-extras-css\fontawesome\fontawesome-css\fontawesome.css" />
 		<EmbeddedResource Include="_dynaserve-extras-css\fontawesome\fontawesome-css\regular.css" />
 		<EmbeddedResource Include="_dynaserve-extras-css\fontawesome\fontawesome-css\solid.css" />
-		<EmbeddedResource Include="_dynaserve-extras-css\fontawesome\fontawesome-custom-css\fontawesome-ctrls.scss" />
+		<EmbeddedResource Include="_dynaserve-extras-css\fontawesome\fontawesome-custom-css\fontawesome-ctrls.css" />
 		<EmbeddedResource Include="_dynaserve-extras-css\fontawesome\fontawesome-webfonts\fa-brands-400.woff2" />
 		<EmbeddedResource Include="_dynaserve-extras-css\fontawesome\fontawesome-webfonts\fa-regular-400.woff2" />
 		<EmbeddedResource Include="_dynaserve-extras-css\fontawesome\fontawesome-webfonts\fa-solid-900.woff2" />
-		<EmbeddedResource Include="_dynaserve-extras-css\_theme\0_vars.scss" />
-		<EmbeddedResource Include="_dynaserve-extras-css\_theme\1_reset.scss" />
-		<EmbeddedResource Include="_dynaserve-extras-css\_theme\2_ctrls.scss" />
+		<EmbeddedResource Include="_dynaserve-extras-css\_theme\0_vars.css" />
+		<EmbeddedResource Include="_dynaserve-extras-css\_theme\1_reset.css" />
+		<EmbeddedResource Include="_dynaserve-extras-css\_theme\2_ctrls.css" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -1,5 +1,7 @@
 ﻿using DynaServeLib.Serving.FileServing.StructsEnum;
+using DynaServeLib.Utils;
 using DynaServeLib.Utils.Exts;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace DynaServeLib.Serving.FileServing.Structs;
 
@@ -28,6 +30,19 @@ record DirectFileServNfo(
 	byte[] Content
 ) : IServNfo
 {
+	/*public static DirectFileServNfo FromString(FCat cat, string name, byte[] cont, params (string, string)[] substitutions)
+	{
+		if (!name.ToType().IsBinary())
+		{
+			var text = cont.FromBytes();
+			foreach (var (key, val) in substitutions)
+				text = text.Replace(key, val);
+			cont = text.ToBytes();
+		}
+
+		return new DirectFileServNfo(cat, name, cont);
+	}*/
+
 	public static DirectFileServNfo FromString(FCat cat, string name, string contentString, params (string, string)[] substitutions)
 	{
 		foreach (var (key, val) in substitutions)

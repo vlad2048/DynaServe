@@ -1,5 +1,8 @@
 ﻿global using static DynaServeLib.Nodes.Ctrls;
 global using static DynaServeExtrasLib.Utils.HtmlNodeExtraMakers;
+using DynaServeExtrasLib.Components.FontAwesomeLogic;
+using DynaServeLib.Utils;
+using DynaServeLib.Utils.Exts;
 using PowRxVar;
 
 namespace ExtrasPlay;
@@ -10,6 +13,10 @@ static class Program
 	{
 		//DispStats.SetBP(105);
 		//DispStats.OnBPHit = () => { };
+
+		/*var cont = Embedded.Read("fa-solid-900.woff2", typeof(FontAwesomeRegisterExt).Assembly);
+		var bytes = cont.ToBytes();
+		var lng = bytes.Length;*/
 		
 		MainInner();
 

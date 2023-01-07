@@ -1,8 +1,10 @@
-﻿using DynaServeLib.Logging;
+﻿using System.Reflection;
+using DynaServeLib.Logging;
 using DynaServeLib.Serving.FileServing.Structs;
 using DynaServeLib.Serving.FileServing.StructsEnum;
 using DynaServeLib.Serving.Repliers;
 using DynaServeLib.Utils;
+using DynaServeLib.Utils.Exts;
 
 namespace DynaServeLib;
 
@@ -69,6 +71,20 @@ public static class ServOptFileServExt
 		params (string, string)[] substitutions
 	) =>
 		opt.ServNfos.Add(new LocalFileServNfo(fuzzyFolder, file, substitutions));
+	
+	public static void ServeEmbedded(
+		this ServOpt opt,
+		string embeddedName,
+		Assembly ass,
+		params (string, string)[] substitutions
+	) =>
+		opt.ServNfos.Add(
+			DirectFileServNfo.FromString(
+				embeddedName.ToCat(),
+				embeddedName,
+				Embedded.Read(embeddedName, ass, substitutions)
+			)
+		);
 
 	public static void ServeEmbedded(
 		this ServOpt opt,

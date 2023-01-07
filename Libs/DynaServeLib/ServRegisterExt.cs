@@ -11,7 +11,7 @@ static class ServRegisterExt
 			("{{WSLink}}", UrlUtils.GetWSLink(opt.Port)),
 			("{{StatusEltId}}", ServInst.StatusEltId)
 		);
-		opt.ServeFile(
+		/*opt.ServeFile(
 			"_embedded",
 			"websockets-handlers.js",
 			("{{StatusEltId}}", ServInst.StatusEltId)
@@ -19,6 +19,12 @@ static class ServRegisterExt
 		opt.ServeFile(
 			"_embedded",
 			"websockets-utils.js",
+			("{{HttpLink}}", UrlUtils.GetLocalLink(opt.Port))
+		);*/
+		opt.ServeEmbedded("websockets-handlers.js",
+			("{{StatusEltId}}", ServInst.StatusEltId)
+		);
+		opt.ServeEmbedded("websockets-utils.js",
 			("{{HttpLink}}", UrlUtils.GetLocalLink(opt.Port))
 		);
 
@@ -49,9 +55,12 @@ static class ServRegisterExt
 	{
 		if (!opt.ShowDynaServLibVersion) return;
 		var version = DynaServVerDisplayer.GetVer();
-		opt.ServeFile(
+		/*opt.ServeFile(
 			"_embedded",
 			"dynaservver.css",
+			("DynaServVerCls", ServInst.DynaServVerCls)
+		);*/
+		opt.ServeEmbedded("dynaservver.css",
 			("DynaServVerCls", ServInst.DynaServVerCls)
 		);
 		opt.AddEmbeddedHtml("dynaservver.html",

@@ -1,9 +1,12 @@
 ﻿using System.Reflection;
+using DynaServeLib.Serving.FileServing.StructsEnum;
+using DynaServeLib.Utils.Exts;
 using PowBasics.CollectionsExt;
 
 namespace DynaServeLib.Utils;
 
 public record EmbeddedFile(string Name, byte[] Content);
+
 
 public static class Embedded
 {
@@ -53,6 +56,16 @@ public static class Embedded
 		params (string, string)[] substitutions
 	)
 	{
+		/*var embedName = GetAssNames(assembly).Single(e => e.EndsWith(name));
+		var bytes = assembly.GetManifestResourceStream(embedName)!.ToBin();
+		if (name.ToType().IsBinary())
+		{
+			var text = bytes.FromBytes();
+			foreach (var (key, val) in substitutions)
+				text = text.Replace(key, val);
+			bytes = text.ToBytes();
+		}
+		return bytes;*/
 		var embedName = GetAssNames(assembly).Single(e => e.EndsWith(name));
 		var text = assembly.GetManifestResourceStream(embedName)!.ToText();
 		foreach (var (key, val) in substitutions)
