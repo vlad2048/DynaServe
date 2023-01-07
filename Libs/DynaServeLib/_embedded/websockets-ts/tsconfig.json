@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["ESNext", "DOM"],
+    "outDir": "../websockets",
+    "module": "ES2015",
+  },
+  "include": ["./**/*.ts"],
+}

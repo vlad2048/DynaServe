@@ -50,6 +50,8 @@ static class LinkCreator
 		{
 			var node = domOps.Dom.CreateElement<IHtmlScriptElement>();
 			node.Source = link;
+			if (link.Contains("websockets") || link.Contains("link-utils"))
+				node.Type = "module";
 			domOps.Dom.FindDescendant<IHtmlHeadElement>()!.AppendElement(node);
 		}
 	}

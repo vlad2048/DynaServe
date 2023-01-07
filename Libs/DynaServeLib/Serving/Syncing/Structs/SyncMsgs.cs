@@ -1,4 +1,12 @@
-﻿namespace DynaServeLib.Serving.Syncing.Structs;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace DynaServeLib.Serving.Syncing.Structs;
+
+
+// *******************
+// * Client Messages *
+// *******************
 
 enum ClientMsgType
 {
@@ -9,74 +17,56 @@ enum ClientMsgType
 	User
 }
 
-record ReqScriptsSyncMsg(
-	string[] CssLinks,
-	string[] JsLinks
-);
+// @formatter:off
+interface IClientMsg { ClientMsgType Type { get; } }
 
-record ClientDomSnapshot(
-	string Head,
-	string Body
-);
+record ReqScriptsSyncClientMsg		(string[] CssLinks, string[] JsLinks)		: IClientMsg { public ClientMsgType Type => ClientMsgType.ReqScriptsSync;		}
+record HookCalledClientMsg			(string Id, string EvtName)					: IClientMsg { public ClientMsgType Type => ClientMsgType.HookCalled;			}
+record HookArgCalledClientMsg		(string Id, string EvtName, string EvtArg)	: IClientMsg { public ClientMsgType Type => ClientMsgType.HookArgCalled;		}
+record AnswerDomSnapshotClientMsg	(string Head, string Body)					: IClientMsg { public ClientMsgType Type => ClientMsgType.AnswerDomSnapshot;	}
+record UserClientMsg				(string UserType, string Arg)				: IClientMsg { public ClientMsgType Type => ClientMsgType.User;					}
+// @formatter:on
 
-class ClientMsg
+static class SyncJsonUtils
 {
-	public ClientMsgType Type { get; init; }
-	public ReqScriptsSyncMsg? ReqScriptsSyncMsg { get; init; }
-	public string? Id { get; init; }
-	public string? EvtName { get; init; }
-	public string? EvtArg { get; init; }
-	public string? Html { get; init; }
-	public ClientDomSnapshot? ClientDomSnapshot { get; init; }
-	public string? UserType { get; init; }
-	public string? UserArg { get; init; }
+	public static IClientMsg DeserClientMsg(string str)
+	{
+		return Get<ClientMsgShell>().Type switch
+		{
+			// @formatter:off
+			ClientMsgType.ReqScriptsSync	=> Get<ReqScriptsSyncClientMsg>(),
+			ClientMsgType.HookCalled		=> Get<HookCalledClientMsg>(),
+			ClientMsgType.HookArgCalled		=> Get<HookArgCalledClientMsg>(),
+			ClientMsgType.AnswerDomSnapshot	=> Get<AnswerDomSnapshotClientMsg>(),
+			ClientMsgType.User				=> Get<UserClientMsg>(),
+			// @formatter:on
+			_ => throw new ArgumentException()
+		};
 
-	public override string ToString() => $"{Type}";
+		T Get<T>() where T : IClientMsg => JsonSerializer.Deserialize<T>(str, jsonOpt) ?? throw new ArgumentException();
+	}
+
+	public static string SerServerMsg(IServerMsg msg) => JsonSerializer.Serialize(msg, msg.GetType(), jsonOpt);
+
+	private static readonly JsonSerializerOptions jsonOpt = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, };
+	static SyncJsonUtils() => jsonOpt.Converters.Add(new JsonStringEnumConverter());
+	// ReSharper disable once ClassNeverInstantiated.Local
+	private record ClientMsgShell(ClientMsgType Type) : IClientMsg;
 }
 
-public enum ServerMsgType
-{
-	FullUpdate,
-	ReplyScriptsSync,
-	ScriptRefresh,
 
-	ChgsDomUpdate,
-
-	DomOp,
-	//ReplaceChildrenDomUpdate,
-	//AddChildToBody,
-	//RemoveChildFromBody,
-
-	ReqDomSnapshot,
-	ReqCallMethodOnNode
-}
+// *******************
+// * Server Messages *
+// *******************
 
 public enum DomOpType
 {
 	InsertHtmlUnderBody,
 	InsertHtmlUnderParent,
 	DeleteHtmlUnderParent,
+	ReplaceHtmlUnderParent,
 	DeleteParent,
 }
-
-public record DomOp(
-	DomOpType Type,
-	string? Html,
-	string? ParentId
-)
-{
-	public static DomOp MkInsertHtmlUnderBody(string html) => new(DomOpType.InsertHtmlUnderBody, html, null);
-	public static DomOp MkInsertHtmlUnderParent(string html, string parentId) => new(DomOpType.InsertHtmlUnderParent, html, parentId);
-	public static DomOp MkDeleteHtmlUnderParent(string parentId) => new(DomOpType.DeleteHtmlUnderParent, null, parentId);
-	public static DomOp MkDeleteParent(string parentId) => new(DomOpType.DeleteParent, null, parentId);
-}
-
-public record ReplyScriptsSyncMsg(
-	string[] CssLinksDel,
-	string[] CssLinksAdd,
-	string[] JsLinksDel,
-	string[] JsLinksAdd
-);
 
 public enum ScriptType
 {
@@ -84,73 +74,28 @@ public enum ScriptType
 	Js
 }
 
-// Type:Css  Link:css/edit-list?c=6
-public record ScriptRefreshNfo(ScriptType Type, string Link);
 
-
-
-
-public class ServerMsg
+public enum ServerMsgType
 {
-	public ServerMsgType Type { get; }
-	public string? Html { get; private init; }
-	public ReplyScriptsSyncMsg? ReplyScriptsSyncMsg { get; private init; }
-	public ScriptRefreshNfo? ScriptRefreshNfo { get; private init; }
-	public Chg[]? Chgs { get; private init; }
-	public DomOp? DomOp { get; private init; }
-	public string? NodeId { get; private init; }
-	public string? MethodName { get; private init; }
-
-	private ServerMsg(ServerMsgType type) => Type = type;
-
-	public static ServerMsg MkFullUpdate(string html) => new(ServerMsgType.FullUpdate)
-	{
-		Html = html,
-	};
-
-	public static ServerMsg MkReplyScriptsSync(ReplyScriptsSyncMsg replyScriptsSyncMsg) => new(ServerMsgType.ReplyScriptsSync)
-	{
-		ReplyScriptsSyncMsg = replyScriptsSyncMsg
-	};
-
-	public static ServerMsg MkScriptRefresh(ScriptType scriptType, string link) => new(ServerMsgType.ScriptRefresh)
-	{
-		ScriptRefreshNfo = new ScriptRefreshNfo(scriptType, link)
-	};
-
-	public static ServerMsg MkChgsDomUpdate(params Chg[] chgs) => new(ServerMsgType.ChgsDomUpdate)
-	{
-		Chgs = chgs
-	};
-
-
-	public static ServerMsg MkDomOp(DomOp domOp) => new(ServerMsgType.DomOp)
-	{
-		DomOp = domOp
-	};
-	/*public static ServerMsg MkReplaceChildrenDomUpdate(string html, string nodeId) => new(ServerMsgType.ReplaceChildrenDomUpdate)
-	{
-		Html = html,
-		NodeId = nodeId,
-	};
-
-	public static ServerMsg MkAddChildToBody(string html) => new(ServerMsgType.AddChildToBody)
-	{
-		Html = html,
-	};
-
-	public static ServerMsg MkRemoveChildFromBody(string nodeId) => new(ServerMsgType.RemoveChildFromBody)
-	{
-		NodeId = nodeId,
-	};*/
-
-
-
-	public static ServerMsg MkReqDomSnapshot() => new(ServerMsgType.ReqDomSnapshot);
-
-	public static ServerMsg MkReqCallMethodOnNode(string nodeId, string methodName) => new(ServerMsgType.ReqCallMethodOnNode)
-	{
-		NodeId = nodeId,
-		MethodName = methodName,
-	};
+	FullUpdate,
+	ReplyScriptsSync,
+	ScriptRefresh,
+	ChgsDomUpdate,
+	DomOp,
+	ReqDomSnapshot,
+	ReqCallMethodOnNode
 }
+
+// @formatter:off
+public interface IServerMsg { ServerMsgType Type { get; } }
+
+public record FullUpdateServerMsg			(string Html)																			: IServerMsg { public ServerMsgType Type => ServerMsgType.FullUpdate;			}
+public record ReplyScriptsSyncServerMsg		(string[] CssLinksDel, string[] CssLinksAdd, string[] JsLinksDel, string[] JsLinksAdd)	: IServerMsg { public ServerMsgType Type => ServerMsgType.ReplyScriptsSync;		}
+// Type:Css  Link:css/edit-list?c=6
+public record ScriptRefreshServerMsg		(ScriptType ScriptType, string Link)													: IServerMsg { public ServerMsgType Type => ServerMsgType.ScriptRefresh;		}
+public record ChgsDomUpdateServerMsg		(params Chg[] Chgs)																		: IServerMsg { public ServerMsgType Type => ServerMsgType.ChgsDomUpdate;		}
+public record DomOpServerMsg				(DomOpType OpType, string? Html, string? ParentId)										: IServerMsg { public ServerMsgType Type => ServerMsgType.DomOp;				}
+public record ReqDomSnapshotServerMsg																								: IServerMsg { public ServerMsgType Type => ServerMsgType.ReqDomSnapshot;		}
+public record ReqCallMethodOnNodeServerMsg	(string NodeId, string MethodName)														: IServerMsg { public ServerMsgType Type => ServerMsgType.ReqCallMethodOnNode;	}
+// @formatter:on
+

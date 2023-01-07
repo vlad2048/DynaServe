@@ -1,10 +1,12 @@
-﻿var socket = null;
+﻿import { handleServerMsg } from "./websockets-handlers.js";
+import { ClientMsg, ServerMsg } from "./websockets-types.js";
+import { getReqScriptsSyncMsg } from "./websockets-utils.js";
+
+var socket = null;
 
 function init() {
     const socketUrl = "{{WSLink}}";
     const statusEltId = "{{StatusEltId}}";
-    //const socketUrl = "ws://box-pc:7000/";
-    //const statusEltId = 'syncserv-status';
 
     function updateState() {
         const elt = document.getElementById(statusEltId);
@@ -34,9 +36,11 @@ function init() {
         socket.onerror = () => updateState();
         socket.onopen = () => {
             updateState();
-            sockSend({
+            const linkSet = getReqScriptsSyncMsg();
+            send({
                 type: "ReqScriptsSync",
-                reqScriptsSyncMsg: getReqScriptsSyncMsg(),
+                cssLinks: linkSet.cssLinks,
+                jsLinks: linkSet.jsLinks,
             });
         };
         socket.onclose = () => {
@@ -44,7 +48,8 @@ function init() {
             setTimeout(() => connectSocket(), 100);
         };
 
-        socket.onmessage = (evt) => {
+        socket.onmessage = (evtData) => {
+          const evt = JSON.parse(evtData.data) as ServerMsg;
           handleServerMsg(evt);
         };
     }
@@ -53,8 +58,10 @@ function init() {
 }
 
 // init() doesn't work properly on Safari without the delay
+console.log('before init');
 setTimeout(() => {
-    init();
+  console.log('init');
+  init();
 }, 0);
 
 // **************************
@@ -62,27 +69,31 @@ setTimeout(() => {
 // ** Send Client Messages **
 // **************************
 // **************************
-function sockSend(obj) {
-    const str = JSON.stringify(obj);
-    socket.send(str);
+export function send(msg: ClientMsg) {
+    socket.send(JSON.stringify(msg));
 }
 
-function sockEvt(id, evtName) {
-    sockSend({
+function sockEvt(id: string, evtName: string) {
+  console.log(`[Sending] Evt:${evtName} -> ${id}`);
+  send({
         type: "HookCalled",
         id,
         evtName,
     });
 }
 
-function sockEvtArg(id, evtName, evtArg) {
+function sockEvtArg(id: string, evtName: string, evtArg: string) {
     if (Object.prototype.toString.call(evtArg) !== "[object String]") {
         evtArg = evtArg.toString();
     }
-    sockSend({
+    console.log(`[Sending] EvtArg:${evtName} -> ${id}`);
+    send({
         type: "HookArgCalled",
         id,
         evtName,
         evtArg,
     });
 }
+
+(window as any).sockEvt = sockEvt;
+(window as any).sockEvtArg = sockEvtArg;

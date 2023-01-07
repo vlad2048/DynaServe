@@ -7,21 +7,24 @@ using PowBasics.CollectionsExt;
 
 namespace DynaServeLib.DynaLogic.DomLogic;
 
-record NodsRefs(IElement[] Nods, RefreshMap RefreshMap);
-record NodRefs(IElement Nod, RefreshMap RefreshMap);
+record NodRef(IElement[] Nods, RefreshMap RefreshMap);
 
 static class NodeMaker
 {
-	public static NodsRefs CreateNodes(this HtmlNode[] nodes, IHtmlDocument doc)
+	public static NodRef Create(this HtmlNode node, IHtmlDocument doc) =>
+		new[] { node }.Create(doc);
+
+	public static NodRef Create(this HtmlNode[] nodes, IHtmlDocument doc)
 	{
 		var arr = nodes.SelectToArray(node => node.CreateNode(doc));
-		return new NodsRefs(
-			arr.SelectToArray(e => e.Nod),
-			arr.Select(e => e.RefreshMap).MergeEnsure()
+		return new NodRef(
+			arr.SelectToArray(e => e.Item1),
+			arr.Select(e => e.Item2).MergeEnsure()
 		);
 	}
 
-    public static NodRefs CreateNode(this HtmlNode node, IHtmlDocument doc)
+
+    private static (IElement, RefreshMap) CreateNode(this HtmlNode node, IHtmlDocument doc)
     {
         var refreshMap = new Dictionary<IElement, IRefresher[]>();
 
@@ -44,6 +47,6 @@ static class NodeMaker
         var nodeElt = Recurse(node);
 
 		// Cast works because we don't allow the root node to be a text node
-        return new NodRefs((IElement)nodeElt, refreshMap);
+        return ((IElement)nodeElt, refreshMap);
     }
 }

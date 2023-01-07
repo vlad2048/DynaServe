@@ -27,9 +27,62 @@ void Main()
 {
 	//Util.ReadLine();
 	
-	DynamicAttr();
+	RefreshComplex();
+	
+	//DynamicAttr();
 	//RefreshChildren();
 }
+
+private record Num(int Val, int Ver);
+
+public static void RefreshComplex()
+{
+	var rxNum = Var.Make(new Num(0, 0)).D(D);
+	MkBtn(0, "Set 0", () => rxNum.V = new Num(0, rxNum.V.Ver + 1));
+	MkBtn(1, "Set 1", () => rxNum.V = new Num(1, rxNum.V.Ver + 1));
+
+	Serv.Start(
+		opt => {
+			//opt.Port = 7001;
+			//opt.CheckSecurity = true;
+			opt.ServeHardcoded("test.css", TestCss);
+		},
+		Div("main").Wrap(
+			Div().Txt("RefreshChildren"),
+			Btn("Btn", async () =>
+			{
+				Console.WriteLine("Throwing exception");
+				throw new ArgumentException("Btn Ex");
+			}),
+			Div().Wrap(
+				rxNum.ToUnit(),
+				() => rxNum.V.Val switch
+				{
+					0 => new[]
+					{
+						Div().Wrap(
+							Div().Txt("Layout 1"),
+							Div().Txt(rxNum.Select(e => $"cnt_{e.Ver}"))
+						)
+					},
+					1 => new[]
+					{
+						Div().Wrap(
+							Div().Txt("Layout 2"),
+							Div().Wrap(
+								Div().Txt("Inner"),
+								Div().Txt(rxNum.Select(e => $"cnt_{e.Ver}"))
+							)
+						)
+					},
+					_ => throw new ArgumentException()
+				}
+			)
+		)
+	).D(D);
+}
+
+
 
 static void DynamicAttr()
 {
@@ -99,6 +152,15 @@ private static (IObservable<Unit>, IDisposable) MkEvt()
 	btn.Styles["top"] = "10px";
 	btn.Dump();
 	return (when.AsObservable(), d);
+}
+
+private static void MkBtn(int slot, string text, Action action)
+{
+	var btn = new Button(text, _ => action());
+	btn.Styles["position"] = "fixed";
+	btn.Styles["right"] = $"{10 + (slot * 50)}px";
+	btn.Styles["top"] = "10px";
+	btn.Dump();
 }
 
 

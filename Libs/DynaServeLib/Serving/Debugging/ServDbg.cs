@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿/*
+using System.Reactive.Linq;
 using AngleSharp.Html.Dom;
 using DynaServeLib.DynaLogic;
 using DynaServeLib.Serving.Debugging.Structs;
@@ -26,15 +27,15 @@ public class ServDbg : IDisposable
 		slim = new SemaphoreSlim(0).D(d);
 
 		messenger.WhenClientMsg
-			.Where(e => e.Type == ClientMsgType.AnswerDomSnapshot)
+			.OfType<AnswerDomSnapshotClientMsg>()
 			.Subscribe(e =>
 			{
-				receivedSnap = May.Some(e.ClientDomSnapshot!);
+				receivedSnap = May.Some(e.Msg);
 				slim.Release();
 			}).D(d);
 	}
 
-	/*public async Task<DbgSnap> GetSnap()
+	public async Task<DbgSnap> GetSnap()
 	{
 		var domDbg = domOps.GetDbgNfo();
 		receivedSnap = May.None<ClientDomSnapshot>();
@@ -48,7 +49,7 @@ public class ServDbg : IDisposable
 			domDbg.RefreshTrackerDbgNfo.Map
 		);
 		return dbgSnap;
-	}*/
+	}
 
 	private static IHtmlDocument ReconstructClientDom(ClientDomSnapshot snap) =>
 		$"""
@@ -60,3 +61,4 @@ public class ServDbg : IDisposable
 		"""
 			.Parse();
 }
+*/

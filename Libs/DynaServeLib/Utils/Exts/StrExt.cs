@@ -14,4 +14,25 @@ public static class StrExt
 			.ToLines()
 			.Select(e => $"{prefix}{e}")
 			.FromLines();
+
+	internal static int GetLongestLineLength(this string? str) => str switch
+	{
+		null => 0,
+		not null => str
+			.Replace("\t", "    ")
+			.Split('\r', '\n')
+			.MaxOrZero(e => e.Length)
+	};
+	
+	private static int MaxOrZero<T>(this IEnumerable<T> source, Func<T, int> fun)
+	{
+		var max = 0;
+		foreach (var elt in source)
+		{
+			var val = fun(elt);
+			if (val > max)
+				max = val;
+		}
+		return max;
+	}
 }

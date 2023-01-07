@@ -1,25 +1,91 @@
 <Query Kind="Program">
   <Reference>C:\Dev_Nuget\Libs\DynaServe\Libs\DynaServeLib\bin\Debug\net7.0\DynaServeLib.dll</Reference>
-  <Namespace>static DynaServeLib.Nodes.Ctrls</Namespace>
-  <Namespace>PowRxVar</Namespace>
+  <NuGetReference>AngleSharp.XPath</NuGetReference>
   <Namespace>DynaServeLib</Namespace>
-  <Namespace>System.Reactive.Linq</Namespace>
-  <Namespace>DynaServeLib.Nodes</Namespace>
   <Namespace>DynaServeLib.Logging</Namespace>
+  <Namespace>DynaServeLib.Nodes</Namespace>
+  <Namespace>DynaServeLib.Utils.Exts</Namespace>
   <Namespace>LINQPad.Controls</Namespace>
-  <Namespace>System.Reactive.Subjects</Namespace>
+  <Namespace>PowRxVar</Namespace>
+  <Namespace>static DynaServeLib.Nodes.Ctrls</Namespace>
   <Namespace>System.Reactive</Namespace>
+  <Namespace>System.Reactive.Linq</Namespace>
+  <Namespace>System.Reactive.Subjects</Namespace>
+  <Namespace>AngleSharp.XPath</Namespace>
+  <Namespace>AngleSharp.Dom</Namespace>
 </Query>
+
+void Chk()
+{
+	var dom = html.Parse();
+	var start = dom.GetElementById("start");
+	
+	var xpath = "./div[2]/span[2]/span[1]/div[1]";
+	
+	var end = start.SelectSingleNode(xpath);
+	
+	if (end == null)
+	{
+		"not found".Dump();
+		return;
+	}
+
+	$"found id='{((IElement)end).Id}'".Dump();
+}
+
+const string html = """
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<link rel="icon" type="image/png" href="image/creepy-icon.png" />
+			<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+			<title>DynaServe</title>
+			<link href='http://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900italic,900' rel='stylesheet' type='text/css'>
+		</head>
+		<body id="body">
+		
+			<div>
+				<div id="start">
+					<div>
+					</div>
+					<div>
+						<span>
+						</span>
+						<div>
+						</div>
+						<span>
+							<span>
+								<div id="end">
+								</div>
+								<div id="other">
+								</div>
+							</span>
+							<div>
+							</div>
+						</span>
+						<span>
+						<span>
+					</div>
+					<div>
+					</div>
+				</div>
+			</div>
+			<div>
+			</div>
+		
+		</body>
+	</html>
+	""";
 
 void Main()
 {
+	Chk(); return;
 	var varBool = Var.Make(true).D(D);
 	var whenChange = new Subject<Unit>().D(D);
 	Serv.Start(
 		opt =>
 		{
 			opt.Logr = new LPLogger();
-			opt.LINQPadRefs = Util.CurrentQuery.FileReferences;
 			opt.ServeHardcoded("test.css", TestCss);
 		},
 		Div("main").Wrap(

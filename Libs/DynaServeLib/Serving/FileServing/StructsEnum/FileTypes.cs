@@ -46,7 +46,11 @@ static class FileTypeExtSugar
 	{
 		var mountFolder = Path.GetExtension(filename).Ext2Type().ToCat().ToMountFolder();
 		var name = Path.GetFileName(filename);
-		return $"{mountFolder}/{name}";
+		return (mountFolder != "") switch
+		{
+			true => $"{mountFolder}/{name}",
+			false => name,
+		};
 	}
 
 	public static FType ToType(this string filename) =>
@@ -98,7 +102,7 @@ static class FileTypeExt
 	{
 		FCat.Html => "html",
 		FCat.Css => "css",
-		FCat.Js => "js",
+		FCat.Js => "",
 		FCat.Image => "images",
 		FCat.Font => "fonts",
 		FCat.Manifest => "",

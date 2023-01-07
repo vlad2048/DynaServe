@@ -7,32 +7,38 @@ static class ServRegisterExt
 {
 	public static void Register_WebsocketScripts(this ServOpt opt)
 	{
+		opt.ServeEmbedded("link-utils.js",
+			("{{HttpLink}}", UrlUtils.GetLocalLink(opt.Port))
+		);
+		opt.ServeEmbedded("websockets-utils.js");
+		opt.ServeEmbedded("websockets-handlers.js",
+			("{{StatusEltId}}", ServInst.StatusEltId)
+		);
 		opt.ServeEmbedded("websockets.js",
 			("{{WSLink}}", UrlUtils.GetWSLink(opt.Port)),
 			("{{StatusEltId}}", ServInst.StatusEltId)
+		);
+
+
+		/*opt.ServeFile(
+			"_embedded-utils",
+			"link-utils.js",
+			("{{HttpLink}}", UrlUtils.GetLocalLink(opt.Port))
+		);
+		opt.ServeFile(
+			"_embedded",
+			"websockets-utils.js"
 		);
 		opt.ServeFile(
 			"_embedded",
 			"websockets-handlers.js",
 			("{{StatusEltId}}", ServInst.StatusEltId)
 		);
-		opt.ServeFile(
-			"_embedded",
-			"websockets-utils.js",
-			("{{HttpLink}}", UrlUtils.GetLocalLink(opt.Port))
-		);
-
-		
-		/*opt.ServeFile(
-			"_embedded",
-			"websockets.js",
+		opt.ServeEmbedded("websockets.js",
 			("{{WSLink}}", UrlUtils.GetWSLink(opt.Port)),
 			("{{StatusEltId}}", ServInst.StatusEltId)
 		);*/
-
-		//opt.ServeEmbedded("websockets-utils.js",
-		//	("{{HttpLink}}", UrlUtils.GetLocalLink(opt.Port))
-		//);
+		
 
 		opt.ServeEmbedded("websockets.css",
 			("StatusEltClsAuto", ServInst.StatusEltClsAuto),
@@ -50,7 +56,7 @@ static class ServRegisterExt
 		if (!opt.ShowDynaServLibVersion) return;
 		var version = DynaServVerDisplayer.GetVer();
 		opt.ServeFile(
-			"_embedded",
+			"dynaservver",
 			"dynaservver.css",
 			("DynaServVerCls", ServInst.DynaServVerCls)
 		);

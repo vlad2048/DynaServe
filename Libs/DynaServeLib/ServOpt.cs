@@ -6,6 +6,8 @@ using DynaServeLib.Utils;
 
 namespace DynaServeLib;
 
+public record ClientUserMsg(string UserType, string Arg);
+
 public class ServOpt
 {
 	private ServOpt() {}

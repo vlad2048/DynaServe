@@ -17,6 +17,6 @@ public class Ref
 	public void CallMethod(string methodName)
 	{
 		if (Id.IsSome(out var id))
-			Serv.I?.Messenger.SendToClient(ServerMsg.MkReqCallMethodOnNode(id, methodName));
+			Serv.I?.Messenger.SendToClient(new ReqCallMethodOnNodeServerMsg(id, methodName));
 	}
 }

@@ -18,13 +18,12 @@ static class Syncer
 			.Subscribe(_ =>
 			{
 				var bodyFmt = dom.GetUserBodyNodes().Fmt();
-				messenger.SendToClient(ServerMsg.MkFullUpdate(bodyFmt));
+				messenger.SendToClient(new FullUpdateServerMsg(bodyFmt));
 			}).D(d);
 
 		messenger.WhenClientMsg
-			.Where(e => e.Type == ClientMsgType.ReqScriptsSync)
-			.Select(e => e.ReqScriptsSyncMsg!)
-			.Subscribe(msg =>
+			.OfType<ReqScriptsSyncClientMsg>()
+			.SubscribeSafe(msg =>
 			{
 				var cssDomLinks = dom.GetAllCssLinks();
 				var cssWebLinks = msg.CssLinks;
@@ -36,12 +35,12 @@ static class Syncer
 				var jsDel = jsWebLinks.WhereNotToArray(jsDomLinks.Contains);
 				var jsAdd = jsDomLinks.WhereNotToArray(jsWebLinks.Contains);
 
-				messenger.SendToClient(ServerMsg.MkReplyScriptsSync(new ReplyScriptsSyncMsg(
+				messenger.SendToClient(new ReplyScriptsSyncServerMsg(
 					cssDel,
 					cssAdd,
 					jsDel,
 					jsAdd
-				)));
+				));
 			}).D(d);
 
 		return d;

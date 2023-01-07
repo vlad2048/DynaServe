@@ -1,5 +1,6 @@
 ﻿using DynaServeLib.DynaLogic;
 using DynaServeLib.Logging;
+using DynaServeLib.Nodes;
 using DynaServeLib.Serving.FileServing.Logic;
 using DynaServeLib.Serving.FileServing.Structs;
 using DynaServeLib.Serving.FileServing.StructsEnum;
@@ -43,7 +44,25 @@ class FileServer : IDisposable
 		SetupLocalFolders(servNfos.OfType<LocalFolderServNfo>());
 		SetupLocalFiles(servNfos.OfType<LocalFileServNfo>());
 		SetupDirectFiles(servNfos.OfType<DirectFileServNfo>());
+		LogRegs();
 	}
+
+	private void AddReg(string link, IReg reg)
+	{
+		regMap[link] = reg;
+		//if (link.EndsWith(".js"))
+		//	regMap[link[..^3]] = reg;
+	}
+
+
+	private void LogRegs()
+	{
+		foreach (var (link, reg) in regMap)
+		{
+			L($"{link} -> {reg}");
+		}
+	}
+	private static void L(string s) => Console.Error.WriteLine(s);
 
 	/*private void LogFoldsNotFound(LocalFolderServNfo[] folds)
 	{
@@ -63,7 +82,14 @@ class FileServer : IDisposable
 	public async Task<Maybe<RegData>> TryGetContent(string link)
 	{
 		link = link.RemoveQueryParams();
-		if (!regMap.TryGetValue(link, out var reg)) return May.None<RegData>();
+		if (!regMap.TryGetValue(link, out var reg))
+		{
+			link = $"{link}.js";
+			if (!regMap.TryGetValue(link, out reg))
+			{
+				return May.None<RegData>();
+			}
+		}
 		return await reg.GetContent();
 	}
 
@@ -87,7 +113,7 @@ class FileServer : IDisposable
 		// ===========
 		var regs = filesToServe.SelectToArray(e => new FileReg(e, null));
 		foreach (var reg in regs)
-			regMap[reg.Filename.ToLink()] = reg;
+			AddReg(reg.Filename.ToLink(), reg);
 
 		// Watch files
 		// ===========
@@ -123,7 +149,7 @@ class FileServer : IDisposable
 		// ===========
 		var regs = filesToServe.SelectToArray(e => new FileReg(e.File, e.Substs));
 		foreach (var reg in regs)
-			regMap[reg.Filename.ToLink()] = reg;
+			AddReg(reg.Filename.ToLink(), reg);
 
 		// Watch files
 		// ===========
@@ -162,7 +188,7 @@ class FileServer : IDisposable
 		foreach (var file in files)
 		{
 			var link = file.Link;
-			regMap[link] = new DirectReg(file.Name, file.Content);
+			AddReg(link, new DirectReg(file.Name, file.Content));
 		}
 	}
 

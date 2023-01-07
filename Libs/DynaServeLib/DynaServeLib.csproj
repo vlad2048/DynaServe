@@ -5,27 +5,26 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Remove="_embedded\dynaservver.css" />
-		<None Remove="_embedded\dynaservver.html" />
-		<None Remove="_embedded\websockets-handlers.js" />
-		<None Remove="_embedded\websockets-utils.js" />
-		<None Remove="_embedded\websockets.css" />
-		<None Remove="_embedded\websockets.html" />
-		<None Remove="_embedded\websockets.js" />
+		<None Remove="_embedded\websockets\link-utils.js" />
+		<None Remove="_embedded\websockets\websockets-handlers.js" />
+		<None Remove="_embedded\websockets\websockets-utils.js" />
+		<None Remove="_embedded\websockets\websockets.js" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="_embedded\websockets-handlers.js" />
-		<EmbeddedResource Include="_embedded\websockets-utils.js" />
-		<EmbeddedResource Include="_embedded\dynaservver.css" />
-		<EmbeddedResource Include="_embedded\dynaservver.html" />
-		<EmbeddedResource Include="_embedded\websockets.css" />
-		<EmbeddedResource Include="_embedded\websockets.html" />
-		<EmbeddedResource Include="_embedded\websockets.js" />
+		<EmbeddedResource Include="_embedded\dynaservver\dynaservver.css" />
+		<EmbeddedResource Include="_embedded\dynaservver\dynaservver.html" />
+		<EmbeddedResource Include="_embedded\websockets\link-utils.js" />
+		<EmbeddedResource Include="_embedded\websockets\websockets-handlers.js" />
+		<EmbeddedResource Include="_embedded\websockets\websockets-utils.js" />
+		<EmbeddedResource Include="_embedded\websockets\websockets.css" />
+		<EmbeddedResource Include="_embedded\websockets\websockets.html" />
+		<EmbeddedResource Include="_embedded\websockets\websockets.js" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="AngleSharp" Version="0.17.1" />
+		<PackageReference Include="AngleSharp.XPath" Version="2.0.1" />
 		<PackageReference Include="CliWrap" Version="3.6.0" />
 		<PackageReference Include="PowBasics" Version="0.0.6" />
 		<PackageReference Include="PowRxVar.Maybe" Version="0.0.14" />

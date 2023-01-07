@@ -1,7 +1,6 @@
 ﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Runtime.Intrinsics.X86;
 using AngleSharp.Html.Dom;
 using DynaServeLib.DynaLogic;
 using DynaServeLib.DynaLogic.DomLogic;
@@ -9,7 +8,6 @@ using DynaServeLib.DynaLogic.Events;
 using DynaServeLib.Nodes;
 using DynaServeLib.Security;
 using DynaServeLib.Serving;
-using DynaServeLib.Serving.Debugging;
 using DynaServeLib.Serving.FileServing;
 using DynaServeLib.Serving.Repliers.ServeFiles;
 using DynaServeLib.Serving.Repliers.ServePage;
@@ -18,8 +16,6 @@ using DynaServeLib.Utils;
 using PowRxVar;
 
 namespace DynaServeLib;
-
-public record ClientUserMsg(string Type, string Arg);
 
 class ServInst : IDisposable
 {
@@ -39,7 +35,6 @@ class ServInst : IDisposable
 	public ServOpt Opt { get; }
 	public IHtmlDocument Dom { get;  }
 	public DomOps DomOps { get; }
-	public ServDbg ServDbg { get; }
 	public IObservable<IDomEvt> WhenDomEvt => whenDomEvt.AsObservable();
 	public void SignalDomEvt(IDomEvt evt) => whenDomEvt.OnNext(evt);
 
@@ -67,7 +62,6 @@ class ServInst : IDisposable
 			Opt.SlnFolders,
 			Opt.Logr
 		).D(d);
-		ServDbg = new ServDbg(DomOps, Messenger).D(d);
 
 		DomOps.AddInitialNodes(rootNodes);
 		server.AddRepliers(
@@ -115,7 +109,6 @@ public static class Serv
 
 		return d;
 	}
-	public static ServDbg Dbg => I!.ServDbg;
 	public static HtmlNode StatusEltManual => new HtmlNode("div").Id(ServInst.StatusEltId).Cls(ServInst.StatusEltClsManual);
 	public static IDisposable AddNodeToBody(HtmlNode node)
 	{

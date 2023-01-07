@@ -42,11 +42,11 @@ static class LiveReloader
 				switch (cat)
 				{
 					case FCat.Css:
-						domOps.SendToClient(ServerMsg.MkScriptRefresh(ScriptType.Css, link));
+						domOps.SendToClient(new ScriptRefreshServerMsg(ScriptType.Css, link));
 						break;
 
 					case FCat.Js:
-						domOps.SendToClient(ServerMsg.MkScriptRefresh(ScriptType.Js, link));
+						domOps.SendToClient(new ScriptRefreshServerMsg(ScriptType.Js, link));
 						break;
 
 					case FCat.Image:

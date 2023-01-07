@@ -6,6 +6,13 @@ namespace DynaServeLib.DynaLogic;
 
 static class DomExt
 {
+	public static TElement CreateElementWithChildren<TElement>(this IHtmlDocument doc, IElement[] children) where TElement : IElement
+	{
+		var elt = doc.CreateElement<TElement>();
+		elt.AppendChildren(children);
+		return elt;
+	}
+
 	public static string GetIdEnsure(this IElement node) => node.Id ?? throw new ArgumentException();
 
 	public static IElement GetById(this IHtmlDocument dom, string id) => dom.GetElementById(id) ?? throw new ArgumentException($"Cannot find node {id}");

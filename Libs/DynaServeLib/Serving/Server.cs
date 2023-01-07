@@ -150,7 +150,7 @@ public sealed class Server : IDisposable
     {
 	    try
 	    {
-			whenWsOpen.OnNext(Unit.Default);
+		    whenWsOpen.OnNext(Unit.Default);
 
 		    var buffer = new byte[WsBufferSize];
 		    while (ws.State == WebSocketState.Open)
@@ -179,8 +179,20 @@ public sealed class Server : IDisposable
 		    }
 	    }
 	    // The remote party closed the WebSocket connection without completing the close handshake.
-	    catch (WebSocketException ex) when (ex.ErrorCode == 0)
+	    catch (WebSocketException ex) when (ex.ErrorCode == 0) { }
+	    catch (Exception ex)
 	    {
+			LTitle("Uncaught Exception in a WebSockets handler");
+			L($"{ex}");
+		    throw;
 	    }
     }
+
+	private static void LTitle(string s)
+	{
+		L(s);
+		L(new string('=', s.Length));
+	}
+
+	private static void L(string s) => Console.WriteLine(s);
 }

@@ -31,7 +31,9 @@ record ChgRefresher(ChgKey Key, IObservable<string?> ValObs) : IRefresher
 	public IDisposable Activate(IElement node, DomOps domOps) =>
 		ValObs.Subscribe(val =>
 		{
-			var chg = Key.Make(node.GetIdEnsure(), val);
+			var nodeId = node.GetIdEnsure();
+			var xPath = $"//*[@id='{nodeId}']";
+			var chg = Key.Make(xPath, val);
 			domOps.SignalDomEvt(new ChgDomEvt(chg));
 		});
 }
@@ -44,8 +46,15 @@ record EvtRefresher(string EvtName, Func<Task> Action, bool StopPropagation) : I
 		var id = node.GetIdEnsure();
 		EvtRefresherUtils.SetNodeEvtAttr(node, EvtName, StopPropagation, null);
 		return domOps.WhenClientMsg
-			.Where(e => e.Type == ClientMsgType.HookCalled && e.Id == id && e.EvtName == EvtName)
+			.OfType<HookCalledClientMsg>()
+			.Where(e => e.EvtName == EvtName)
 			.SelectMany(_ => Observable.FromAsync(Action))
+			.Catch<Unit, Exception>(ex =>
+			{
+				Console.WriteLine($"Exception caught in EvtRefresher {ex}");
+				return Observable.Throw<Unit>(ex);
+			})
+			.Retry()
 			.Subscribe();
 	}
 }
@@ -57,10 +66,19 @@ record EvtArgRefresher(string EvtName, Func<string, Task> Action, string ArgExpr
 		var id = node.GetIdEnsure();
 		EvtRefresherUtils.SetNodeEvtAttr(node, EvtName, StopPropagation, ArgExpr);
 		return domOps.WhenClientMsg
-			.Where(e => e.Type == ClientMsgType.HookArgCalled && e.Id == id && e.EvtName == EvtName)
+			.OfType<HookArgCalledClientMsg>()
+			.Where(e => e.Id == id && e.EvtName == EvtName)
 			.SelectMany(e => Observable.FromAsync(() => Action(e.EvtArg!)))
+			.Catch<Unit, Exception>(ex =>
+			{
+				L($"Exception caught in EvtArgRefresher {ex}");
+				return Observable.Throw<Unit>(ex);
+			})
+			.Retry()
 			.Subscribe();
 	}
+
+	private static void L(string s) => Console.WriteLine(s);
 }
 
 

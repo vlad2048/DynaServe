@@ -19,6 +19,7 @@
   <Namespace>System.Reactive</Namespace>
   <Namespace>System.Reactive.Linq</Namespace>
   <Namespace>System.Reactive.Subjects</Namespace>
+  <Namespace>PowTrees.Algorithms</Namespace>
 </Query>
 
 void Main()
@@ -40,12 +41,15 @@ void Main()
 		""";
 	
 	//html.Prn().Dump();
+	var dom = html.Parse();
+	var body = dom.FindDescendant<IHtmlBodyElement>()!;
+	var div = body.FindDescendant<IHtmlDivElement>()!;
+
+	dom.Dump();
 	
-	var nods = new INode[]
-	{
-		html.Parse(),
-		html.Parse(),
-	}.Dump();
+	body.Dump();
+	
+	div.Dump();
 }
 
 
@@ -57,31 +61,57 @@ void OnStart()
 	serD.Value = null;
 	serD.Value = D = new Disp();
 	LinqpadDump.DmpFun = e => e.Dump();
+	LinqpadDump.ClearFun = DrawExt.Clear;
 	Util.HtmlHead.AddStyles(DrawUtils.Css);
 }
 
 
 public static object ToDump(object o) => o switch
 {
-	IHtmlDocument e => e.FindDescendant<IHtmlBodyElement>()!.Children.ToArray().Fmt().Prn(),
-	INode[] arr => Util.VerticalRun(arr.Select(e => e.FindDescendant<IHtmlBodyElement>()!.Fmt().Prn())),
-	INode e => e.Fmt().Prn(),
+	//INode e => e.Prn(),
+	INode e => e.PrnTxt(),
 	_ => o
 };
 
 
 public static class DrawExt
 {
-	public static C Prn(this string html)
+	public static void Clear()
 	{
-		var dom = html.Parse().D(D);
-		var body = dom.FindDescendant<IHtmlBodyElement>()!;
-		var root = body.ToTree();
-		return PanelGfx.Make(gfx =>
+		Util.HtmlHead.AddScript("""
+			function clearFun() {
+				console.log('start')
+				const root = document.getElementById('final');
+				var arr = root.children;
+				for (let i = arr.length - 1; i >= 0; i--) {
+					const elt = arr[i];
+					const name = elt.tagName.toLowerCase();
+					elt.remove();
+				}
+			}
+			"""
+		);
+		Util.InvokeScript(false, "clearFun");
+	}
+
+	public static C PrnTxt(this INode node)
+	{
+		var tree = node.ToTree();
+		var txt = tree.LogToString(opt =>
+		{
+			opt.FormatFun = e => e.GetStr();
+		});
+		return new DumpContainer(Util.FixedFont(txt));
+	}
+	
+	public static C Prn(this INode node)
+	{
+		var tree = node.ToTree();
+		var ctrl = PanelGfx.Make(gfx =>
 		{
 			gfx.TreeCtrl<INode, Control>(
 				new Pt(0, 0),
-				root,
+				tree,
 				o => o.GetStr(),
 				(node, str) => node.MkNodeCtrl(),
 				opt =>
@@ -89,6 +119,8 @@ public static class DrawExt
 				}
 			);
 		});
+		ctrl.CssClass = "tree";
+		return ctrl;
 	}
 }
 
@@ -109,6 +141,9 @@ static class DrawUtils
 			--key-cls: #c4b52d;
 			--val-cls: #2bc271;
 		}
+		.tree {
+			margin-bottom: 15px;
+		}		
 		.node {
 			font-family: consolas;
 			white-space: nowrap;
