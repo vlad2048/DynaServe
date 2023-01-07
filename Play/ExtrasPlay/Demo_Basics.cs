@@ -27,6 +27,24 @@ static class Demo_Basics
 			)
 		).D(d);
 
+	public static void Buttons(Disp d)
+	{
+		var rxVar = Var.Make(0).D(d);
+
+		Serv.Start(
+			opt => { opt.ServeHardcoded("test.css", TestCss); },
+			Div("main").Wrap(
+				rxVar.ToUnit(),
+				() => new []
+				{
+					Btn("Inc", () => rxVar.V++),
+					Div().Txt($"cnt_{rxVar.V}")
+				}
+			)
+		).D(d);
+	}
+
+
 	public static void Counter(Disp d)
 	{
 		var (when, act) = MkEvt().D(d);

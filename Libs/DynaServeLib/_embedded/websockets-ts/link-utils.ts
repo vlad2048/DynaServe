@@ -7,8 +7,9 @@ export class LinkUtils {
   static delPrefix(lnk: string): string {
     let idx = lnk.indexOf("css/");
     if (idx !== -1) lnk = lnk.substring(idx);
-    idx = lnk.indexOf("js/");
-    if (idx !== -1) lnk = lnk.substring(idx);
+    //idx = lnk.indexOf("js/");
+    //if (idx !== -1) lnk = lnk.substring(idx);
+    if (lnk.startsWith(this.httpLink)) lnk = lnk.substring(this.httpLink.length);
     return lnk;
   }
 
@@ -54,10 +55,16 @@ export class LinkUtils {
   // Output: true
   // Input : http://google.com/...
   // Output: false
-  static relevantUrl(url: string): boolean {
+  static relevantUrlCss(url: string): boolean {
     return (
       !!url &&
-      (url.includes("css/") || url.includes("js/")) &&
+      (url.includes("css/")) &&
+      (url.startsWith("file:///") || url.startsWith(this.httpLink))
+    );
+  }
+  static relevantUrlJs(url: string): boolean {
+    return (
+      !!url &&
       (url.startsWith("file:///") || url.startsWith(this.httpLink))
     );
   }
@@ -79,12 +86,12 @@ export class LinkUtils {
   static getCssScripts(): HTMLLinkElement[] {
     return this.getHeadTags<HTMLLinkElement>("link")
       .filter((e) => e.rel === "stylesheet")
-      .filter((e) => this.relevantUrl(e.href));
+      .filter((e) => this.relevantUrlCss(e.href));
   }
 
   static getJsScripts(): HTMLScriptElement[] {
     return this.getHeadTags<HTMLScriptElement>("script")
-      .filter((e) => this.relevantUrl(e.src));
+      .filter((e) => this.relevantUrlJs(e.src));
   }
 
   static mkCssScript(lnk: string): void {

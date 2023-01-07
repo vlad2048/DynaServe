@@ -2,22 +2,9 @@
 import { ScriptType } from "./websockets-types.js";
 
 
-// *********
-// * Utils *
-// *********
-
-
-
 // ************************
 // * getReqScriptsSyncMsg *
 // ************************
-/*
-Output:
-{
-	cssLinks: string[];
-	jsLinks: string[];
-}
-*/
 type LinkSet = {
 	cssLinks: string[];
 	jsLinks: string[];
@@ -32,15 +19,6 @@ export function getReqScriptsSyncMsg(): LinkSet {
 // **************************
 // * handleReplyScriptsSync *
 // **************************
-/*
-Input:
-{
-	cssLinksDel: string[];
-	cssLinksAdd: string[];
-	jsLinksDel: string[];
-	jsLinksAdd: string[];
-}
-*/
 var isFirstTime = true;
 export function handleReplyScriptsSync(
 	cssLinksDel: string[],
@@ -48,7 +26,7 @@ export function handleReplyScriptsSync(
 	jsLinksDel: string[],
 	jsLinksAdd: string[]
 ) {
-	/*LinkUtils.getCssScripts()
+	LinkUtils.getCssScripts()
 		.filter((e) => cssLinksDel.some((f) => LinkUtils.isMatch(f, e.href)))
 		.forEach((e) => e.remove());
 	//if (!isFirstTime)
@@ -59,7 +37,7 @@ export function handleReplyScriptsSync(
 			e.remove();
 		}, 100); // <=50 causes the styles to disappear shortly on reload
 	});
-	cssLinksAdd.forEach(LinkUtils.mkCssScript);*/
+	cssLinksAdd.forEach(LinkUtils.mkCssScript);
 
 	/*
 	getJsScripts()
@@ -81,13 +59,6 @@ export function handleReplyScriptsSync(
 // ***********************
 // * handleScriptRefresh *
 // ***********************
-/*
-Input:
-{
-	type: 'Css' | 'Js';
-	link: string;
-}
-*/
 export function handleScriptRefresh(type: ScriptType, link: string) {
 	switch (type) {
 		case "Css": {

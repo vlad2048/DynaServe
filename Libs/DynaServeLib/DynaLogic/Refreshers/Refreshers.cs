@@ -21,7 +21,7 @@ record ChildrenRefresher(IObservable<Unit> When, Func<HtmlNode[]> Fun) : IRefres
 {
 	public IDisposable Activate(IElement node, DomOps domOps) =>
 		When.Subscribe(_ =>
-			domOps.UpdateNodeChildren(node.GetIdEnsure(), Fun())
+			domOps.SignalDomEvt(new UpdateChildrenDomEvt(node.GetIdEnsure(), Fun()))
 		);
 }
 
@@ -47,7 +47,7 @@ record EvtRefresher(string EvtName, Func<Task> Action, bool StopPropagation) : I
 		EvtRefresherUtils.SetNodeEvtAttr(node, EvtName, StopPropagation, null);
 		return domOps.WhenClientMsg
 			.OfType<HookCalledClientMsg>()
-			.Where(e => e.EvtName == EvtName)
+			.Where(e => e.Id == id && e.EvtName == EvtName)
 			.SelectMany(_ => Observable.FromAsync(Action))
 			.Catch<Unit, Exception>(ex =>
 			{

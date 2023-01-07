@@ -6,9 +6,10 @@ export class LinkUtils {
         let idx = lnk.indexOf("css/");
         if (idx !== -1)
             lnk = lnk.substring(idx);
-        idx = lnk.indexOf("js/");
-        if (idx !== -1)
-            lnk = lnk.substring(idx);
+        //idx = lnk.indexOf("js/");
+        //if (idx !== -1) lnk = lnk.substring(idx);
+        if (lnk.startsWith(this.httpLink))
+            lnk = lnk.substring(this.httpLink.length);
         return lnk;
     }
     // Input : file:///C:/folder/js/simple.js?c=3
@@ -51,9 +52,13 @@ export class LinkUtils {
     // Output: true
     // Input : http://google.com/...
     // Output: false
-    static relevantUrl(url) {
+    static relevantUrlCss(url) {
         return (!!url &&
-            (url.includes("css/") || url.includes("js/")) &&
+            (url.includes("css/")) &&
+            (url.startsWith("file:///") || url.startsWith(this.httpLink)));
+    }
+    static relevantUrlJs(url) {
+        return (!!url &&
             (url.startsWith("file:///") || url.startsWith(this.httpLink)));
     }
     // Input : 'script'
@@ -72,11 +77,11 @@ export class LinkUtils {
     static getCssScripts() {
         return this.getHeadTags("link")
             .filter((e) => e.rel === "stylesheet")
-            .filter((e) => this.relevantUrl(e.href));
+            .filter((e) => this.relevantUrlCss(e.href));
     }
     static getJsScripts() {
         return this.getHeadTags("script")
-            .filter((e) => this.relevantUrl(e.src));
+            .filter((e) => this.relevantUrlJs(e.src));
     }
     static mkCssScript(lnk) {
         const head = document.getElementsByTagName("head")[0];

@@ -24,4 +24,10 @@ public static class DomTreeMaker
 			})
 			.Single();
 	}
+
+	public static TNod<T> TreeOfType<T>(this TNod<INode> root) where T : IElement =>
+		root
+			.Filter(e => e is T)
+			.Single()
+			.Map(e => (T)e);
 }

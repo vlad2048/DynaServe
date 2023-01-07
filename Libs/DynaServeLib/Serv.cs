@@ -115,7 +115,7 @@ public static class Serv
 		if (I == null) throw new ArgumentException("Cannot call AddNodeToBody before the server is started");
 		var d = new Disp();
 		// TODO: con't access that var like this
-		node.Id ??= $"id-{I.DomOps.idCnt++}";
+		node.Id ??= I.DomOps.GetNextNodeId();
 		I.SignalDomEvt(new AddBodyNodeDomEvt(node));
 		Disposable.Create(() =>
 		{

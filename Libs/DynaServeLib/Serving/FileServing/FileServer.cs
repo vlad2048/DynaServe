@@ -44,7 +44,7 @@ class FileServer : IDisposable
 		SetupLocalFolders(servNfos.OfType<LocalFolderServNfo>());
 		SetupLocalFiles(servNfos.OfType<LocalFileServNfo>());
 		SetupDirectFiles(servNfos.OfType<DirectFileServNfo>());
-		LogRegs();
+		//LogRegs();
 	}
 
 	private void AddReg(string link, IReg reg)

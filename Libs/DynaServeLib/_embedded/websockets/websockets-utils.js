@@ -8,18 +8,9 @@ export function getReqScriptsSyncMsg() {
 // **************************
 // * handleReplyScriptsSync *
 // **************************
-/*
-Input:
-{
-    cssLinksDel: string[];
-    cssLinksAdd: string[];
-    jsLinksDel: string[];
-    jsLinksAdd: string[];
-}
-*/
 var isFirstTime = true;
 export function handleReplyScriptsSync(cssLinksDel, cssLinksAdd, jsLinksDel, jsLinksAdd) {
-    /*LinkUtils.getCssScripts()
+    LinkUtils.getCssScripts()
         .filter((e) => cssLinksDel.some((f) => LinkUtils.isMatch(f, e.href)))
         .forEach((e) => e.remove());
     //if (!isFirstTime)
@@ -30,7 +21,7 @@ export function handleReplyScriptsSync(cssLinksDel, cssLinksAdd, jsLinksDel, jsL
             e.remove();
         }, 100); // <=50 causes the styles to disappear shortly on reload
     });
-    cssLinksAdd.forEach(LinkUtils.mkCssScript);*/
+    cssLinksAdd.forEach(LinkUtils.mkCssScript);
     /*
     getJsScripts()
         .filter(e => jsLinksDel.some(f => isMatch(f, e.src)))
@@ -51,13 +42,6 @@ export function handleReplyScriptsSync(cssLinksDel, cssLinksAdd, jsLinksDel, jsL
 // ***********************
 // * handleScriptRefresh *
 // ***********************
-/*
-Input:
-{
-    type: 'Css' | 'Js';
-    link: string;
-}
-*/
 export function handleScriptRefresh(type, link) {
     switch (type) {
         case "Css": {

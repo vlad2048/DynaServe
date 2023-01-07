@@ -9,6 +9,7 @@ static class Program
 	private static void MainInner(Disp d)
 	{
 		//Demo_Basics.Minimal(d);
+		//Demo_Basics.Buttons(d);
 		//Demo_Basics.Counter(d);
 		//Demo_Basics.RefreshChildren(d);
 		//Demo_Basics.RefreshComplex(d);
@@ -16,8 +17,8 @@ static class Program
 		//Demo_LiveReload.Run(d);
 		//Demo_BoundCtrls.Run(d);
 
-		Demo_Extras_DlgInput.Run(d);
-		//Demo_Extras_EditList.Run(d);
+		//Demo_Extras_DlgInput.Run(d);
+		Demo_Extras_EditList.Run(d);
 		//Demo_Extras_FontAwesome.Run(d);
 	}
 
