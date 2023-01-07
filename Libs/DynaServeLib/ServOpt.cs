@@ -43,7 +43,7 @@ public class ServOpt
 
 public static class ServOptFileServExt
 {
-	public static void ServeCssFile(this ServOpt opt, string shortFilename) => opt.Mounts.Add(new Mount(
+	public static void ServeCssFile(this ServOpt opt, string shortFilename, string? mountLocation) => opt.Mounts.Add(new Mount(
 		FileFinder.FindFile(shortFilename, opt.SearchFolders),
 	));
 
