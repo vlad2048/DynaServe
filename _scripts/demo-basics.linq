@@ -19,13 +19,14 @@
   <Namespace>System.Reactive</Namespace>
   <Namespace>System.Reactive.Linq</Namespace>
   <Namespace>System.Reactive.Subjects</Namespace>
+  <Namespace>DynaServeLib.Serving.Syncing.Structs</Namespace>
 </Query>
 
 #load ".\libs\sys"
 
 void Main()
 {
-	//Util.ReadLine();
+	Util.ReadLine();
 	
 	RefreshComplex();
 	
@@ -48,6 +49,7 @@ public static void RefreshComplex()
 			opt.ServeHardcoded("test.css", TestCss);
 		},
 		Div("main").Wrap(
+			Btn("Err", () => Serv.Send(new ShowErrorServerMsg())),
 			Div().Txt("RefreshChildren"),
 			Btn("Btn", async () =>
 			{

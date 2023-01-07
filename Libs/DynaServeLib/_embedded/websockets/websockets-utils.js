@@ -10,11 +10,9 @@ export function getReqScriptsSyncMsg() {
 // **************************
 var isFirstTime = true;
 export function handleReplyScriptsSync(cssLinksDel, cssLinksAdd, jsLinksDel, jsLinksAdd) {
-    LinkUtils.getCssScripts()
-        .filter((e) => cssLinksDel.some((f) => LinkUtils.isMatch(f, e.href)))
-        .forEach((e) => e.remove());
-    //if (!isFirstTime)
-    //getCssScripts().forEach((e) => (e.href = bumpLnk(e.href)));
+    LinkUtils.getCssScripts().filter((e) => cssLinksDel.some((f) => LinkUtils.isMatch(f, e.href))).forEach((e) => e.remove());
+    if (!isFirstTime)
+        LinkUtils.getCssScripts().forEach((e) => (e.href = LinkUtils.bumpLnk(e.href)));
     LinkUtils.getCssScripts().forEach((e) => {
         LinkUtils.mkCssScript(LinkUtils.bumpLnk(e.href));
         setTimeout(() => {
@@ -22,20 +20,20 @@ export function handleReplyScriptsSync(cssLinksDel, cssLinksAdd, jsLinksDel, jsL
         }, 100); // <=50 causes the styles to disappear shortly on reload
     });
     cssLinksAdd.forEach(LinkUtils.mkCssScript);
-    /*
-    getJsScripts()
-        .filter(e => jsLinksDel.some(f => isMatch(f, e.src)))
+    console.log('jsDel', jsLinksDel);
+    console.log('jsAdd', jsLinksAdd);
+    LinkUtils.getJsScripts()
+        .filter(e => jsLinksDel.some(f => LinkUtils.isMatch(f, e.src)))
         .forEach(e => e.remove());
-    //if (!isFirstTime)
-    //  getJsScripts().forEach((e) => (e.src = bumpLnk(e.src)));
-    getJsScripts().forEach(e => {
-        mkJsScript(bumpLnk(e.src));
+    if (!isFirstTime)
+        LinkUtils.getJsScripts().forEach((e) => (e.src = LinkUtils.bumpLnk(e.src)));
+    LinkUtils.getJsScripts().forEach(e => {
+        LinkUtils.mkJsScript(LinkUtils.bumpLnk(e.src));
         setTimeout(() => {
             e.remove();
         }, 1000); // <=50 causes the styles to disappear shortly on reload
     });
-    jsLinksAdd.forEach(mkJsScript);
-  */
+    jsLinksAdd.forEach(LinkUtils.mkJsScript);
     if (isFirstTime)
         isFirstTime = false;
 }
@@ -83,4 +81,31 @@ export function fixAutofocus() {
     if (!!autofocusElt) {
         autofocusElt.focus();
     }
+}
+// *************
+// * ShowError *
+// *************
+export function showError(err) {
+    if (!err)
+        return;
+    const errorPanelId = 'error-panel';
+    var div = document.getElementById(errorPanelId);
+    if (!div) {
+        const body = document.body;
+        div = document.createElement('div');
+        div.id = errorPanelId;
+        div.style.position = 'fixed';
+        div.style.left = '20px';
+        div.style.top = '10px';
+        div.style.width = '90%';
+        div.style.height = '80%';
+        div.style.padding = '5px';
+        div.style.border = '2px solid black';
+        div.style.backgroundColor = '#333C';
+        div.style.color = '#FFF';
+        div.style.zIndex = '20';
+        body.append(div);
+    }
+    div.innerText += `${err.message}\n${JSON.stringify(err)}\n\n`;
+    div.style.left = '20px';
 }

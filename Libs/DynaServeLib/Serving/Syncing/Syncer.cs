@@ -10,6 +10,8 @@ namespace DynaServeLib.Serving.Syncing;
 
 static class Syncer
 {
+	private static readonly TimeSpan stalePageInterval = TimeSpan.FromSeconds(1);
+
 	public static IDisposable Setup(IHtmlDocument dom, Messenger messenger)
 	{
 		var d = new Disp();
@@ -17,8 +19,18 @@ static class Syncer
 		messenger.WhenClientConnects
 			.Subscribe(_ =>
 			{
-				var bodyFmt = dom.GetUserBodyNodes().Fmt();
-				messenger.SendToClient(new FullUpdateServerMsg(bodyFmt));
+				var deltaTime = DateTime.Now - messenger.LastTimePageServed;
+				var isStale = deltaTime >= stalePageInterval;
+				if (isStale)
+				{
+					L($"[{deltaTime}] Stale page => Send FullUpdate");
+					var bodyFmt = dom.GetUserBodyNodes().Fmt();
+					messenger.SendToClient(new FullUpdateServerMsg(bodyFmt));
+				}
+				else
+				{
+					L($"[{deltaTime}] Fresh page => Do Nothing");
+				}
 			}).D(d);
 
 		messenger.WhenClientMsg
@@ -45,4 +57,6 @@ static class Syncer
 
 		return d;
 	}
+
+	private static void L(string s) => Console.WriteLine(s);
 }

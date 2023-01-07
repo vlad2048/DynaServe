@@ -36,12 +36,12 @@ function init() {
         socket.onerror = () => updateState();
         socket.onopen = () => {
             updateState();
-            const linkSet = getReqScriptsSyncMsg();
+            /*const linkSet = getReqScriptsSyncMsg();
             send({
                 type: "ReqScriptsSync",
                 cssLinks: linkSet.cssLinks,
                 jsLinks: linkSet.jsLinks,
-            });
+            });*/
         };
         socket.onclose = () => {
             updateState();
@@ -50,7 +50,18 @@ function init() {
 
         socket.onmessage = (evtData) => {
           const evt = JSON.parse(evtData.data) as ServerMsg;
+          console.log(`<== ${evt.type}`);
           handleServerMsg(evt);
+          console.log(`<== ${evt.type} (done)`);
+
+          if (evt.type === 'FullUpdate') {
+            const linkSet = getReqScriptsSyncMsg();
+            send({
+                type: "ReqScriptsSync",
+                cssLinks: linkSet.cssLinks,
+                jsLinks: linkSet.jsLinks,
+            });
+          }
         };
     }
 
@@ -70,11 +81,11 @@ setTimeout(() => {
 // **************************
 // **************************
 export function send(msg: ClientMsg) {
+    console.log(`==> ${msg.type}`);
     socket.send(JSON.stringify(msg));
 }
 
 function sockEvt(id: string, evtName: string) {
-  console.log(`[Sending] Evt:${evtName} -> ${id}`);
   send({
         type: "HookCalled",
         id,
@@ -86,7 +97,6 @@ function sockEvtArg(id: string, evtName: string, evtArg: string) {
     if (Object.prototype.toString.call(evtArg) !== "[object String]") {
         evtArg = evtArg.toString();
     }
-    console.log(`[Sending] EvtArg:${evtName} -> ${id}`);
     send({
         type: "HookArgCalled",
         id,

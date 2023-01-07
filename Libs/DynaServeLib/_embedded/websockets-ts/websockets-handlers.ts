@@ -1,12 +1,10 @@
 import { send } from "./websockets.js";
 import { ServerMsg } from "./websockets-types.js";
-import { fixAutofocus, handleReplyScriptsSync, handleScriptRefresh } from "./websockets-utils";
+import { fixAutofocus, handleReplyScriptsSync, handleScriptRefresh, showError } from "./websockets-utils";
 
 var statusEltId = "{{StatusEltId}}";
 
 export function handleServerMsg(evt: ServerMsg) {
-
-  console.log(`RECEIVED: ${evt.type}`);
 
 	// ****************************
 	// ****************************
@@ -26,6 +24,7 @@ export function handleServerMsg(evt: ServerMsg) {
 			break;
 		}
 
+    /*
 		case "ReplyScriptsSync": {
 			handleReplyScriptsSync(evt.cssLinksDel, evt.cssLinksAdd, evt.jsLinksDel, evt.jsLinksAdd);
 			break;
@@ -142,5 +141,11 @@ export function handleServerMsg(evt: ServerMsg) {
 			elt[evt.methodName]();
 			break;
 		}
+
+    case "ShowError": {
+      const err = new Error('Test ErrorYES2');
+      showError(err);
+    }
+    */
 	}
 }

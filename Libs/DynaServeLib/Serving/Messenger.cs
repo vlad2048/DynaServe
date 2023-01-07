@@ -17,13 +17,16 @@ class Messenger : IDisposable
 	public IObservable<Unit> WhenClientConnects { get; }
 	public IObservable<IClientMsg> WhenClientMsg { get; }
 	public void SendToClient(IServerMsg msg) => whenServerMsg.OnNext(msg);
+	public DateTime LastTimePageServed { get; private set; } = DateTime.MinValue;
 
-	public Messenger(Server server)
+	public Messenger(Server server, IObservable<Unit> whenPageServed)
 	{
 		WhenClientConnects = server.WhenWsOpen;
 		WhenClientMsg = server.WhenWsMsg.Select(e => SyncJsonUtils.DeserClientMsg(e.Msg));
 
 		whenServerMsg = new Subject<IServerMsg>().D(d);
+
+		whenPageServed.Subscribe(_ => LastTimePageServed = DateTime.Now).D(d);
 
 		WhenServerMsg
 			.Synchronize()

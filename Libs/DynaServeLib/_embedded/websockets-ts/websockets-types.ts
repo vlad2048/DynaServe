@@ -3,6 +3,8 @@
 // *******************
 
 export type ClientMsg =
+  /*{ type: 'Error',
+    message: string } |*/
   { type: 'ReqScriptsSync',
     cssLinks: string[], jsLinks: string[] } |
   { type: 'HookCalled',
@@ -67,4 +69,7 @@ export type ServerMsg =
 
   { type: 'ReqCallMethodOnNode',
     nodeId: string;
-    methodName: string; };
+    methodName: string; } |
+    
+  { type: 'ShowError'
+  };

@@ -7,17 +7,21 @@ static class ServRegisterExt
 {
 	public static void Register_WebsocketScripts(this ServOpt opt)
 	{
-		opt.ServeEmbedded("link-utils.js",
-			("{{HttpLink}}", UrlUtils.GetLocalLink(opt.Port))
-		);
-		opt.ServeEmbedded("websockets-utils.js");
-		opt.ServeEmbedded("websockets-handlers.js",
-			("{{StatusEltId}}", ServInst.StatusEltId)
-		);
-		opt.ServeEmbedded("websockets.js",
+		var repls = new[]
+		{
 			("{{WSLink}}", UrlUtils.GetWSLink(opt.Port)),
+			("{{HttpLink}}", UrlUtils.GetLocalLink(opt.Port)),
 			("{{StatusEltId}}", ServInst.StatusEltId)
-		);
+		};
+		//opt.ServeEmbedded("link-utils.js", repls);
+		//opt.ServeEmbedded("websockets-utils.js", repls);
+		//opt.ServeEmbedded("websockets-handlers.js", repls);
+
+
+		opt.ServeFile("websockets", "link-utils.js", repls);
+		opt.ServeFile("websockets", "websockets-utils.js", repls);
+		opt.ServeFile("websockets", "websockets-handlers.js", repls);
+		opt.ServeEmbedded("websockets.js", repls);
 
 		opt.ServeEmbedded("websockets.css",
 			("StatusEltClsAuto", ServInst.StatusEltClsAuto),

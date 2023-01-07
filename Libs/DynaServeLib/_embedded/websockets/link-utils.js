@@ -92,9 +92,12 @@ export class LinkUtils {
         head.appendChild(tag);
     }
     static mkJsScript(lnk) {
+        console.log(`MAKING JS SCRIPT: ${lnk}`);
         const head = document.getElementsByTagName("head")[0];
         const tag = document.createElement("script");
         tag.src = lnk;
+        if (lnk.includes('websockets') || lnk.includes('link-utils'))
+            tag.type = 'module';
         head.appendChild(tag);
     }
     static isSysJsLnk(lnk) {

@@ -1,6 +1,7 @@
 ﻿using DynaServeLib.Logging;
 using DynaServeLib.Serving.FileServing.Structs;
 using DynaServeLib.Serving.FileServing.StructsEnum;
+using DynaServeLib.Serving.FileServing.Utils;
 using DynaServeLib.Serving.Repliers;
 using DynaServeLib.Utils;
 
@@ -13,13 +14,13 @@ public class ServOpt
 	private ServOpt() {}
 
 	internal List<IReplier> Repliers { get; } = new();
-	internal List<string> SlnFolders { get; } = new()
+	internal List<string> SearchFolders { get; } = new()
 	{
 		@"C:\Dev_Nuget\Libs\DynaServe",
 		@"C:\Dev_Nuget\Libs\ImdbLib",
 		@"C:\Dev\Creepy",
 	};
-	internal List<IServNfo> ServNfos { get; } = new();
+	internal List<Mount> Mounts { get; } = new();
 	internal List<string> ExtraHtmlNodes { get; } = new();
 
 	public void AddRepliers(params IReplier[] repliers) => Repliers.AddRange(repliers);
@@ -42,7 +43,13 @@ public class ServOpt
 
 public static class ServOptFileServExt
 {
-	public static void AddSlnFolder(
+	public static void ServeCssFile(this ServOpt opt, string shortFilename) => opt.Mounts.Add(new Mount(
+		FileFinder.FindFile(shortFilename, opt.SearchFolders),
+	));
+
+
+
+	/*public static void AddSlnFolder(
 		this ServOpt opt,
 		params string[] slnFolders
 	) =>
@@ -96,5 +103,5 @@ public static class ServOptFileServExt
 				name,
 				content
 			)
-		);
+		);*/
 }

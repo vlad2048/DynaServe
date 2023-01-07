@@ -100,13 +100,13 @@ static class DiffAlgo
 	// ****************************************************
 	// * Apply the list of changes to a list of DOM nodes *
 	// ****************************************************
-	public static void ApplyChgs_In_Dom(IHtmlDocument doc, params Chg[] chgs)
+	public static void ApplyChgs_In_Dom(IHtmlDocument doc, string dbgStr, params Chg[] chgs)
 	{
 		var body = doc.FindDescendant<IHtmlBodyElement>()!;
 
 		foreach (var chg in chgs)
 		{
-			var node = body.SelectSingleNode(chg.NodePath) as IElement ?? throw new ArgumentException($"Cannot find '{chg.NodePath}'");
+			var node = body.SelectSingleNode(chg.NodePath) as IElement ?? throw new ArgumentException($"Cannot find '{chg.NodePath}' ({dbgStr})");
 
 			switch (chg.Type)
 			{

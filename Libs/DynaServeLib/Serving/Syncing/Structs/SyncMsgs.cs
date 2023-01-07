@@ -10,6 +10,7 @@ namespace DynaServeLib.Serving.Syncing.Structs;
 
 enum ClientMsgType
 {
+	//Error,
 	ReqScriptsSync,
 	HookCalled,
 	HookArgCalled,
@@ -20,6 +21,7 @@ enum ClientMsgType
 // @formatter:off
 interface IClientMsg { ClientMsgType Type { get; } }
 
+//record ErrorClientMsg				(string Message)							: IClientMsg { public ClientMsgType Type => ClientMsgType.Error;		}
 record ReqScriptsSyncClientMsg		(string[] CssLinks, string[] JsLinks)		: IClientMsg { public ClientMsgType Type => ClientMsgType.ReqScriptsSync;		}
 record HookCalledClientMsg			(string Id, string EvtName)					: IClientMsg { public ClientMsgType Type => ClientMsgType.HookCalled;			}
 record HookArgCalledClientMsg		(string Id, string EvtName, string EvtArg)	: IClientMsg { public ClientMsgType Type => ClientMsgType.HookArgCalled;		}
@@ -83,7 +85,8 @@ public enum ServerMsgType
 	ChgsDomUpdate,
 	DomOp,
 	ReqDomSnapshot,
-	ReqCallMethodOnNode
+	ReqCallMethodOnNode,
+	ShowError,
 }
 
 // @formatter:off
@@ -97,5 +100,6 @@ public record ChgsDomUpdateServerMsg		(params Chg[] Chgs)																		: ISe
 public record DomOpServerMsg				(DomOpType OpType, string? Html, string? ParentId)										: IServerMsg { public ServerMsgType Type => ServerMsgType.DomOp;				}
 public record ReqDomSnapshotServerMsg																								: IServerMsg { public ServerMsgType Type => ServerMsgType.ReqDomSnapshot;		}
 public record ReqCallMethodOnNodeServerMsg	(string NodeId, string MethodName)														: IServerMsg { public ServerMsgType Type => ServerMsgType.ReqCallMethodOnNode;	}
+public record ShowErrorServerMsg																									: IServerMsg { public ServerMsgType Type => ServerMsgType.ShowError;			}
 // @formatter:on
 

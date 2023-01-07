@@ -3,6 +3,35 @@ using DynaServeLib.Utils.Exts;
 
 namespace DynaServeLib.Serving.FileServing.Structs;
 
+enum MountJsFlags
+{
+	ServeOnly,
+	AddScript,
+	AddModuleScript
+}
+
+record Mount(
+	string Filename,
+	string MountLocation,
+	(string, string)[] Substs,
+	MountJsFlags? JsFlags
+)
+{
+	public FCat Cat => Filename.ToCat();
+}
+
+/*interface IMount
+{
+	FCat Cat { get; }
+	string Filename { get; }
+	string MountLocation { get; }
+}
+
+record 
+
+
+
+/*
 interface IServNfo
 {
 	FCat Cat { get; }
@@ -69,3 +98,4 @@ record WatchFold(
 	string Pattern,
 	FileReg[] Regs
 );
+*/

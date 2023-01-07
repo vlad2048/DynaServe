@@ -80,7 +80,7 @@ class DomOps : IDisposable
 				rootPrev,
 				rootNext
 			);
-			DiffAlgo.ApplyChgs_In_Dom(Dom, chgs);
+			DiffAlgo.ApplyChgs_In_Dom(Dom, "Handle_UpdateChildrenDomEvt", chgs);
 			messenger.SendToClient(new ChgsDomUpdateServerMsg(chgs));
 		}
 		else
@@ -112,7 +112,7 @@ class DomOps : IDisposable
 		foreach (var evt in evts)
 		{
 			var chg = evt.Chg;
-			DiffAlgo.ApplyChgs_In_Dom(Dom, chg);
+			DiffAlgo.ApplyChgs_In_Dom(Dom, "Handle_ChgDomEvt", chg);
 		}
 
 		var chgs = evts.SelectToArray(e => e.Chg);
