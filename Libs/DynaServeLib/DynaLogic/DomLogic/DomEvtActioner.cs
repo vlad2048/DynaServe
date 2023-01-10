@@ -55,7 +55,7 @@ static class DomEvtActioner
 		whenEvtBuf.Subscribe(evtBuf =>
 		{
 			domOps.Handle_ChgDomEvt(evtBuf);
-			var str = evtBuf.Select(e => $"{e}").JoinText(";");
+			//var str = evtBuf.Select(e => $"{e}").JoinText(";");
 			//domOps.Logr.LogTransition($"DomEvt[--Batch--] {str}", domOps.Dom.FmtBody());
 		}).D(d);
 

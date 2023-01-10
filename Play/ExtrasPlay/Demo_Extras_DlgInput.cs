@@ -4,6 +4,7 @@ using PowMaybe;
 using DynaServeExtrasLib.Components.DlgInputLogic.Comps;
 using DynaServeExtrasLib.Components.DlgInputLogic;
 using PowRxVar;
+using DynaServeLib.Serving.FileServing.StructsEnum;
 
 namespace ExtrasPlay;
 
@@ -17,7 +18,7 @@ static class Demo_Extras_DlgInput
 			opt =>
 			{
 				opt.RegisterDlgInput();
-				opt.ServeHardcoded("demo.css", DemoCss);
+				opt.ServeString(DemoCss, "demo.css");
 			},
 			Div("btnrow").Wrap(
 				Btn("Edit", async () =>

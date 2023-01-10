@@ -7,8 +7,17 @@ public static class FontAwesomeRegisterExt
 {
 	public static void RegisterFontAwesome(this ServOpt opt)
 	{
-		opt.Serve(FCat.Font, "fontawesome-webfonts");
-		opt.Serve(FCat.Css, "fontawesome-css");
-		opt.Serve(FCat.Css, "fontawesome-custom-css");
+		opt.ServeFolder("fontawesome-webfonts", FCat.Font, fopt =>
+		{
+			fopt.MountLocation = "fonts";
+		});
+		opt.ServeFolder("fontawesome-css", FCat.Css, fopt =>
+		{
+			fopt.MountLocation = "css";
+		});
+		opt.ServeFolder("fontawesome-custom-css", FCat.Css, fopt =>
+		{
+			fopt.MountLocation = "css";
+		});
 	}
 }

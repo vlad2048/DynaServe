@@ -8,7 +8,7 @@ public static class DlgInputRegisterExt
 {
     public static void RegisterDlgInput(this ServOpt opt)
     {
-	    opt.RegisterTheme();
-		opt.Serve(FCat.Css, "dlg-input");
+	    //opt.RegisterTheme();
+		opt.ServeFolder("dlg-input", FCat.Css);
     }
 }

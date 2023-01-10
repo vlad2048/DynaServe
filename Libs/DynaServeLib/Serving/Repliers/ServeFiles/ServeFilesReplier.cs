@@ -19,10 +19,10 @@ class ServeFilesReplier : IReplier
 		var (req, res) = reqRes;
 		var url = req.GetUrl();
 
-		var mayData = await fileServer.TryGetContent(url);
-		if (mayData.IsSome(out var data))
+		var mayReply = await fileServer.TryGetReply(url);
+		if (mayReply.IsSome(out var reply))
 		{
-			await data.WriteToResponse(res);
+			await reply.WriteToResponse(res);
 			return true;
 		}
 

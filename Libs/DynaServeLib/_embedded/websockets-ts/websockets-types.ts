@@ -5,8 +5,8 @@
 export type ClientMsg =
   /*{ type: 'Error',
     message: string } |*/
-  { type: 'ReqScriptsSync',
-    cssLinks: string[], jsLinks: string[] } |
+  /*{ type: 'ReqScriptsSync',
+    cssLinks: string[], jsLinks: string[] } |*/
   { type: 'HookCalled',
     id: string, evtName: string } |
   { type: 'HookArgCalled',
@@ -30,7 +30,11 @@ type DomOpType =
 	'ReplaceHtmlUnderParent' |
 	'DeleteParent';
 
-export type ScriptType = 'Css' | 'Js';
+type ScriptType = 'Css' | 'Js' | 'JsModule' | 'Manifest';
+export interface ScriptNfo {
+  type: ScriptType;
+  link: string;
+}
 
 type ChgType = 'Text' | 'Attr' | 'Prop';
 type ChgPropType = 'Str' | 'Bool';
@@ -42,9 +46,10 @@ export interface Chg {
   val?: string;
 }
 
+
 export type ServerMsg =
   { type: 'FullUpdate',
-    html: string } |
+    html: string; scripts: ScriptNfo[] } |
 
   { type: 'ReplyScriptsSync',
     cssLinksDel: string[];
@@ -53,8 +58,7 @@ export type ServerMsg =
     jsLinksAdd: string[]; } |
 
   { type: 'ScriptRefresh',
-    scriptType: ScriptType;
-    link: string; } |
+    scriptNfo: ScriptNfo; } |
 
   { type: 'ChgsDomUpdate',
     chgs: Chg[] } |

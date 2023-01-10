@@ -12,9 +12,9 @@ static class Demo_LiveReload
 		Serv.Start(
 			opt =>
 			{
-				opt.Serve(FCat.Css, "demo-livereload");
-				opt.Serve(FCat.Image, "demo-livereload");
-				opt.Serve(FCat.Js, "demo-livereload");
+				opt.ServeFolder("demo-livereload", FCat.Css);
+				opt.ServeFolder("demo-livereload", FCat.Image);
+				opt.ServeFolder("demo-livereload", FCat.Js);
 			},
 			Div("main").Wrap(
 				Div().Txt("Hello"),

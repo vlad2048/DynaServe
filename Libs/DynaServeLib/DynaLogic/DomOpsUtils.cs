@@ -9,50 +9,27 @@ using PowBasics.CollectionsExt;
 
 namespace DynaServeLib.DynaLogic;
 
+
+class RefStats
+{
+	public List<string> Added { get; } = new();
+	public List<string> Removed { get; } = new();
+
+	public void Clear()
+	{
+		Added.Clear();
+		Removed.Clear();
+	}
+}
+
+
 static class DomOpsUtils
 {
-	public static Dictionary<IElement, IElement> GetBackMap(
-		IElement rootPrev,
-		IElement rootNext
-	)
-	{
-		var treePrev = rootPrev.ToTree().TreeOfType<IElement>();
-		var treeNext = rootNext.ToTree().TreeOfType<IElement>();
-		return treePrev.ZipTree(treeNext)
-			.ToDictionary(
-				t => t.V.Item2,
-				t => t.V.Item1
-			);
-	}
-
-	public static void FlashRefreshers(
-		IElement root, RefreshMap refMap,
-		Dictionary<IElement, IElement> backMap,
-		DomOps domOps
-	) =>
-		root.Recurse<IElement>(node =>
-		{
-			if (!refMap.TryGetValue(node, out var refs)) return;
-			if (!backMap.TryGetValue(node, out var nodePrev))
-			{
-				throw new ArgumentException();
-			}
-			if (nodePrev.Id == null)
-			{
-				throw new ArgumentException();
-			}
-			node.Id = nodePrev.Id;
-			foreach (var @ref in refs)
-			{
-				var refD = @ref.Activate(node, domOps);
-				refD.Dispose();
-			}
-		});
-
 	public static void LogState(
 		string transitionStr,
 		IHtmlDocument dom,
-		Dictionary<IElement, Disp> map
+		Dictionary<IElement, Disp> map,
+		RefStats refStats
 	)
 	{
 		var tree = dom.FindDescendant<IHtmlBodyElement>()!
@@ -77,6 +54,20 @@ static class DomOpsUtils
 			var unvisitedStr = unvisited.Select(e => e.Id ?? "_").JoinText(",");
 			L($" -> {unvisited.Length} nodes: {unvisitedStr}");
 		}
+
+		void ShowRef(string title, List<string> list)
+		{
+			var str = (list.Count == 0) switch
+			{
+				true => "_",
+				false => list.JoinText(", ")
+			};
+			L($"  {title} {str}");
+		}
+		L("Refreshers");
+		ShowRef("Added  : ", refStats.Added);
+		ShowRef("Removed: ", refStats.Removed);
+
 		LN();
 	}
 

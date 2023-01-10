@@ -9,6 +9,8 @@ public enum FCat
 	Font,
 	Manifest,
 	Video,
+
+	Ts,
 }
 
 enum FType
@@ -37,6 +39,9 @@ enum FType
 
 	// Video
 	VideoMP4,
+
+	// Ts
+	Ts
 }
 
 
@@ -72,6 +77,7 @@ static class FileTypeExt
 		FCat.Font => new[] { FType.FontWoff2 },
 		FCat.Manifest => new[] { FType.Json },
 		FCat.Video => new[] { FType.VideoMP4 },
+		FCat.Ts => new[] { FType.Ts },
 		_ => throw new ArgumentException()
 	};
 
@@ -95,6 +101,8 @@ static class FileTypeExt
 
 		FType.VideoMP4 => new[] { ".mp4" },
 
+		FType.Ts => new[] { ".ts" },
+
 		_ => throw new ArgumentException()
 	};
 
@@ -107,7 +115,8 @@ static class FileTypeExt
 		FCat.Font => "fonts",
 		FCat.Manifest => "",
 		FCat.Video => "videos",
-		_ => throw new ArgumentException()
+		FCat.Ts => throw new ArgumentException("Cannot mount .ts files"),
+		_ => throw new ArgumentException($"Invalid Cat: {cat}")
 	};
 
 	public static bool NeedsLinking(this FCat cat) => cat switch
@@ -141,7 +150,9 @@ static class FileTypeExt
 
 			".mp4" => FType.VideoMP4,
 
-			_ => throw new ArgumentException(),
+			".ts" => FType.Ts,
+
+			_ => throw new ArgumentException($"Invalid file ext: {fileExt}"),
 		};
 	}
 
@@ -166,7 +177,9 @@ static class FileTypeExt
 
 		FType.VideoMP4 => FCat.Video,
 
-		_ => throw new ArgumentException(),
+		FType.Ts => FCat.Ts,
+
+		_ => throw new ArgumentException($"Invalid FType: {t}"),
 	};
 
 
@@ -175,7 +188,7 @@ static class FileTypeExt
 		FType.Html => "text/html",
 
 		FType.Css => "text/css",
-		FType.Scss => throw new ArgumentException(),
+		FType.Scss => "text/css", // as this gets compiled to .css
 
 		FType.Js => "text/javascript",
 
@@ -190,7 +203,9 @@ static class FileTypeExt
 		
 		FType.VideoMP4 => "video/mp4",
 		
-		_ => throw new ArgumentException()
+		FType.Ts => throw new ArgumentException(".ts has no mime type"),
+
+		_ => throw new ArgumentException($"Cannot find mime type for FType:{t}")
 	};
 
 
@@ -214,6 +229,6 @@ static class FileTypeExt
 		
 		FType.VideoMP4 => true,
 		
-		_ => throw new ArgumentException()
+		_ => throw new ArgumentException($"Invalid FType: {t}")
 	};
 }

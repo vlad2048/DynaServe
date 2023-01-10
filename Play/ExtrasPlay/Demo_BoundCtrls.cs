@@ -1,5 +1,6 @@
 ﻿using DynaServeLib;
 using DynaServeLib.Nodes;
+using DynaServeLib.Serving.FileServing.StructsEnum;
 using DynaServeLib.Utils.Exts;
 using PowRxVar;
 
@@ -20,7 +21,7 @@ static class Demo_BoundCtrls
 		Serv.Start(
 			opt =>
 			{
-				opt.ServeHardcoded("test.css", TestCss);
+				opt.ServeString(TestCss, "test.css");
 			},
 			Div("main").Wrap(
 				new HtmlNode("button").Txt("Check").Attr("onclick", "runCheck()"),

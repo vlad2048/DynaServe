@@ -1,6 +1,7 @@
 ﻿using System.Reactive;
 using System.Reactive.Subjects;
 using AngleSharp.Html.Dom;
+using DynaServeLib.Serving.FileServing.StructsEnum;
 using DynaServeLib.Serving.Structs;
 using DynaServeLib.Utils;
 using DynaServeLib.Utils.Exts;
@@ -10,12 +11,10 @@ namespace DynaServeLib.Serving.Repliers.ServePage;
 class ServePageReplier : IReplier
 {
 	private readonly IHtmlDocument dom;
-	private readonly ISubject<Unit> whenPageServedSig;
 
-	public ServePageReplier(IHtmlDocument dom, ISubject<Unit> whenPageServedSig)
+	public ServePageReplier(IHtmlDocument dom)
 	{
 		this.dom = dom;
-		this.whenPageServedSig = whenPageServedSig;
 	}
 
 	public async Task<bool> Reply(ReqRes reqRes)
@@ -28,9 +27,8 @@ class ServePageReplier : IReplier
 		if (url == "index.html")
 		{
 			var replyTxt = dom.Fmt();
-			var reply = Structs.Reply.MkTxt(ReplyType.Html, replyTxt);
+			var reply = new Reply(FType.Html, ReplyData.MkString(replyTxt, Array.Empty<(string, string)>()));
 			await reply.WriteToResponse(res);
-			whenPageServedSig.OnNext(Unit.Default);
 			return true;
 		}
 

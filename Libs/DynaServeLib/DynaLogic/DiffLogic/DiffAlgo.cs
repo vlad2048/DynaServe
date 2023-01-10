@@ -2,6 +2,7 @@
 using AngleSharp.Html.Dom;
 using AngleSharp.XPath;
 using DynaServeLib.Serving.Syncing.Structs;
+using DynaServeLib.Utils.Exts;
 using PowBasics.CollectionsExt;
 
 namespace DynaServeLib.DynaLogic.DiffLogic;
@@ -45,8 +46,8 @@ static class DiffAlgo
 				// ********
 				// * Attr *
 				// ********
-				var attrsPrev = nodePrev.Attributes.Where(e => e.Name != "id").SelectToArray(e => e.Name);
-				var attrsNext = nodeNext.Attributes.Where(e => e.Name != "id").SelectToArray(e => e.Name);
+				var attrsPrev = nodePrev.Attributes/*.Where(e => e.Name != "id")*/.SelectToArray(e => e.Name);
+				var attrsNext = nodeNext.Attributes/*.Where(e => e.Name != "id")*/.SelectToArray(e => e.Name);
 
 				var attrsAdded = attrsNext.WhereNotToArray(attrsPrev.Contains);
 				var attrsRemoved = attrsPrev.WhereNotToArray(attrsNext.Contains);
@@ -100,13 +101,18 @@ static class DiffAlgo
 	// ****************************************************
 	// * Apply the list of changes to a list of DOM nodes *
 	// ****************************************************
-	public static void ApplyChgs_In_Dom(IHtmlDocument doc, string dbgStr, params Chg[] chgs)
+	public static Chg[] ApplyChgs_In_Dom(IHtmlDocument doc, string dbgStr, params Chg[] chgs)
 	{
 		var body = doc.FindDescendant<IHtmlBodyElement>()!;
+		var list = new List<Chg>();
 
 		foreach (var chg in chgs)
 		{
-			var node = body.SelectSingleNode(chg.NodePath) as IElement ?? throw new ArgumentException($"Cannot find '{chg.NodePath}' ({dbgStr})");
+			//var node = body.SelectSingleNode(chg.NodePath) as IElement ?? throw new ArgumentException($"Cannot find '{chg.NodePath}' ({dbgStr})");
+			var node = body.SelectSingleNode(chg.NodePath) as IElement;
+			if (node == null) continue;
+
+			list.Add(chg);
 
 			switch (chg.Type)
 			{
@@ -128,5 +134,7 @@ static class DiffAlgo
 					throw new ArgumentException();
 			}
 		}
+
+		return list.ToArray();
 	}
 }

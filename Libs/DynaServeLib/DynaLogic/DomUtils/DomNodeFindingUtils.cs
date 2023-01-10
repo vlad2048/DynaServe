@@ -1,5 +1,6 @@
 ﻿using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
+using DynaServeLib.Serving.Syncing.Structs;
 using PowBasics.CollectionsExt;
 
 namespace DynaServeLib.DynaLogic.DomUtils;

@@ -1,38 +1,77 @@
 ﻿using System.Net;
+using System.Reflection;
 using System.Text;
+using DynaServeLib.Serving.FileServing.StructsEnum;
+using DynaServeLib.Utils;
 using DynaServeLib.Utils.Exts;
 
 namespace DynaServeLib.Serving.Structs;
 
-enum ReplyType
+enum ReplyDataType
 {
-	Html,
-	ScriptJs,
-	ScriptCss,
-	Json,
-	ImageSvg,
-	ImagePng,
-	ImageJpg,
-	ImageIco,
-	Video,
-	FontWoff2,
+	String,
+	Binary
 }
 
-class Reply
+class ReplyData
 {
-	public ReplyType Type { get; }
-	public byte[] Data { get; }
+	public ReplyDataType Type { get; }
+	public string? DataString { get; private init; }
+	public byte[]? DataBinary { get; private init; }
 
-	private Reply(ReplyType type, byte[] data)
-	{
-		Type = type;
-		Data = data;
-	}
+	private ReplyData(ReplyDataType type) => Type = type;
 
-	public static Reply MkBin(ReplyType type, byte[] data) => new(type, data);
-	public static Reply MkTxt(ReplyType type, string data) => new(type, data.ToBytes());
+	public static ReplyData MkString(string dataString, (string, string)[] substs) => new(ReplyDataType.String) { DataString = dataString.ApplySubsts(substs) };
+	public static ReplyData MkBinary(byte[] dataBinary) => new(ReplyDataType.Binary) { DataBinary = dataBinary };
+}
 
-	public static Reply Mk(ReplyType type, byte[] data) => new(type, data);
+
+record Reply(
+	FType Type,
+	ReplyData Data
+)
+{
+	public static async Task<Reply> LoadFromFile(
+		FType type,
+		string filename,
+		(string, string)[] substs,
+		Func<string, Task<string>>? compileFun
+	) =>
+		new(
+			type,
+			type.IsBinary() switch
+			{
+				false => ReplyData.MkString(await (await File.ReadAllTextAsync(filename)).Compile(compileFun), substs),
+				true => ReplyData.MkBinary(await File.ReadAllBytesAsync(filename))
+			}
+		);
+
+	public static async Task<Reply> LoadFromEmbedded(
+		FType type,
+		string embeddedName,
+		Assembly ass,
+		(string, string)[] substs,
+		Func<string, Task<string>>? compileFun
+	) =>
+		new(
+			type,
+			type.IsBinary() switch
+			{
+				false => ReplyData.MkString(await EmbeddedUtils.LoadAsString(embeddedName, ass).Compile(compileFun), substs),
+				true => ReplyData.MkBinary(EmbeddedUtils.LoadAsBinary(embeddedName, ass)),
+			}
+		);
+
+	public static async Task<Reply> LoadFromString(
+		FType type,
+		string @string,
+		(string, string)[] substs,
+		Func<string, Task<string>>? compileFun
+	) =>
+		new(
+			type,
+			ReplyData.MkString(await @string.Compile(compileFun), substs)
+		);
 }
 
 
@@ -40,53 +79,40 @@ static class ReplyExt
 {
 	public static async Task WriteToResponse(this Reply reply, HttpListenerResponse response)
 	{
-		var isBinary = reply.Type.IsBinary();
-		response.ContentEncoding = isBinary switch
+		var bytes = reply.Data.Type switch
 		{
-			true => Encoding.Default,
-			false => Encoding.UTF8,
+			ReplyDataType.String => reply.Data.DataString!.ToBytes(),
+			ReplyDataType.Binary => reply.Data.DataBinary!,
+			_ => throw new ArgumentException($"Invalid Reply.Data.Type: {reply.Data.Type}")
 		};
-		response.ContentType = reply.Type.GetMimeType();
-		response.ContentLength64 = reply.Data.LongLength;
-		await response.OutputStream.WriteAsync(reply.Data, 0, reply.Data.Length);
+		response.ContentEncoding = reply.Data.Type switch
+		{
+			ReplyDataType.String => Encoding.UTF8,
+			ReplyDataType.Binary => Encoding.Default,
+			_ => throw new ArgumentException()
+		};
+		response.ContentType = reply.Type.ToMime();
+		response.ContentLength64 = bytes.LongLength;
+		await response.OutputStream.WriteAsync(bytes, 0, bytes.Length);
 	}
 
-	public static Reply MakeReplyFromImage(string name, byte[] data) => Path.GetExtension(name).ToLowerInvariant() switch
+	public static Reply MakeReplyFromImage(string name, byte[] data)
 	{
-		".png" => Reply.MkBin(ReplyType.ImagePng, data),
-		".jpeg" => Reply.MkBin(ReplyType.ImageJpg, data),
-		".jpg" => Reply.MkBin(ReplyType.ImageJpg, data),
-		".ico" => Reply.MkBin(ReplyType.ImageIco, data),
-		".svg" => Reply.MkBin(ReplyType.ImageSvg, data),
-	};
+		var ext = Path.GetExtension(name).ToLowerInvariant();
+		return ext switch
+		{
+			".png" => new Reply(FType.ImagePng, ReplyData.MkBinary(data)),
+			".jpeg" => new Reply(FType.ImageJpg, ReplyData.MkBinary(data)),
+			".jpg" => new Reply(FType.ImageJpg, ReplyData.MkBinary(data)),
+			".ico" => new Reply(FType.ImageIco, ReplyData.MkBinary(data)),
+			".svg" => new Reply(FType.ImageSvg, ReplyData.MkBinary(data)),
+			_ => throw new ArgumentException($"Unknown image extension: {ext}")
+		};
+	}
 
-	private static bool IsBinary(this ReplyType type) => type switch
+	public static async Task<string> Compile(this string str, Func<string, Task<string>>? compileFun) => compileFun switch
 	{
-		ReplyType.Html => false,
-		ReplyType.ScriptJs => false,
-		ReplyType.ScriptCss => false,
-		ReplyType.Json => false,
-		ReplyType.ImageSvg => false,
-		ReplyType.ImagePng => true,
-		ReplyType.ImageJpg => true,
-		ReplyType.ImageIco => true,
-		ReplyType.Video => true,
-		ReplyType.FontWoff2 => true,
-		_ => throw new ArgumentException()
-	};
-
-	private static string GetMimeType(this ReplyType type) => type switch
-	{
-		ReplyType.Html => "text/html",
-		ReplyType.ScriptJs => "text/javascript",
-		ReplyType.ScriptCss => "text/css",
-		ReplyType.Json => "application/json",
-		ReplyType.ImageSvg => "image/svg+xml",
-		ReplyType.ImagePng => "image/png",
-		ReplyType.ImageJpg => "image/jpeg",
-		ReplyType.ImageIco => "image/x-icon",
-		ReplyType.Video => "video/mp4",
-		ReplyType.FontWoff2 => "font/woff2",
-		_ => throw new ArgumentException()
+		null => str,
+		not null => await compileFun(str)
 	};
 }

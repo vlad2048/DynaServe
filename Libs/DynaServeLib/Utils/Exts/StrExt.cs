@@ -23,6 +23,13 @@ public static class StrExt
 			.Split('\r', '\n')
 			.MaxOrZero(e => e.Length)
 	};
+
+	internal static string ApplySubsts(this string str, (string, string)[] substs)
+	{
+		foreach (var t in substs)
+			str = str.Replace(t.Item1, t.Item2);
+		return str;
+	}
 	
 	private static int MaxOrZero<T>(this IEnumerable<T> source, Func<T, int> fun)
 	{

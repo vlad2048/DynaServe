@@ -151,7 +151,7 @@ public sealed class Server : IDisposable
 	    try
 	    {
 		    whenWsOpen.OnNext(Unit.Default);
-
+			
 		    var buffer = new byte[WsBufferSize];
 		    while (ws.State == WebSocketState.Open)
 		    {

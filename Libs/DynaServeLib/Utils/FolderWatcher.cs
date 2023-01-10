@@ -29,3 +29,4 @@ public class FolderWatcher : IDisposable
 		watcher.EnableRaisingEvents = true;
 	}
 }
+

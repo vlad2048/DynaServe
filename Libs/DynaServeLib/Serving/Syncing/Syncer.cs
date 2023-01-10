@@ -1,6 +1,8 @@
 ﻿using System.Reactive.Linq;
+using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using DynaServeLib.DynaLogic.DomUtils;
+using DynaServeLib.Serving.FileServing.Utils;
 using DynaServeLib.Serving.Syncing.Structs;
 using DynaServeLib.Utils.Exts;
 using PowBasics.CollectionsExt;
@@ -10,8 +12,6 @@ namespace DynaServeLib.Serving.Syncing;
 
 static class Syncer
 {
-	private static readonly TimeSpan stalePageInterval = TimeSpan.FromSeconds(1);
-
 	public static IDisposable Setup(IHtmlDocument dom, Messenger messenger)
 	{
 		var d = new Disp();
@@ -19,21 +19,12 @@ static class Syncer
 		messenger.WhenClientConnects
 			.Subscribe(_ =>
 			{
-				var deltaTime = DateTime.Now - messenger.LastTimePageServed;
-				var isStale = deltaTime >= stalePageInterval;
-				if (isStale)
-				{
-					L($"[{deltaTime}] Stale page => Send FullUpdate");
-					var bodyFmt = dom.GetUserBodyNodes().Fmt();
-					messenger.SendToClient(new FullUpdateServerMsg(bodyFmt));
-				}
-				else
-				{
-					L($"[{deltaTime}] Fresh page => Do Nothing");
-				}
+				var bodyFmt = dom.GetUserBodyNodes().Fmt();
+				var scripts = dom.GetScripts();
+				messenger.SendToClient(new FullUpdateServerMsg(bodyFmt, scripts));
 			}).D(d);
 
-		messenger.WhenClientMsg
+		/*messenger.WhenClientMsg
 			.OfType<ReqScriptsSyncClientMsg>()
 			.SubscribeSafe(msg =>
 			{
@@ -53,7 +44,7 @@ static class Syncer
 					jsDel,
 					jsAdd
 				));
-			}).D(d);
+			}).D(d);*/
 
 		return d;
 	}

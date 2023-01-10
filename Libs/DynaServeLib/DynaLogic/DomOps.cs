@@ -22,8 +22,11 @@ class DomOps : IDisposable
 
 	private readonly Messenger messenger;
 	private readonly Dictionary<IElement, Disp> map;
+	private readonly RefStats refStats = new();
+	private readonly HashSet<string> refSet = new();
 	private IHtmlBodyElement Body => Dom.FindDescendant<IHtmlBodyElement>()!;
 	private int idCnt;
+	private bool IsRefMounted(string? nodeId) => nodeId != null && refSet.Contains(nodeId);
 
 	public IHtmlDocument Dom { get; }
 	public string GetNextNodeId() => $"id-{idCnt++}";
@@ -63,24 +66,22 @@ class DomOps : IDisposable
 	// ******************
 	public void Handle_UpdateChildrenDomEvt(UpdateChildrenDomEvt evt)
 	{
+		refStats.Clear();
 		var rootPrev = Dom.GetById(evt.NodeId);
 		var nodsRefs = evt.Children.Create(Dom);
 
 		if (DiffAlgo.Are_DomNodeTrees_StructurallyIdentical(rootPrev.Children, nodsRefs.Nods))
 		{
-			var rootNext = Dom.CreateElementWithChildren<IHtmlDivElement>(nodsRefs.Nods);
-
-			// Before we can compare the new nodes to the old ones to detect changes,
-			// we need to apply and remove the refreshers on the new nodes so they have the same attributes
-			// and they need to be applied with the same NodeIds, that's why we compute a map lookup first
-			var backMap = DomOpsUtils.GetBackMap(rootPrev, rootNext);
-			DomOpsUtils.FlashRefreshers(rootNext, nodsRefs.RefreshMap, backMap, this);
+			DelRefs(rootPrev.Children);
+			var rootPrevCopy = (rootPrev.Clone() as IElement)!;
+			rootPrev.RemoveAllChildren();
+			rootPrev.AppendChildren(nodsRefs.Nods);
+			AddRefs(nodsRefs.RefreshMap);
 
 			var chgs = DiffAlgo.ComputePropChanges_In_StructurallyIdentical_DomNodesTree(
-				rootPrev,
-				rootNext
+				rootPrevCopy,
+				rootPrev
 			);
-			DiffAlgo.ApplyChgs_In_Dom(Dom, "Handle_UpdateChildrenDomEvt", chgs);
 			messenger.SendToClient(new ChgsDomUpdateServerMsg(chgs));
 		}
 		else
@@ -94,6 +95,7 @@ class DomOps : IDisposable
 
 	public void Handle_AddBodyNodeDomEvt(AddBodyNodeDomEvt evt)
 	{
+		refStats.Clear();
 		var nodRefs = evt.Node.Create(Dom);
 		AddUnder(Body, nodRefs, true);
 		LogState("Add Body Node");
@@ -101,6 +103,7 @@ class DomOps : IDisposable
 
 	public void Handle_RemoveBodyNodeDomEvt(RemoveBodyNodeDomEvt evt)
 	{
+		refStats.Clear();
 		var nodeId = evt.NodeId;
 		var domNode = Dom.GetById(nodeId);
 		DelParent(domNode, true);
@@ -109,13 +112,9 @@ class DomOps : IDisposable
 
 	public void Handle_ChgDomEvt(ChgDomEvt[] evts)
 	{
-		foreach (var evt in evts)
-		{
-			var chg = evt.Chg;
-			DiffAlgo.ApplyChgs_In_Dom(Dom, "Handle_ChgDomEvt", chg);
-		}
-
+		refStats.Clear();
 		var chgs = evts.SelectToArray(e => e.Chg);
+		chgs = DiffAlgo.ApplyChgs_In_Dom(Dom, "Handle_ChgDomEvt", chgs);
 		messenger.SendToClient(new ChgsDomUpdateServerMsg(chgs));
 		LogState($"Chg Dom cnt={evts.Length}");
 	}
@@ -191,6 +190,8 @@ class DomOps : IDisposable
 		{
 			if (map.ContainsKey(node)) throw new ArgumentException();
 			node.Id ??= GetNextNodeId();
+			refStats.Added.Add(node.Id);
+			refSet.Add(node.Id);
 			var refD = new Disp();
 			foreach (var @ref in refs)
 			{
@@ -209,6 +210,8 @@ class DomOps : IDisposable
 		{
 			if (map.TryGetValue(node, out var refD))
 			{
+				refSet.Remove(node.Id ?? "");
+				refStats.Removed.Add(node.Id ?? "(missing)");
 				refD.Dispose();
 				map.Remove(node);
 			}
@@ -217,6 +220,6 @@ class DomOps : IDisposable
 
 	private void LogState(string transitionStr)
 	{
-		//DomOpsUtils.LogState(transitionStr, Dom, map);
+		//DomOpsUtils.LogState(transitionStr, Dom, map, refStats);
 	}
 }

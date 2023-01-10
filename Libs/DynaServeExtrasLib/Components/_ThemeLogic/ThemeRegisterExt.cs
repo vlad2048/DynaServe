@@ -7,6 +7,6 @@ public static class ThemeRegisterExt
 {
 	public static void RegisterTheme(this ServOpt opt)
 	{
-		opt.Serve(FCat.Css, "_theme");
+		opt.ServeFolder("_theme", FCat.Css);
 	}
 }

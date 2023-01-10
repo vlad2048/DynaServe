@@ -1,6 +1,6 @@
 import { handleServerMsg } from "./websockets-handlers.js";
-import { getReqScriptsSyncMsg } from "./websockets-utils.js";
 var socket = null;
+console.log('LOADING MODULE websockets.js');
 function init() {
     const socketUrl = "{{WSLink}}";
     const statusEltId = "{{StatusEltId}}";
@@ -28,39 +28,32 @@ function init() {
     }
     function connectSocket() {
         socket = new WebSocket(socketUrl);
-        socket.onerror = () => updateState();
-        socket.onopen = () => {
+        socket.onerror = () => {
+            console.log('ON-ERROR');
             updateState();
-            /*const linkSet = getReqScriptsSyncMsg();
-            send({
-                type: "ReqScriptsSync",
-                cssLinks: linkSet.cssLinks,
-                jsLinks: linkSet.jsLinks,
-            });*/
+        };
+        socket.onopen = () => {
+            console.log('ON-OPEN');
+            updateState();
         };
         socket.onclose = () => {
+            console.log('ON-CLOSE');
             updateState();
-            setTimeout(() => connectSocket(), 100);
+            setTimeout(() => {
+                console.log('ON-ERROR -> RECONNECT');
+                connectSocket();
+            }, 100);
         };
         socket.onmessage = (evtData) => {
             const evt = JSON.parse(evtData.data);
             console.log(`<== ${evt.type}`);
             handleServerMsg(evt);
             console.log(`<== ${evt.type} (done)`);
-            if (evt.type === 'FullUpdate') {
-                const linkSet = getReqScriptsSyncMsg();
-                send({
-                    type: "ReqScriptsSync",
-                    cssLinks: linkSet.cssLinks,
-                    jsLinks: linkSet.jsLinks,
-                });
-            }
         };
     }
     connectSocket();
 }
 // init() doesn't work properly on Safari without the delay
-console.log('before init');
 setTimeout(() => {
     console.log('init');
     init();

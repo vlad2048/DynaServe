@@ -4,6 +4,7 @@ using DynaServeExtrasLib.Components.EditListLogic;
 using DynaServeExtrasLib.Components.EditListLogic.EditListConstraints;
 using DynaServeExtrasLib.Components.EditListLogic.StructsEnum;
 using DynaServeLib;
+using DynaServeLib.Serving.FileServing.StructsEnum;
 using PowMaybe;
 using PowRxVar;
 
@@ -48,7 +49,7 @@ static class Demo_Extras_EditList
 			opt =>
 			{
 				opt.RegisterEditList();
-				opt.ServeHardcoded("test.css", TestCss);
+				opt.ServeString(TestCss, "test.css");
 			},
 			listMaster.UI,
 			listSlaves.UI

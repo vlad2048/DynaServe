@@ -20,22 +20,26 @@ interface IRefresher
 record ChildrenRefresher(IObservable<Unit> When, Func<HtmlNode[]> Fun) : IRefresher
 {
 	public IDisposable Activate(IElement node, DomOps domOps) =>
-		When.Subscribe(_ =>
-			domOps.SignalDomEvt(new UpdateChildrenDomEvt(node.GetIdEnsure(), Fun()))
-		);
+		When
+			//.Where(_ => domOps.IsRefMounted(node.Id))
+			.Subscribe(_ =>
+				domOps.SignalDomEvt(new UpdateChildrenDomEvt(node.GetIdEnsure(), Fun()))
+			);
 }
 
 
 record ChgRefresher(ChgKey Key, IObservable<string?> ValObs) : IRefresher
 {
 	public IDisposable Activate(IElement node, DomOps domOps) =>
-		ValObs.Subscribe(val =>
-		{
-			var nodeId = node.GetIdEnsure();
-			var xPath = $"//*[@id='{nodeId}']";
-			var chg = Key.Make(xPath, val);
-			domOps.SignalDomEvt(new ChgDomEvt(chg));
-		});
+		ValObs
+			//.Where(_ => domOps.IsRefMounted(node.Id))
+			.Subscribe(val =>
+			{
+				var nodeId = node.GetIdEnsure();
+				var xPath = $"//*[@id='{nodeId}']";
+				var chg = Key.Make(xPath, val);
+				domOps.SignalDomEvt(new ChgDomEvt(chg));
+			});
 }
 
 
@@ -48,6 +52,7 @@ record EvtRefresher(string EvtName, Func<Task> Action, bool StopPropagation) : I
 		return domOps.WhenClientMsg
 			.OfType<HookCalledClientMsg>()
 			.Where(e => e.Id == id && e.EvtName == EvtName)
+			//.Where(_ => domOps.IsRefMounted(node.Id))
 			.SelectMany(_ => Observable.FromAsync(Action))
 			.Catch<Unit, Exception>(ex =>
 			{
@@ -68,6 +73,7 @@ record EvtArgRefresher(string EvtName, Func<string, Task> Action, string ArgExpr
 		return domOps.WhenClientMsg
 			.OfType<HookArgCalledClientMsg>()
 			.Where(e => e.Id == id && e.EvtName == EvtName)
+			//.Where(_ => domOps.IsRefMounted(node.Id))
 			.SelectMany(e => Observable.FromAsync(() => Action(e.EvtArg!)))
 			.Catch<Unit, Exception>(ex =>
 			{

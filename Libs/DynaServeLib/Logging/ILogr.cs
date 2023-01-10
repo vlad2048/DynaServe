@@ -20,7 +20,9 @@ public class ConsoleLogr : ILogr
 
 	public void LogTransition(string transition, string dom)
 	{
+		Console.WriteLine();
 		Console.WriteLine(transition);
+		Console.WriteLine(new string('=', transition.Length));
 		Console.WriteLine(dom);
 	}
 

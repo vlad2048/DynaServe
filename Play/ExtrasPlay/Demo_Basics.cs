@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynaServeLib.Nodes;
 using DynaServeLib;
+using DynaServeLib.Serving.FileServing.StructsEnum;
 using PowRxVar;
 using PowRxVar.Utils;
 
@@ -14,7 +15,7 @@ static class Demo_Basics
 		Serv.Start(
 			opt =>
 			{
-				opt.ServeHardcoded("test.css", TestCss);
+				opt.ServeString(TestCss, "test.css");
 			},
 			Div("main").Wrap(
 				Div().Txt("Minimal"),
@@ -32,7 +33,10 @@ static class Demo_Basics
 		var rxVar = Var.Make(0).D(d);
 
 		Serv.Start(
-			opt => { opt.ServeHardcoded("test.css", TestCss); },
+			opt =>
+			{
+				opt.ServeString(TestCss, "test.css");
+			},
 			Div("main").Wrap(
 				rxVar.ToUnit(),
 				() => new []
@@ -51,7 +55,10 @@ static class Demo_Basics
 		var cnt = 0;
 
 		Serv.Start(
-			opt => { opt.ServeHardcoded("test.css", TestCss); },
+			opt =>
+			{
+				opt.ServeString(TestCss, "test.css");
+			},
 			Div().Txt("Counter"),
 			Div().Txt(when.Select(_ => $"cnt_{cnt++}").StartWith("cnt_start"))
 		).D(d);
@@ -77,7 +84,10 @@ static class Demo_Basics
 		var (when, act) = MkEvt().D(d);
 		var cnt = 0;
 		Serv.Start(
-			opt => { opt.ServeHardcoded("test.css", TestCss); },
+			opt =>
+			{
+				opt.ServeString(TestCss, "test.css");
+			},
 			Div("main").Wrap(
 				Div().Txt("RefreshChildren"),
 				Div().Wrap(
@@ -112,7 +122,10 @@ static class Demo_Basics
 		var rxNum = Var.Make(new Num(0, 0)).D(d);
 
 		Serv.Start(
-			opt => { opt.ServeHardcoded("test.css", TestCss); },
+			opt =>
+			{
+				opt.ServeString(TestCss, "test.css");
+			},
 			Div("main").Wrap(
 				Div().Txt("RefreshChildren"),
 				Btn("Btn", async () =>

@@ -11,6 +11,6 @@ public static class EditListRegisterExt
 	{
 		opt.RegisterFontAwesome();
 		opt.RegisterDlgInput();
-		opt.Serve(FCat.Css, "edit-list");
+		opt.ServeFolder("edit-list", FCat.Css);
 	}
 }

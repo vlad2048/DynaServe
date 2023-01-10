@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>MyMods</title>
+  <script src="websockets/script-utils.js" type="module"></script>
+  <script>
+	//import { ScriptUtils } from 'websockets/script-utils.js';
+	function runSync() {
+		const scripts = [
+			{ type: 'Css', link: 'style2.css' },
+			{ type: 'Css', link: 'style3.css' },
+			{ type: 'Js', link: 'code2.js' },
+			{ type: 'Js', link: 'code3.js' },
+			{ type: 'JsModule', link: 'mod2.js' },
+			{ type: 'JsModule', link: 'mod3.js' },
+		];
+		syncScripts(scripts);
+	}
+  </script>
+
+  <!-- <link href="style1.css" rel="stylesheet" type="text/css"></link>
+  <link href="style2.css" rel="stylesheet" type="text/css"></link>
+  <script src="code1.js"></script>
+  <script src="code2.js"></script>
+  <script src="mod1.js" type="module"></script>
+  <script src="mod2.js" type="module"></script> -->
+
+  <link href="style2.css?c=1" rel="stylesheet" type="text/css"></link>
+  <link href="style3.css" rel="stylesheet" type="text/css"></link>
+  <script src="code2.js?c=1"></script>
+  <script src="code3.js"></script>
+  <script src="mod2.js?c=1" type="module"></script>
+  <script src="mod3.js" type="module"></script>
+
+</head>
+
+<body id="body">
+  <button onclick="runSync()">Click</button>
+  <div id="myid">text</div>
+</body>
+
+</html>

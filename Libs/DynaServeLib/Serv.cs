@@ -1,5 +1,4 @@
-﻿using System.Reactive;
-using System.Reactive.Disposables;
+﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using AngleSharp.Html.Dom;
@@ -16,7 +15,6 @@ using DynaServeLib.Serving.Syncing;
 using DynaServeLib.Serving.Syncing.Structs;
 using DynaServeLib.Utils;
 using PowRxVar;
-using PowRxVar.Utils;
 
 namespace DynaServeLib;
 
@@ -49,28 +47,20 @@ class ServInst : IDisposable
 		Opt = ServOpt.Build(optFun);
 		SecurityChecker.CheckPort(Opt.CheckSecurity, Opt.Port);
 
-		var (whenPageServedSig, whenPageServedObs) = RxEventMaker.Make<Unit>().D(d);
-
 		Opt.Register_WebsocketScripts();
 		Opt.Register_VersionDisplayer();
 
 		server = new Server(Opt.Port).D(d);
-		Messenger = new Messenger(server, whenPageServedObs).D(d);
+		Messenger = new Messenger(server).D(d);
 		Dom = DomCreator.Create(Opt.ExtraHtmlNodes).D(d);
 		DomOps = new DomOps(Dom, Opt.Logr, SignalDomEvt, Messenger).D(d);
 		whenDomEvt = new Subject<IDomEvt>().D(d);
 		DomEvtActioner.Setup(WhenDomEvt, DomOps).D(d);
-		fileServer = new FileServer(
-			DomOps,
-			Opt.ServNfos,
-			Opt.ScssOutputFolder,
-			Opt.SlnFolders,
-			Opt.Logr
-		).D(d);
+		fileServer = new FileServer(DomOps, Opt.Logr, Opt.Mounts).D(d);
 
 		DomOps.AddInitialNodes(rootNodes);
 		server.AddRepliers(
-			new ServePageReplier(Dom, whenPageServedSig),
+			new ServePageReplier(Dom),
 			new ServeFilesReplier(fileServer)
 		);
 		server.AddRepliers(Opt.Repliers);
@@ -97,29 +87,43 @@ class ServInst : IDisposable
 public static class Serv
 {
 	private static Disp? trackD;
+	private static readonly BehaviorSubject<bool> isStarted = new(false);
 
 	internal static ServInst? I { get; private set; }
-	internal static bool IsStarted { get; private set; }
+	internal static bool IsStarted => isStarted.Value;
 
 	public static void Start(params HtmlNode[] rootNodes) => Start(null, rootNodes);
 	public static IDisposable Start(Action<ServOpt>? optFun, params HtmlNode[] rootNodes)
 	{
-		IsStarted = false;
+		isStarted.OnNext(false);
 		trackD?.Dispose();
 		var d = trackD = new Disp();
 
 		I = new ServInst(optFun, rootNodes).D(d);
 		I.Start();
-		IsStarted = true;
+		isStarted.OnNext(true);
 
 		return d;
 	}
+
+	public static IObservable<IClientMsg> WhenMsg => isStarted
+		.Select(on => on switch
+		{
+			true => I!.Messenger.WhenClientMsg,
+			false => Observable.Never<IClientMsg>()
+		})
+		.Switch();
+
 
 	public static void Send(IServerMsg msg)
 	{
 		if (I == null) throw new ArgumentException("Server not ready -> cannot send messages to the frontend");
 		I.Messenger.SendToClient(msg);
 	}
+
+
+
+
 	public static HtmlNode StatusEltManual => new HtmlNode("div").Id(ServInst.StatusEltId).Cls(ServInst.StatusEltClsManual);
 	public static IDisposable AddNodeToBody(HtmlNode node)
 	{

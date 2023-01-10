@@ -18,8 +18,10 @@ static class Program
 		//Demo_BoundCtrls.Run(d);
 
 		//Demo_Extras_DlgInput.Run(d);
-		Demo_Extras_EditList.Run(d);
+		//Demo_Extras_EditList.Run(d);
 		//Demo_Extras_FontAwesome.Run(d);
+
+		Demo_Scss.Scss(d);
 	}
 
 

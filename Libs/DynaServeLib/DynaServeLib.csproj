@@ -5,20 +5,19 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Remove="_embedded\websockets\link-utils.js" />
+		<None Remove="_embedded\websockets\dom-utils.js" />
+		<None Remove="_embedded\websockets\script-utils.js" />
 		<None Remove="_embedded\websockets\websockets-handlers.js" />
-		<None Remove="_embedded\websockets\websockets-utils.js" />
 		<None Remove="_embedded\websockets\websockets.js" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="_embedded\dynaservver\dynaservver.css" />
 		<EmbeddedResource Include="_embedded\dynaservver\dynaservver.html" />
-		<EmbeddedResource Include="_embedded\websockets\link-utils.js" />
+		<EmbeddedResource Include="_embedded\websockets\dom-utils.js" />
+		<EmbeddedResource Include="_embedded\websockets\script-utils.js" />
 		<EmbeddedResource Include="_embedded\websockets\websockets-handlers.js" />
-		<EmbeddedResource Include="_embedded\websockets\websockets-utils.js" />
 		<EmbeddedResource Include="_embedded\websockets\websockets.css" />
-		<EmbeddedResource Include="_embedded\websockets\websockets.html" />
 		<EmbeddedResource Include="_embedded\websockets\websockets.js" />
 	</ItemGroup>
 

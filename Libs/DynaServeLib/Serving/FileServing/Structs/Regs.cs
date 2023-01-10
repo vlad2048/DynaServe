@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿/*
+using System.Net;
 using System.Text;
 using DynaServeLib.Serving.FileServing.Logic;
 using DynaServeLib.Serving.FileServing.StructsEnum;
@@ -92,3 +93,4 @@ file static class FileRegExt
 		return text.ToBytes();
 	}
 }
+*/
