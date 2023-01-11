@@ -11,10 +11,12 @@ static class Demo_BoundCtrls
 	public static void Run(Disp d)
 	{
 		var varBool = Var.Make(true).D(d);
+		var varBool2 = Var.Make(false).D(d);
 		var varTxt = Var.Make("Hello there").D(d);
 		var varNum = Var.Make(22).D(d);
 
 		varBool.Inspect();
+		varBool2.Inspect();
 		varTxt.Inspect();
 		varNum.Inspect();
 
@@ -26,6 +28,7 @@ static class Demo_BoundCtrls
 			Div("main").Wrap(
 				new HtmlNode("button").Txt("Check").Attr("onclick", "runCheck()"),
 				CheckBox(varBool),
+				CheckBox(varBool2),
 				TextBox(varTxt),
 				RangeSlider(varNum, 0, 30)
 			)
@@ -34,8 +37,9 @@ static class Demo_BoundCtrls
 		Console.WriteLine("Running ...");
 		Console.WriteLine("Press:");
 		Console.WriteLine("  1 - Toggle CheckBox");
-		Console.WriteLine("  2 - Append To TextBox");
-		Console.WriteLine("  3 - Increment RangeSlider");
+		Console.WriteLine("  2 - Toggle CheckBox2");
+		Console.WriteLine("  3 - Append To TextBox");
+		Console.WriteLine("  4 - Increment RangeSlider");
 		Console.WriteLine("  Q - Quit");
 		while (true)
 		{
@@ -47,10 +51,14 @@ static class Demo_BoundCtrls
 					break;
 
 				case ConsoleKey.D2:
-					varTxt.V += "C";
+					varBool2.V = !varBool2.V;
 					break;
 
 				case ConsoleKey.D3:
+					varTxt.V += "C";
+					break;
+
+				case ConsoleKey.D4:
 					varNum.V++;
 					break;
 

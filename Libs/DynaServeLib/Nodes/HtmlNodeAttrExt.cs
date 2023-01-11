@@ -71,6 +71,17 @@ public static class HtmlNodeAttrExt
 		return node;
 	}
 
+	public static HtmlNode PropInt(
+		this HtmlNode node,
+		string propName,
+		IObservable<int> valObs,
+		[CallerArgumentExpression(nameof(valObs))] string? valObsName = null
+	)
+	{
+		node.AddRefresher(new ChgRefresher(ChgKeyMk.PropInt(propName), valObs.Select(e => $"{e}").ThrowIf_Observable_IsNot_Derived_From_RxVar(valObsName)));
+		return node;
+	}
+
 
 	// ****************
 	// * Sugar (base) *

@@ -37,7 +37,7 @@ export interface ScriptNfo {
 }
 
 type ChgType = 'Text' | 'Attr' | 'Prop';
-type ChgPropType = 'Str' | 'Bool';
+type ChgPropType = 'Str' | 'Bool' | 'Int';
 export interface Chg {
   nodePath: string;
   type: ChgType;

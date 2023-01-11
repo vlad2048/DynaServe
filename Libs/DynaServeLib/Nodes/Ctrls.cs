@@ -24,54 +24,46 @@ public static class Ctrls
 		static string? Val2Web(bool v) => v ? "" : null;
 		static bool Web2Val(string v) => bool.Parse(v);
 
-		var bndVar = Var.MakeBnd(rxVar.V).D(rxVar);
-		rxVar.PipeTo(bndVar);
-		bndVar.WhenInner.Subscribe(e => rxVar.V = e).D(rxVar);
-		var checkedObs = bndVar.WhenOuter.Prepend(true);
+		var (bndVar, whenChanged) = MkBndVar(rxVar);
 
-		return new HtmlNode("input")
-			.Attr("type", "checkbox")
-			.Attr("checked", checkedObs.Select(Val2Web))
-			.PropBool("checked", checkedObs)
-			.HookArg("change", str => bndVar.SetInner(Web2Val(str)), "this.checked");
+		return new HtmlNode("input").Attr("type", "checkbox")
+			.Attr("checked", whenChanged.Select(Val2Web))
+			.PropBool("checked", whenChanged)
+			.HookArg("change", v => bndVar.SetInner(Web2Val(v)), "this.checked");
 	}
-
-		
 
 	public static HtmlNode TextBox(IRwVar<string> rxVar)
 	{
-		var isUiUpdate = false;
+		static string Val2Web(string v) => v;
+		static string Web2Val(string v) => v;
 
-		var node = new HtmlNode("input")
-			.Attr("type", "text")
-			.Attr("value", rxVar.Where(_ => !isUiUpdate).Prepend($"{rxVar.V}"))
-			.HookArg("input", v =>
-			{
-				isUiUpdate = true;
-				rxVar.V = v;
-				isUiUpdate = false;
-			}, "this.value");
+		var (bndVar, whenChanged) = MkBndVar(rxVar);
 
-		return node;
+		return new HtmlNode("input").Attr("type", "text")
+			.Attr("value", whenChanged.Select(Val2Web))
+			.PropStr("value", whenChanged)
+			.HookArg("input", v => bndVar.SetInner(Web2Val(v)), "this.value");
 	}
 
 	public static HtmlNode RangeSlider(IRwVar<int> rxVar, int min, int max)
 	{
-		var isUiUpdate = false;
+		static string Val2Web(int v) => $"{v}";
+		static int Web2Val(string v) => int.Parse(v);
 
-		var node = new HtmlNode("input")
-			.Attr("type", "range")
-			.Attr("min", $"{min}")
-			.Attr("max", $"{max}")
-			.Attr("value", rxVar.Where(_ => !isUiUpdate).Select(e => $"{e}").Prepend($"{rxVar.V}"))
-			.HookArg("change", valStr =>
-			{
-				var val = int.Parse(valStr);
-				isUiUpdate = true;
-				rxVar.V = val;
-				isUiUpdate = false;
-			}, "this.value");
+		var (bndVar, whenChanged) = MkBndVar(rxVar);
 
-		return node;
+		return new HtmlNode("input").Attr("type", "range").Attr("min", $"{min}").Attr("max", $"{max}")
+			.Attr("value", whenChanged.Select(Val2Web))
+			.PropInt("value", whenChanged)
+			.HookArg("input", v => bndVar.SetInner(Web2Val(v)), "this.value");
+	}
+
+	private static (IFullRwBndVar<T>, IObservable<T>) MkBndVar<T>(IRwVar<T> rxVar)
+	{
+		var bndVar = Var.MakeBnd(rxVar.V).D(rxVar);
+		rxVar.PipeTo(bndVar);
+		bndVar.WhenInner.Subscribe(e => rxVar.V = e).D(rxVar);
+		var whenChanged = bndVar.WhenOuter.Prepend(rxVar.V);
+		return (bndVar, whenChanged);
 	}
 }

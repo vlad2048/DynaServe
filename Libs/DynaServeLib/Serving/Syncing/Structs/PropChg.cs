@@ -10,7 +10,8 @@ public enum ChgType
 public enum ChgPropType
 {
 	Str,
-	Bool
+	Bool,
+	Int,
 }
 
 
@@ -42,4 +43,5 @@ public static class ChgKeyMk
 	public static ChgKey Attr(string name) => new(ChgType.Attr, null, name);
 	public static ChgKey PropStr(string name) => new(ChgType.Prop, ChgPropType.Str, name);
 	public static ChgKey PropBool(string name) => new(ChgType.Prop, ChgPropType.Bool, name);
+	public static ChgKey PropInt(string name) => new(ChgType.Prop, ChgPropType.Int, name);
 }

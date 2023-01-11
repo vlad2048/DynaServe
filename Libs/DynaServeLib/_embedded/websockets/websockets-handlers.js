@@ -53,6 +53,9 @@ export function handleServerMsg(evt) {
                             case "Bool":
                                 node[chg.name] = !!chg.val;
                                 break;
+                            case "Int":
+                                node[chg.name] = +chg.val;
+                                break;
                         }
                         break;
                     default:
