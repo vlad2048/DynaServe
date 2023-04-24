@@ -46,7 +46,7 @@ public static void RefreshComplex()
 		opt => {
 			//opt.Port = 7001;
 			//opt.CheckSecurity = true;
-			opt.ServeHardcoded("test.css", TestCss);
+			//opt.ServeHardcoded("test.css", TestCss);
 		},
 		Div("main").Wrap(
 			Btn("Err", () => Serv.Send(new ShowErrorServerMsg())),
@@ -94,7 +94,9 @@ static void DynamicAttr()
 	var rxNum = Var.Make(0, when.Select(_ => cntNum++)).D(D);
 	var rxTxt = Var.Make("cnt", when.Select(_ => $"cnt_{cntStr++}")).D(D);
 	Serv.Start(
-		opt => { opt.ServeHardcoded("test.css", TestCss); },
+		opt => {
+			//opt.ServeHardcoded("test.css", TestCss);
+		},
 		Div("main").Wrap(
 			rxNum.Where(e => e % 2 == 0).ToUnit(),
 			() => new[]
@@ -111,7 +113,9 @@ static void RefreshChildren()
 	var when = MkEvt().D(D);
 	var cnt = 0;
 	Serv.Start(
-		opt => { opt.ServeHardcoded("test.css", TestCss); },
+		opt => {
+			//opt.ServeHardcoded("test.css", TestCss);
+		},
 		Div("main").Wrap(
 			Div().Txt("RefreshChildren"),
 			Div().Wrap(

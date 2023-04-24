@@ -19,8 +19,8 @@ static class DomEvtActioner
 
 		var whenDomEvtSync = whenDomEvt.Synchronize();
 
-		var (whenEvtElt, whenEvtBuf) = whenDomEvtSync.BufferSubType<IDomEvt, ChgDomEvt>(bufferPeriod).D(d);
-		//var (whenEvtElt, whenEvtBuf) = (whenDomEvtSync, Observable.Never<ChgDomEvt[]>());
+		//var (whenEvtElt, whenEvtBuf) = whenDomEvtSync.BufferSubType<IDomEvt, ChgDomEvt>(bufferPeriod).D(d);
+		var (whenEvtElt, whenEvtBuf) = (whenDomEvtSync, Observable.Never<ChgDomEvt[]>());
 
 		whenEvtElt.Subscribe(evt =>
 		{

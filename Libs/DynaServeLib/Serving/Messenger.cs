@@ -25,12 +25,37 @@ class Messenger : IDisposable
 
 		whenServerMsg = new Subject<IServerMsg>().D(d);
 
+		/*WhenServerMsg
+			.Synchronize()
+			.SelectMany(msg => Observable.FromAsync(async () =>
+			{
+				try
+				{
+					var str = SyncJsonUtils.SerServerMsg(msg);
+					await server.WsSend(_ => Task.FromResult(str));
+				}
+				catch (Exception ex)
+				{
+					L($"Exception sending to the client: {ex}");
+				}
+			}))
+			.Subscribe().D(d);*/
+
 		WhenServerMsg
 			.Synchronize()
 			.Subscribe(msg =>
 			{
-				var str = SyncJsonUtils.SerServerMsg(msg);
-				server.WsSend(_ => Task.FromResult(str)).Wait();
+				try
+				{
+					var str = SyncJsonUtils.SerServerMsg(msg);
+					server.WsSend(_ => Task.FromResult(str)).Wait();
+				}
+				catch (Exception ex)
+				{
+					L($"Exception sending to the client (subscribe): {ex}");
+				}
 			}).D(d);
 	}
+
+	private static void L(string s) => Console.WriteLine(s);
 }

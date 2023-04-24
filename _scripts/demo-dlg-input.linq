@@ -25,7 +25,7 @@ static class Demo_DlgInput
 			opt =>
 			{
 				opt.RegisterDlgInput();
-				opt.AddScriptCss("demo", DemoCss);
+				//opt.AddScriptCss("demo", DemoCss);
 			},
 			Div("btnrow").Wrap(
 				Btn("Edit", async () =>
