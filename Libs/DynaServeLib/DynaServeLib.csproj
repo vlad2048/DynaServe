@@ -27,7 +27,7 @@
 		<PackageReference Include="CliWrap" Version="3.6.0" />
 		<PackageReference Include="PowBasics" Version="0.0.9" />
 		<PackageReference Include="PowRxVar.Maybe" Version="0.0.15" />
-		<PackageReference Include="PowTrees" Version="0.0.10" />
+		<PackageReference Include="PowTrees" Version="0.0.13" />
 	</ItemGroup>
 
 	<ItemGroup>
