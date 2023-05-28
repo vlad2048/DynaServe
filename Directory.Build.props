@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<DebugType>embedded</DebugType>
-		<Version>0.0.3</Version>
+		<Version>0.0.4</Version>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Authors>vlad2048</Authors>
 		<Description>DynaServe</Description>
