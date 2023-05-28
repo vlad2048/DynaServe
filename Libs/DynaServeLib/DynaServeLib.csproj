@@ -25,9 +25,9 @@
 		<PackageReference Include="AngleSharp" Version="0.17.1" />
 		<PackageReference Include="AngleSharp.XPath" Version="2.0.1" />
 		<PackageReference Include="CliWrap" Version="3.6.0" />
-		<PackageReference Include="PowBasics" Version="0.0.9" />
-		<PackageReference Include="PowRxVar.Maybe" Version="0.0.16" />
-		<PackageReference Include="PowTrees" Version="0.0.13" />
+		<PackageReference Include="PowBasics" Version="0.0.10" />
+		<PackageReference Include="PowRxVar.Maybe" Version="0.0.17" />
+		<PackageReference Include="PowTrees" Version="0.0.14" />
 	</ItemGroup>
 
 	<ItemGroup>
