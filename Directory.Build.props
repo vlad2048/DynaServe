@@ -19,4 +19,8 @@
 		<None Include="$(SolutionDir)\README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
+	<PropertyGroup>
+		<NoWarn>CS1591</NoWarn>
+	</PropertyGroup>
+
 </Project>
